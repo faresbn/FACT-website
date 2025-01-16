@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FACT Special Projects LLC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #E6E6E6;
+            color: #343638;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #343638;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 5rem 1rem;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 4.5rem;
+            font-weight: bold;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            margin-top: 1rem;
+            font-family: 'Georgia', serif;
+        }
+
+        header img {
+            max-width: 150px;
+            margin-top: 1rem;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E6E6E6;
+            padding: 1rem;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style-type: none;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #343638;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 3rem;
+            padding: 2rem;
+        }
+
+        section {
+            position: relative;
+            padding: 3rem 1rem;
+            overflow: hidden;
+        }
+
+        section:before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 150%;
+            background: radial-gradient(circle, #70BB73 20%, transparent 70%);
+            opacity: 0.05;
+            z-index: -1;
+        }
+
+        h2 {
+            font-size: 2.4rem;
+            font-weight: bold;
+            color: #343638;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            color: #4D4D4D;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .call-to-action {
+            text-align: center;
+            padding: 3rem 1rem;
+            background-color: #343638;
+            color: #FFFFFF;
+            font-family: 'Courier New', monospace;
+            border-radius: 8px;
+        }
+
+        .call-to-action h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            background-color: #4D4D4D;
+            color: #FFFFFF;
+        }
+
+        footer a {
+            color: #F7C843;
+            text-decoration: none;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 1s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <img src="./FACT Logo 2025.png" alt="FACT Special Projects Logo">
+        <h1>Transforming Stories into Strategies</h1>
+        <p>Every strategy is a story.</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="container-fluid">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="grid fade-in">
+            <!-- About Section -->
+            <section id="about">
+                <hgroup>
+                    <h2>About Us</h2>
+                    <h3>Innovation | Integrity | Exploration | Collaboration</h3>
+                </hgroup>
+                <p>
+                    At FACT Special Projects LLC, we believe in the power of storytelling. Our mission is to transform compelling narratives into actionable strategies, helping organizations and individuals navigate complex challenges with creativity and precision.
+                </p>
+                <h3>Our Approach</h3>
+                <p>
+                    By blending deep expertise in strategy with creative exploration, we craft solutions that intrigue, resonate, and deliver measurable outcomes.
+                </p>
+            </section>
+
+            <!-- Call-to-Action -->
+            <section class="call-to-action fade-in">
+                <h2>Curious? Let’s start your story.</h2>
+                <p>
+                    Ready to collaborate and transform your narrative into a strategy? Reach out to us today.
+                </p>
+            </section>
+        </div>
+    </main>
+
+    <!-- Contact Section -->
+    <section id="contact" aria-label="Contact Form">
+        <div class="container fade-in">
+            <article>
+                <hgroup>
+                    <h2>Contact Us</h2>
+                    <h3>We’d love to hear from you</h3>
+                </hgroup>
+                <p>Email us directly at: <a href="mailto:info@fact.qa">info@fact.qa</a></p>
+            </article>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <small>
+            <a href="./" target="_blank">fact.qa</a> • <a href="mailto:info@fact.qa">info@fact.qa</a>
+        </small>
+    </footer>
+
+    <script>
+        // JavaScript for Smooth Scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
