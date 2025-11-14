@@ -1,234 +1,192 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FACT Special Projects LLC</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <style>
-        /* Global Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FACT — Applied creative systems</title>
+<meta name="description" content="FACT — applied creative systems: narrative, systems, and AI."/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfafa; --edge:#17191a; --ink:#333537; --ink-soft:#525456;
+    --yellow:#F7C843; --purple:#B593C6; --green:#70BB73;
+    --yellow-soft:#FBE7AA; --purple-soft:#D9C3EA; --green-soft:#B3D9BA;
+    --max:1120px;
+  }
 
-        body {
-            background-color: #E6E6E6;
-            color: #343638;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-        }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
 
-        header {
-            background-color: #343638;
-            color: #FFFFFF;
-            text-align: center;
-            padding: 5rem 1rem;
-            position: relative;
-        }
+  /* Page frame */
+  .page{min-height:100vh;border:5px solid rgba(23,25,26,0.95);display:flex;align-items:center;justify-content:center}
+  .wrap{
+    width:100%;max-width:var(--max);padding:1.1rem 1.5rem;position:relative;
+    display:grid;grid-template-columns:44% 56%;gap:1.35rem;align-items:stretch;
+  }
 
-        header h1 {
-            font-size: 4.5rem;
-            font-weight: bold;
-        }
+  /* Background accents (behind everything) */
+  .wrap::before,
+  .wrap::after{content:"";position:absolute;pointer-events:none;z-index:-2}
+  .wrap::before{
+    left:1.2rem; top:20%; width:34%; height:28%;
+    background:var(--yellow-soft); border-right:1px solid rgba(23,25,26,0.9); border-bottom:1px solid rgba(23,25,26,0.9);
+    opacity:.9;
+  }
+  .wrap::after{
+    right:1.2rem; bottom:12%; width:34%; height:28%;
+    background:var(--green-soft); border-left:1px solid rgba(23,25,26,0.9); border-top:1px solid rgba(23,25,26,0.9);
+    opacity:.9;
+  }
 
-        header p {
-            font-size: 1.3rem;
-            margin-top: 1rem;
-            font-family: 'Georgia', serif;
-        }
+  @media (max-width:920px){
+    .wrap{grid-template-columns:1fr;gap:1rem;padding:1rem}
+    .wrap::before,.wrap::after{opacity:.14}
+  }
 
-        header img {
-            max-width: 150px;
-            margin-top: 1rem;
-        }
+  /* Logo column - logo is intentionally the anchor */
+  .brand{
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+    gap:.6rem;padding:1rem;border-right:1px solid rgba(23,25,26,0.24);
+  }
 
-        nav {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background-color: #FFFFFF;
-            border-bottom: 1px solid #E6E6E6;
-            padding: 1rem;
-        }
+  /* Logo sizing tuned so it sits comfortably inside left column */
+  .brand img{
+    width:min(54%,420px); max-width:420px; height:auto; display:block; object-fit:contain;
+    /* white 'frame' on the logo is preserved; avoid extra background or shadow here */
+  }
 
-        nav ul {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            list-style-type: none;
-        }
+  /* Palette directly under the logo and aligned with its left edge */
+  .brand-palette{display:flex;gap:.5rem;margin-top:.5rem;margin-left:0.15rem}
+  .sw{height:18px;border:1px solid rgba(23,25,26,0.9)}
+  .sw--edge{background:var(--edge);flex:1.25}
+  .sw--yellow{background:var(--yellow);flex:1}
+  .sw--purple{background:var(--purple);flex:1}
+  .sw--green{background:var(--green);flex:1}
 
-        nav ul li a {
-            text-decoration: none;
-            font-weight: bold;
-            color: #343638;
-        }
+  .brand-note{font-family:Space Grotesk,system-ui,sans-serif;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-top:.42rem}
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 3rem;
-            padding: 2rem;
-        }
+  /* Content column */
+  .content{display:flex;flex-direction:column;gap:.62rem;padding:1rem}
+  .kicker{display:flex;align-items:center;gap:.6rem;color:var(--ink-soft);font-family:Space Grotesk,system-ui,sans-serif;font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}
+  .kicker .line{width:4.4rem;height:1px;background:var(--edge)}
+  h1{font-family:Space Grotesk,system-ui,sans-serif;font-size:clamp(2rem,3vw,2.6rem);text-transform:uppercase;letter-spacing:.04em;margin-top:.06rem}
+  .sub{font-size:.92rem;font-weight:600;color:var(--ink-soft);margin-top:.18rem}
+  .blurb{font-size:.88rem;margin-top:.4rem;color:var(--ink);max-width:36rem}
+  .thesis{margin-top:.56rem;padding-top:.46rem;border-top:1px solid rgba(23,25,26,0.6);font-family:Space Grotesk,system-ui,sans-serif;font-size:.77rem;letter-spacing:.12em;text-transform:uppercase}
+  .thesis span{display:block;margin-top:.24rem;font-size:.9rem;font-weight:600;text-transform:none}
 
-        section {
-            position: relative;
-            padding: 3rem 1rem;
-            overflow: hidden;
-        }
+  /* Panel — sits above background accents; controlled stacking */
+  .panel{margin-top:.72rem;border:2px solid rgba(23,25,26,0.9);padding:.75rem;background:rgba(251,250,250,.995);display:flex;flex-direction:column;gap:.56rem;position:relative;overflow:hidden; z-index:1}
+  .panel::before{content:"";position:absolute;left:.55rem;right:.55rem;top:.55rem;height:2px;background:linear-gradient(90deg,var(--yellow) 0%,var(--purple) 50%,var(--green) 100%);opacity:.95;z-index:2}
+  .tabs{display:flex;gap:.32rem;font-family:Space Grotesk,system-ui,sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.14em}
+  .tab{border:1px solid rgba(23,25,26,0.9);padding:.32rem .48rem;background:transparent;cursor:pointer}
+  .tab[data-active="true"]{background:var(--edge);color:var(--bg)}
+  .panel-body{margin-top:.35rem;display:flex;flex-direction:column;gap:.45rem;font-size:.88rem}
+  .list{list-style:none;margin-left:.4rem;padding-left:.6rem}
+  .list li{margin:.1rem 0;padding-left:.6rem;position:relative}
+  .list li::before{content:"–";position:absolute;left:0;top:0}
 
-        section:before {
-            content: '';
-            position: absolute;
-            top: -10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120%;
-            height: 150%;
-            background: radial-gradient(circle, #70BB73 20%, transparent 70%);
-            opacity: 0.05;
-            z-index: -1;
-        }
+  .strip{height:4px;margin-top:.9rem;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr}
+  .strip div:nth-child(1){background:var(--edge)} .strip div:nth-child(2){background:var(--yellow)} .strip div:nth-child(3){background:var(--purple)} .strip div:nth-child(4){background:var(--green)}
 
-        h2 {
-            font-size: 2.4rem;
-            font-weight: bold;
-            color: #343638;
-        }
-
-        h3 {
-            font-size: 1.6rem;
-            color: #4D4D4D;
-            font-style: italic;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            font-size: 1.2rem;
-            line-height: 1.8;
-            margin-bottom: 1.5rem;
-        }
-
-        .call-to-action {
-            text-align: center;
-            padding: 3rem 1rem;
-            background-color: #343638;
-            color: #FFFFFF;
-            font-family: 'Courier New', monospace;
-            border-radius: 8px;
-        }
-
-        .call-to-action h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem 1rem;
-            background-color: #4D4D4D;
-            color: #FFFFFF;
-        }
-
-        footer a {
-            color: #F7C843;
-            text-decoration: none;
-        }
-
-        /* Animations */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: fadeIn 1s ease-in-out forwards;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
+  a{color:inherit;text-decoration:none}
+  :focus-visible{outline:3px solid var(--edge);outline-offset:3px}
+</style>
 </head>
 <body>
+  <div class="page">
+    <div class="wrap" role="main">
 
-    <!-- Header Section -->
-    <header>
-        <img src="./FACT Logo 2025.png" alt="FACT Special Projects Logo">
-        <h1>Transforming Stories into Strategies</h1>
-        <p>Every strategy is a story.</p>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="container-fluid">
-        <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="container">
-        <div class="grid fade-in">
-            <!-- About Section -->
-            <section id="about">
-                <hgroup>
-                    <h2>About Us</h2>
-                    <h3>Innovation | Integrity | Exploration | Collaboration</h3>
-                </hgroup>
-                <p>
-                    At FACT Special Projects LLC, we believe in the power of storytelling. Our mission is to transform compelling narratives into actionable strategies, helping organizations and individuals navigate complex challenges with creativity and precision.
-                </p>
-                <h3>Our Approach</h3>
-                <p>
-                    By blending deep expertise in strategy with creative exploration, we craft solutions that intrigue, resonate, and deliver measurable outcomes.
-                </p>
-            </section>
-
-            <!-- Call-to-Action -->
-            <section class="call-to-action fade-in">
-                <h2>Curious? Let’s start your story.</h2>
-                <p>
-                    Ready to collaborate and transform your narrative into a strategy? Reach out to us today.
-                </p>
-            </section>
+      <!-- Logo column (exact filename below) -->
+      <aside class="brand" aria-label="FACT brand">
+        <img src="FACT Logo 2025 w line.png" alt="FACT logo" />
+        <div class="brand-palette" aria-hidden="true">
+          <div class="sw sw--edge"></div>
+          <div class="sw sw--yellow"></div>
+          <div class="sw sw--purple"></div>
+          <div class="sw sw--green"></div>
         </div>
-    </main>
+        <div class="brand-note">story driven strategy solutions</div>
+      </aside>
 
-    <!-- Contact Section -->
-    <section id="contact" aria-label="Contact Form">
-        <div class="container fade-in">
-            <article>
-                <hgroup>
-                    <h2>Contact Us</h2>
-                    <h3>We’d love to hear from you</h3>
-                </hgroup>
-                <p>Email us directly at: <a href="mailto:info@fact.qa">info@fact.qa</a></p>
+      <!-- Content -->
+      <main class="content" aria-labelledby="hero-title">
+        <div>
+          <div class="kicker"><div class="line"></div><div>FACT</div></div>
+          <h1 id="hero-title">Applied creative systems<br>for a world in motion.</h1>
+          <div class="sub">Every system is a story.</div>
+          <div class="blurb">We build frames for ideas that must survive reality — narrative, systems, and AI combined into practical work.</div>
+          <div class="thesis">Working thesis<span>A useful idea must hold. Everything else is decoration.</span></div>
+        </div>
+
+        <section class="panel" aria-label="What we do and how">
+          <nav class="tabs" role="tablist" aria-label="Sections">
+            <button class="tab" data-target="s-what" data-active="true" type="button">What we are</button>
+            <button class="tab" data-target="s-do" type="button">What we do</button>
+            <button class="tab" data-target="s-think" type="button">How we think</button>
+          </nav>
+
+          <div class="panel-body" id="panel-body">
+            <article id="s-what" data-active="true">
+              <p><strong>FACT</strong> is an independent practice for applied creative thinking — narrative, structure and AI as a practical frame.</p>
             </article>
-        </div>
-    </section>
 
-    <!-- Footer -->
-    <footer>
-        <small>
-            <a href="./" target="_blank">fact.qa</a> • <a href="mailto:info@fact.qa">info@fact.qa</a>
-        </small>
-    </footer>
+            <article id="s-do" hidden>
+              <p><strong>We work in four practical ways:</strong></p>
+              <ul class="list">
+                <li><strong>Narrative intelligence</strong> — surface the story that moves the system.</li>
+                <li><strong>Systems &amp; structures</strong> — give complexity a clear shape.</li>
+                <li><strong>Applied AI</strong> — extend human judgement, not replace it.</li>
+                <li><strong>Creative research</strong> — find precise leverage points.</li>
+              </ul>
+            </article>
 
-    <script>
-        // JavaScript for Smooth Scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-    </script>
+            <article id="s-think" hidden>
+              <p><strong>Principles</strong></p>
+              <ul class="list">
+                <li><strong>Clarity over noise.</strong></li>
+                <li><strong>Structure as narrative.</strong></li>
+                <li><strong>Imagination as discipline.</strong></li>
+              </ul>
+            </article>
 
+            <div aria-hidden="true" style="height:6px"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;font-size:.82rem;color:var(--ink-soft)">
+              <div><span style="font-family:Space Grotesk,system-ui;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase">Contact</span><br><a href="mailto:info@fact.qa">info@fact.qa</a></div>
+              <div>Independent practice · limited engagements</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="strip" aria-hidden="true"><div></div><div></div><div></div><div></div></div>
+      </main>
+
+    </div>
+  </div>
+
+<script>
+(function () {
+  const tabs = document.querySelectorAll('.tab');
+  const sections = {
+    's-what': document.getElementById('s-what'),
+    's-do': document.getElementById('s-do'),
+    's-think': document.getElementById('s-think')
+  };
+  function activate(id){
+    tabs.forEach(t=>t.dataset.active = (t.dataset.target===id).toString());
+    for(const k in sections){
+      if(k===id){ sections[k].hidden=false; sections[k].dataset.active='true' }
+      else { sections[k].hidden=true; sections[k].dataset.active='false' }
+    }
+  }
+  tabs.forEach(t=> t.addEventListener('click',()=>activate(t.dataset.target)));
+})();
+</script>
 </body>
 </html>
