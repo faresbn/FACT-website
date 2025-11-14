@@ -1,166 +1,310 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FACT — Applied creative systems</title>
-<meta name="description" content="FACT — applied creative systems: narrative, systems, and AI."/>
+<meta name="description" content="FACT — applied creative systems: narrative, systems, and AI." />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#fbfafa; --edge:#17191a; --ink:#333537; --ink-soft:#525456;
-    --yellow:#F7C843; --purple:#B593C6; --green:#70BB73;
-    --yellow-soft:#FBE7AA; --purple-soft:#D9C3EA; --green-soft:#B3D9BA;
-    --max:1120px;
+    --bg:#fbfafa;
+    --edge:#17191a;
+    --ink:#111217;    /* darker ink for stronger contrast */
+    --ink-soft:#525456;
+    --yellow:#F7C843;
+    --purple:#B593C6;
+    --green:#70BB73;
+
+    --yellow-soft:#FBEDD2;
+    --purple-soft:#EDE2F5;
+    --green-soft:#DFF2E6;
+
+    --max-width:1160px;
+    --page-pad:1.0rem;
   }
 
+  /* Base reset */
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
     font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
-    line-height:1.45;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
   }
 
   /* Page frame */
-  .page{min-height:100vh;border:5px solid rgba(23,25,26,0.95);display:flex;align-items:center;justify-content:center}
-  .wrap{
-    width:100%;max-width:var(--max);padding:1.1rem 1.5rem;position:relative;
-    display:grid;grid-template-columns:44% 56%;gap:1.35rem;align-items:stretch;
+  .page{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:calc(var(--page-pad) * 1.5);
+    background:var(--bg);
   }
-
-  /* Background accents (behind everything) */
-  .wrap::before,
-  .wrap::after{content:"";position:absolute;pointer-events:none;z-index:-2}
-  .wrap::before{
-    left:1.2rem; top:20%; width:34%; height:28%;
-    background:var(--yellow-soft); border-right:1px solid rgba(23,25,26,0.9); border-bottom:1px solid rgba(23,25,26,0.9);
-    opacity:.9;
-  }
-  .wrap::after{
-    right:1.2rem; bottom:12%; width:34%; height:28%;
-    background:var(--green-soft); border-left:1px solid rgba(23,25,26,0.9); border-top:1px solid rgba(23,25,26,0.9);
-    opacity:.9;
+  .container{
+    width:100%;
+    max-width:var(--max-width);
+    display:grid;
+    grid-template-columns:1fr 1.1fr;
+    gap:1.2rem;
+    border:4px solid rgba(23,25,26,0.85);
+    padding:1.0rem;
+    background:#fff; /* content canvas */
+    align-items:stretch;
   }
 
   @media (max-width:920px){
-    .wrap{grid-template-columns:1fr;gap:1rem;padding:1rem}
-    .wrap::before,.wrap::after{opacity:.14}
+    .container{grid-template-columns:1fr; padding:.9rem;}
   }
 
-  /* Logo column - logo is intentionally the anchor */
+  /* Left column - logo anchor */
   .brand{
-    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
-    gap:.6rem;padding:1rem;border-right:1px solid rgba(23,25,26,0.24);
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    padding:1rem .9rem;
+    border-right:1px solid rgba(23,25,26,0.12);
+    min-height:320px;
   }
 
-  /* Logo sizing tuned so it sits comfortably inside left column */
+  /* Logo sizing with clamp for responsive scaling.
+     If you have the SVG, swap <img> for inline SVG for perfect scaling. */
   .brand img{
-    width:min(54%,420px); max-width:420px; height:auto; display:block; object-fit:contain;
-    /* white 'frame' on the logo is preserved; avoid extra background or shadow here */
+    width:clamp(220px, 46%, 420px);
+    height:auto;
+    display:block;
+    object-fit:contain;
+    /* Explicitly reserve space so layout doesn't shift. If you know the pixel size,
+       add width/height attributes to the img tag too. */
+    margin-left:.1rem;
   }
 
-  /* Palette directly under the logo and aligned with its left edge */
-  .brand-palette{display:flex;gap:.5rem;margin-top:.5rem;margin-left:0.15rem}
-  .sw{height:18px;border:1px solid rgba(23,25,26,0.9)}
+  .brand .palette{
+    display:flex;
+    gap:.5rem;
+    margin-top:.5rem;
+    align-items:center;
+    margin-left:.12rem;
+  }
+  .sw{height:16px;border:1px solid rgba(23,25,26,0.85);border-radius:0;flex:1}
   .sw--edge{background:var(--edge);flex:1.25}
-  .sw--yellow{background:var(--yellow);flex:1}
-  .sw--purple{background:var(--purple);flex:1}
-  .sw--green{background:var(--green);flex:1}
+  .sw--yellow{background:var(--yellow)}
+  .sw--purple{background:var(--purple)}
+  .sw--green{background:var(--green)}
 
-  .brand-note{font-family:Space Grotesk,system-ui,sans-serif;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-top:.42rem}
+  .brand .strap{
+    margin-top:.44rem;
+    font-family:Space Grotesk,system-ui,sans-serif;
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
 
-  /* Content column */
-  .content{display:flex;flex-direction:column;gap:.62rem;padding:1rem}
-  .kicker{display:flex;align-items:center;gap:.6rem;color:var(--ink-soft);font-family:Space Grotesk,system-ui,sans-serif;font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}
+  /* Right column - content */
+  .content{
+    padding:1rem .9rem;
+    display:flex;
+    flex-direction:column;
+    gap:.6rem;
+  }
+
+  .kicker{
+    display:flex;
+    gap:.6rem;
+    align-items:center;
+    color:var(--ink-soft);
+    font-family:Space Grotesk,system-ui,sans-serif;
+    font-size:.76rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
   .kicker .line{width:4.4rem;height:1px;background:var(--edge)}
-  h1{font-family:Space Grotesk,system-ui,sans-serif;font-size:clamp(2rem,3vw,2.6rem);text-transform:uppercase;letter-spacing:.04em;margin-top:.06rem}
-  .sub{font-size:.92rem;font-weight:600;color:var(--ink-soft);margin-top:.18rem}
-  .blurb{font-size:.88rem;margin-top:.4rem;color:var(--ink);max-width:36rem}
-  .thesis{margin-top:.56rem;padding-top:.46rem;border-top:1px solid rgba(23,25,26,0.6);font-family:Space Grotesk,system-ui,sans-serif;font-size:.77rem;letter-spacing:.12em;text-transform:uppercase}
-  .thesis span{display:block;margin-top:.24rem;font-size:.9rem;font-weight:600;text-transform:none}
 
-  /* Panel — sits above background accents; controlled stacking */
-  .panel{margin-top:.72rem;border:2px solid rgba(23,25,26,0.9);padding:.75rem;background:rgba(251,250,250,.995);display:flex;flex-direction:column;gap:.56rem;position:relative;overflow:hidden; z-index:1}
-  .panel::before{content:"";position:absolute;left:.55rem;right:.55rem;top:.55rem;height:2px;background:linear-gradient(90deg,var(--yellow) 0%,var(--purple) 50%,var(--green) 100%);opacity:.95;z-index:2}
-  .tabs{display:flex;gap:.32rem;font-family:Space Grotesk,system-ui,sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.14em}
-  .tab{border:1px solid rgba(23,25,26,0.9);padding:.32rem .48rem;background:transparent;cursor:pointer}
-  .tab[data-active="true"]{background:var(--edge);color:var(--bg)}
-  .panel-body{margin-top:.35rem;display:flex;flex-direction:column;gap:.45rem;font-size:.88rem}
+  h1{
+    font-family:Space Grotesk,system-ui,sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    font-size:clamp(1.9rem,4vw,2.6rem);
+    margin-top:.08rem;
+    color:var(--edge);
+  }
+
+  .sub{
+    font-weight:600;
+    font-size:0.95rem;
+    color:var(--ink-soft);
+    margin-top:.18rem;
+  }
+
+  .lead{
+    margin-top:.36rem;
+    color:var(--ink);
+    max-width:46ch;
+    font-size:0.92rem;
+  }
+
+  .thesis{
+    margin-top:.5rem;
+    padding-top:.5rem;
+    border-top:1px solid rgba(23,25,26,0.6);
+    font-family:Space Grotesk,system-ui,sans-serif;
+    font-size:.75rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .thesis .main{display:block;margin-top:.22rem;color:var(--ink);font-weight:600;font-size:.92rem}
+
+  /* Panel - accent is inside panel (no overlap) */
+  .panel{
+    margin-top:.66rem;
+    border:1.6px solid rgba(23,25,26,0.9);
+    background:#fff;
+    padding:.8rem;
+    position:relative;
+    box-shadow:none;
+    display:flex;
+    flex-direction:column;
+    gap:.46rem;
+  }
+
+  .panel-accent{
+    height:6px;
+    margin:-.8rem -.8rem .5rem -.8rem;
+    background:linear-gradient(90deg,var(--yellow) 0%,var(--purple) 50%,var(--green) 100%);
+  }
+
+  /* Accessible tabs */
+  .tabs{
+    display:flex;
+    gap:.34rem;
+    font-family:Space Grotesk,system-ui,sans-serif;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+  }
+
+  .tabs [role="tab"]{
+    border:1px solid rgba(23,25,26,0.9);
+    padding:.34rem .5rem;
+    background:transparent;
+    cursor:pointer;
+  }
+  .tabs [role="tab"][aria-selected="true"]{
+    background:var(--edge);
+    color:var(--bg);
+  }
+
+  .tabpanel{
+    margin-top:.26rem;
+    font-size:.89rem;
+    color:var(--ink);
+    line-height:1.5;
+  }
+
   .list{list-style:none;margin-left:.4rem;padding-left:.6rem}
-  .list li{margin:.1rem 0;padding-left:.6rem;position:relative}
+  .list li{margin:.08rem 0;padding-left:.54rem;position:relative}
   .list li::before{content:"–";position:absolute;left:0;top:0}
 
-  .strip{height:4px;margin-top:.9rem;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr}
-  .strip div:nth-child(1){background:var(--edge)} .strip div:nth-child(2){background:var(--yellow)} .strip div:nth-child(3){background:var(--purple)} .strip div:nth-child(4){background:var(--green)}
+  /* Footer strip */
+  .strip{
+    margin-top:.8rem;
+    height:4px;
+    display:grid;
+    grid-template-columns:1.2fr 1fr 1fr 1fr;
+  }
+  .strip div:nth-child(1){background:var(--edge)}
+  .strip div:nth-child(2){background:var(--yellow)}
+  .strip div:nth-child(3){background:var(--purple)}
+  .strip div:nth-child(4){background:var(--green)}
 
-  a{color:inherit;text-decoration:none}
+  /* Focus / accessibility */
+  :focus{outline:none}
   :focus-visible{outline:3px solid var(--edge);outline-offset:3px}
+  a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
-  <div class="page">
-    <div class="wrap" role="main">
+  <div class="page" role="document">
+    <div class="container" role="main" aria-labelledby="hero-title">
 
-      <!-- Logo column (exact filename below) -->
-      <aside class="brand" aria-label="FACT brand">
-        <img src="FACT Logo 2025 w line.png" alt="FACT logo" />
-        <div class="brand-palette" aria-hidden="true">
-          <div class="sw sw--edge"></div>
-          <div class="sw sw--yellow"></div>
-          <div class="sw sw--purple"></div>
-          <div class="sw sw--green"></div>
+      <!-- LEFT: logo anchor -->
+      <aside class="brand" aria-label="FACT brand mark">
+        <!-- spaces in filename are URL-encoded; if you rename asset, update the src -->
+        <img src="FACT%20Logo%202025%20w%20line.png" alt="FACT logo" decoding="async" class="logo" />
+        <div class="palette" aria-hidden="true">
+          <div class="sw sw--edge" aria-hidden="true"></div>
+          <div class="sw sw--yellow" aria-hidden="true"></div>
+          <div class="sw sw--purple" aria-hidden="true"></div>
+          <div class="sw sw--green" aria-hidden="true"></div>
         </div>
-        <div class="brand-note">story driven strategy solutions</div>
+        <div class="strap">story driven strategy solutions</div>
       </aside>
 
-      <!-- Content -->
+      <!-- RIGHT: content -->
       <main class="content" aria-labelledby="hero-title">
         <div>
           <div class="kicker"><div class="line"></div><div>FACT</div></div>
+
           <h1 id="hero-title">Applied creative systems<br>for a world in motion.</h1>
+
           <div class="sub">Every system is a story.</div>
-          <div class="blurb">We build frames for ideas that must survive reality — narrative, systems, and AI combined into practical work.</div>
-          <div class="thesis">Working thesis<span>A useful idea must hold. Everything else is decoration.</span></div>
+
+          <p class="lead">We build frames for ideas that must survive reality — narrative, systems and AI combined into practical work.</p>
+
+          <div class="thesis" aria-hidden="false">
+            WORKING THESIS
+            <span class="main">A useful idea must hold. Everything else is decoration.</span>
+          </div>
         </div>
 
-        <section class="panel" aria-label="What we do and how">
-          <nav class="tabs" role="tablist" aria-label="Sections">
-            <button class="tab" data-target="s-what" data-active="true" type="button">What we are</button>
-            <button class="tab" data-target="s-do" type="button">What we do</button>
-            <button class="tab" data-target="s-think" type="button">How we think</button>
-          </nav>
+        <section class="panel" aria-labelledby="panel-title" aria-describedby="panel-desc">
+          <div class="panel-accent" aria-hidden="true"></div>
 
-          <div class="panel-body" id="panel-body">
-            <article id="s-what" data-active="true">
-              <p><strong>FACT</strong> is an independent practice for applied creative thinking — narrative, structure and AI as a practical frame.</p>
-            </article>
+          <!-- Accessible tablist -->
+          <div class="tabs" role="tablist" aria-label="Sections">
+            <button role="tab" aria-selected="true" aria-controls="panel-what" id="tab-what">What we are</button>
+            <button role="tab" aria-selected="false" aria-controls="panel-do" id="tab-do">What we do</button>
+            <button role="tab" aria-selected="false" aria-controls="panel-think" id="tab-think">How we think</button>
+          </div>
 
-            <article id="s-do" hidden>
-              <p><strong>We work in four practical ways:</strong></p>
-              <ul class="list">
-                <li><strong>Narrative intelligence</strong> — surface the story that moves the system.</li>
-                <li><strong>Systems &amp; structures</strong> — give complexity a clear shape.</li>
-                <li><strong>Applied AI</strong> — extend human judgement, not replace it.</li>
-                <li><strong>Creative research</strong> — find precise leverage points.</li>
-              </ul>
-            </article>
+          <!-- Tab panels -->
+          <div class="tabpanel" id="panel-what" role="tabpanel" tabindex="0" aria-labelledby="tab-what">
+            <p><strong>FACT</strong> is an independent practice for applied creative thinking — narrative, structure and AI as a practical frame.</p>
+          </div>
 
-            <article id="s-think" hidden>
-              <p><strong>Principles</strong></p>
-              <ul class="list">
-                <li><strong>Clarity over noise.</strong></li>
-                <li><strong>Structure as narrative.</strong></li>
-                <li><strong>Imagination as discipline.</strong></li>
-              </ul>
-            </article>
+          <div class="tabpanel" id="panel-do" role="tabpanel" tabindex="0" aria-labelledby="tab-do" hidden>
+            <p><strong>We work in four practical ways:</strong></p>
+            <ul class="list">
+              <li><strong>Narrative intelligence</strong> — surface the story that moves the system.</li>
+              <li><strong>Systems &amp; structures</strong> — give complexity a clear shape.</li>
+              <li><strong>Applied AI</strong> — extend human judgement, not replace it.</li>
+              <li><strong>Creative research</strong> — find precise leverage points.</li>
+            </ul>
+          </div>
 
-            <div aria-hidden="true" style="height:6px"></div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;font-size:.82rem;color:var(--ink-soft)">
-              <div><span style="font-family:Space Grotesk,system-ui;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase">Contact</span><br><a href="mailto:info@fact.qa">info@fact.qa</a></div>
-              <div>Independent practice · limited engagements</div>
-            </div>
+          <div class="tabpanel" id="panel-think" role="tabpanel" tabindex="0" aria-labelledby="tab-think" hidden>
+            <p><strong>Principles</strong></p>
+            <ul class="list">
+              <li><strong>Clarity over noise.</strong></li>
+              <li><strong>Structure as narrative.</strong></li>
+              <li><strong>Imagination as discipline.</strong></li>
+            </ul>
+          </div>
+
+          <!-- Contact / meta area -->
+          <div style="margin-top:.5rem;display:flex;justify-content:space-between;align-items:flex-end;font-size:.86rem;color:var(--ink-soft)">
+            <div><span style="font-family:Space Grotesk,system-ui;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase">Contact</span><br><a href="mailto:info@fact.qa">info@fact.qa</a></div>
+            <div>Independent practice · limited engagements</div>
           </div>
         </section>
 
@@ -171,21 +315,42 @@
   </div>
 
 <script>
-(function () {
-  const tabs = document.querySelectorAll('.tab');
-  const sections = {
-    's-what': document.getElementById('s-what'),
-    's-do': document.getElementById('s-do'),
-    's-think': document.getElementById('s-think')
-  };
-  function activate(id){
-    tabs.forEach(t=>t.dataset.active = (t.dataset.target===id).toString());
-    for(const k in sections){
-      if(k===id){ sections[k].hidden=false; sections[k].dataset.active='true' }
-      else { sections[k].hidden=true; sections[k].dataset.active='false' }
-    }
+/* Accessible tabs: click + keyboard (Left/Right/Home/End)
+   - tabs must have role="tab" and panels role="tabpanel" with aria-controls / aria-labelledby
+*/
+(function() {
+  const tablist = document.querySelector('[role="tablist"]');
+  const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute('aria-controls')));
+
+  function activateTab(index, setFocus=true){
+    tabs.forEach((tab,i)=> {
+      const selected = i === index;
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      tab.tabIndex = selected ? 0 : -1;
+      panels[i].hidden = !selected;
+    });
+    if(setFocus) tabs[index].focus();
   }
-  tabs.forEach(t=> t.addEventListener('click',()=>activate(t.dataset.target)));
+
+  // click handling
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener('click', () => activateTab(idx, false));
+    tab.addEventListener('keydown', (e) => {
+      let newIndex = null;
+      if (e.key === 'ArrowRight') newIndex = (idx + 1) % tabs.length;
+      if (e.key === 'ArrowLeft') newIndex = (idx - 1 + tabs.length) % tabs.length;
+      if (e.key === 'Home') newIndex = 0;
+      if (e.key === 'End') newIndex = tabs.length - 1;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateTab(idx, false); return; }
+      if (newIndex !== null) { e.preventDefault(); activateTab(newIndex, true); }
+    });
+  });
+
+  // ensure first tab initially focusable
+  tabs.forEach((t,i) => t.tabIndex = (i === 0 ? 0 : -1));
+  // initial state
+  activateTab(0, false);
 })();
 </script>
 </body>
