@@ -29,6 +29,13 @@
             overflow: hidden; /* App-like feel */
             height: 100vh;
             display: flex;
+            flex-direction: column;
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+            }
         }
 
         /* Sidebar Transition Line */
@@ -36,17 +43,21 @@
             transition: background-color 0.5s ease;
         }
 
-        /* Tab Transitions */
+        /* Tab Content & Animation */
         .tab-content {
             display: none;
-            animation: fadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1); /* Smooth ease-out */
+            opacity: 0;
             height: 100%;
             overflow-y: auto;
-            padding-right: 2rem;
+            padding-bottom: 6rem; /* Ensure bottom content is visible */
+            /* Hide scrollbar for cleaner look but allow scroll */
+            scrollbar-width: thin; 
+            scrollbar-color: #e5e5e5 transparent;
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         @keyframes fadeSlide {
@@ -58,6 +69,9 @@
         .nav-link {
             position: relative;
             transition: color 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
         }
         
         /* The "Fringe" Indicator on Hover */
@@ -69,7 +83,7 @@
             transform: translateY(-50%);
             width: 4px;
             height: 0;
-            background-color: var(--brand-mustard); /* Default hover color */
+            background-color: var(--brand-mustard); /* Default hover color fallback */
             transition: height 0.3s ease;
         }
 
@@ -78,9 +92,15 @@
             height: 100%;
         }
 
-        /* Custom Scrollbar */
+        /* Active State Text styling */
+        .nav-link.active {
+            color: black;
+            font-weight: 600;
+        }
+
+        /* Custom Scrollbar for Webkit */
         .tab-content::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
         .tab-content::-webkit-scrollbar-track {
             background: transparent;
@@ -89,11 +109,8 @@
             background-color: #e5e5e5;
             border-radius: 4px;
         }
-        .tab-content::-webkit-scrollbar-thumb:hover {
-            background-color: #d4d4d4;
-        }
 
-        /* Specific Color Assignments for Nav Hover */
+        /* Specific Color Assignments for Nav Hover Fringes */
         #nav-expertise::before { background-color: var(--brand-mustard); }
         #nav-index::before { background-color: var(--brand-sage); }
         #nav-principals::before { background-color: var(--brand-lavender); }
@@ -101,23 +118,23 @@
 
     </style>
 </head>
-<body class="flex flex-col md:flex-row">
+<body>
 
     <!-- LEFT SIDEBAR (Brand & Nav) -->
-    <aside class="w-full md:w-80 lg:w-96 flex-none bg-white h-auto md:h-screen flex flex-col justify-between p-8 md:p-12 z-20 relative">
+    <aside class="w-full md:w-80 lg:w-96 flex-none bg-white z-20 relative flex flex-col justify-between p-8 md:p-12 h-auto md:h-full shadow-sm md:shadow-none border-b md:border-b-0 border-gray-100">
         
         <!-- Top: Logo Area -->
         <div>
-            <div class="w-40 md:w-48 mb-12 md:mb-20 cursor-pointer" onclick="switchTab('home')">
+            <div class="w-32 md:w-48 mb-8 md:mb-20 cursor-pointer" onclick="switchTab('home')">
                 <img src="FACTLogo2025wline.png" alt="FACT Special Projects" class="h-auto w-full object-contain">
             </div>
 
             <!-- Nav -->
             <nav class="flex flex-col space-y-6 md:space-y-8 text-lg md:text-xl font-medium text-gray-400">
-                <button onclick="switchTab('expertise')" class="nav-link text-left hover:text-black" id="nav-expertise">Expertise</button>
-                <button onclick="switchTab('index')" class="nav-link text-left hover:text-black" id="nav-index">Index</button>
-                <button onclick="switchTab('principals')" class="nav-link text-left hover:text-black" id="nav-principals">Principals</button>
-                <button onclick="switchTab('contact')" class="nav-link text-left hover:text-black" id="nav-contact">Contact</button>
+                <button onclick="switchTab('expertise')" class="nav-link hover:text-black" id="nav-expertise">Expertise</button>
+                <button onclick="switchTab('index')" class="nav-link hover:text-black" id="nav-index">Index</button>
+                <button onclick="switchTab('principals')" class="nav-link hover:text-black" id="nav-principals">Principals</button>
+                <button onclick="switchTab('contact')" class="nav-link hover:text-black" id="nav-contact">Contact</button>
             </nav>
         </div>
 
@@ -130,22 +147,23 @@
 
     <!-- THE "FRINGE" BORDER -->
     <!-- This line separates sidebar from content and changes color -->
-    <div id="sidebar-border" class="hidden md:block w-[1px] h-screen bg-gray-100 flex-none"></div>
+    <div id="sidebar-border" class="hidden md:block w-[1px] h-full bg-gray-100 flex-none"></div>
 
     <!-- RIGHT CONTENT AREA -->
-    <main class="flex-grow bg-white h-screen relative overflow-hidden p-8 md:p-20 md:pl-24">
+    <!-- Changed to flex-1 and h-full to handle layout properly without clipping -->
+    <main class="flex-1 bg-white h-full relative overflow-hidden px-8 py-8 md:px-24 md:py-20">
         
         <!-- TAB 1: HOME (The Landing) -->
-        <div id="home" class="tab-content active flex flex-col justify-center h-full">
-            <div class="max-w-3xl">
-                <h1 class="text-6xl md:text-8xl font-medium tracking-tighter leading-[1] mb-12">
+        <div id="home" class="tab-content active">
+            <div class="flex flex-col justify-center h-full max-w-3xl">
+                <h1 class="text-5xl md:text-8xl font-medium tracking-tighter leading-[1] mb-12">
                     <span class="text-black">Strategy.</span><br>
                     <span class="text-black">Structure.</span><br>
                     <span class="text-[var(--brand-lavender)]">Story.</span>
                 </h1>
                 
                 <div class="flex items-start space-x-6">
-                    <div class="w-1 h-24 bg-[var(--brand-mustard)] mt-2"></div>
+                    <div class="w-1 h-24 bg-[var(--brand-mustard)] mt-2 flex-none"></div>
                     <div class="max-w-lg">
                         <p class="text-lg md:text-xl leading-relaxed text-gray-800 mb-6">
                             FACT is a multidisciplinary bureau in Doha. A collective of independent specialists operating at the intersection of capital, compliance, and narrative.
@@ -160,9 +178,9 @@
 
         <!-- TAB 2: EXPERTISE -->
         <div id="expertise" class="tab-content">
-            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16">Practice Areas</h2>
+            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16 sticky top-0 bg-white py-4 z-10">Practice Areas</h2>
             
-            <div class="grid grid-cols-1 gap-20 max-w-4xl">
+            <div class="grid grid-cols-1 gap-20 max-w-4xl pb-20">
                 
                 <!-- Strategy -->
                 <div class="group grid grid-cols-1 md:grid-cols-12 gap-8 items-start border-t border-gray-100 pt-8 hover:border-[var(--brand-mustard)] transition-colors duration-500">
@@ -217,12 +235,12 @@
 
         <!-- TAB 3: INDEX -->
         <div id="index" class="tab-content">
-            <div class="flex items-center justify-between mb-16 max-w-5xl border-b border-gray-100 pb-4">
+            <div class="flex items-center justify-between mb-16 max-w-5xl border-b border-gray-100 pb-4 sticky top-0 bg-white pt-4 z-10">
                 <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400">Selected Index</h2>
                 <span class="text-xs font-mono text-gray-300">2023 — 2025</span>
             </div>
             
-            <div class="max-w-5xl">
+            <div class="max-w-5xl pb-20">
                 <!-- Grid of Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
@@ -272,9 +290,9 @@
 
         <!-- TAB 4: PRINCIPALS -->
         <div id="principals" class="tab-content">
-            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16">Bureau Principals</h2>
+            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16 sticky top-0 bg-white py-4 z-10">Bureau Principals</h2>
             
-            <div class="max-w-4xl space-y-16">
+            <div class="max-w-4xl space-y-16 pb-20">
                 
                 <!-- Profile 1 -->
                 <div class="flex flex-col md:flex-row gap-8 md:gap-16 group">
@@ -362,32 +380,40 @@
             'index': '#75B876',     // Sage
             'principals': '#D3C0D9', // Lavender
             'contact': '#A8D5BA',   // Mint
-            'home': '#F5F5F5'       // Default grey
+            'home': '#F5F5F5'       // Default grey (matched to background if needed)
         };
 
         function switchTab(tabId) {
-            // Hide all tabs
+            // 1. Hide all tabs
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.remove('active');
             });
             
-            // Deactivate all nav links
+            // 2. Deactivate all nav links
             document.querySelectorAll('.nav-link').forEach(el => {
                 el.classList.remove('active');
             });
 
-            // Show selected tab
-            document.getElementById(tabId).classList.add('active');
+            // 3. Show selected tab content
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+                // Reset scroll position for better UX
+                selectedTab.scrollTop = 0;
+            }
 
-            // Activate Nav Link (unless it's home)
+            // 4. Activate Nav Link (unless it's home/logo click which has no nav link)
             const navLink = document.getElementById('nav-' + tabId);
             if (navLink) {
                 navLink.classList.add('active');
             }
 
-            // Change Sidebar Border Color based on selection
-            const borderColor = colors[tabId] || '#f3f4f6'; // Default to light grey
-            document.getElementById('sidebar-border').style.backgroundColor = borderColor;
+            // 5. Change Sidebar Border Color based on selection
+            const borderColor = colors[tabId] || '#f3f4f6'; 
+            const borderEl = document.getElementById('sidebar-border');
+            if (borderEl) {
+                borderEl.style.backgroundColor = borderColor;
+            }
         }
     </script>
 </body>
