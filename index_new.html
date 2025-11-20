@@ -7,14 +7,14 @@
     <meta name="description" content="FACT Special Projects: Strategy, Structure, Story. A multidisciplinary bureau in Qatar.">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* FONTS: Space Grotesk (Character Display) + Inter (Swiss Body) */
+        /* FONTS: Space Grotesk (Display/Tech) + Inter (Body/Swiss) */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --bg-body: #EFEFEF; 
+            --bg-body: #F3F3F3; 
             --bg-card: #FFFFFF;
-            --text-primary: #111111;
-            --text-secondary: #555555;
+            --text-primary: #0F0F0F;
+            --text-secondary: #666666;
             
             /* FACT Palette */
             --brand-yellow: #F4C44E; /* Strategy */
@@ -27,14 +27,9 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
-            /* Subtle technical grid background */
-            background-image: 
-                linear-gradient(var(--bg-card) 2px, transparent 2px),
-                linear-gradient(90deg, var(--bg-card) 2px, transparent 2px),
-                linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
-            background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+            /* Technical dot grid background */
+            background-image: radial-gradient(#D1D1D1 1px, transparent 1px);
+            background-size: 24px 24px;
             color: var(--text-primary);
             height: 100vh;
             width: 100vw;
@@ -50,38 +45,40 @@
 
         /* The Interface Frame */
         #app-frame {
-            width: 92vw;
-            height: 88vh;
+            width: 94vw;
+            height: 90vh;
             max-width: 1400px;
             max-height: 850px;
             background-color: var(--bg-card);
             display: flex;
             flex-direction: column;
             position: relative;
+            /* Slight elevation */
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
         }
 
         @media (min-width: 768px) {
             #app-frame {
                 flex-direction: row;
-                width: 85vw; 
-                height: 82vh;
+                width: 88vw; 
+                height: 84vh;
             }
         }
 
-        /* BROKEN BORDER SYSTEM */
+        /* BROKEN BORDER SYSTEM (Thinner, cleaner) */
         .border-line { position: absolute; background-color: #E5E5E5; z-index: 40; }
-        /* Inset lines slightly to create the "lens" look */
-        .bl-top { top: 20px; left: 60px; right: 60px; height: 1px; }
-        .bl-bottom { bottom: 20px; left: 60px; right: 60px; height: 1px; }
-        .bl-left { left: 20px; top: 60px; bottom: 60px; width: 1px; }
-        .bl-right { right: 20px; top: 60px; bottom: 60px; width: 1px; }
+        .bl-top { top: 24px; left: 40px; right: 40px; height: 1px; }
+        .bl-bottom { bottom: 24px; left: 40px; right: 40px; height: 1px; }
+        .bl-left { left: 24px; top: 40px; bottom: 40px; width: 1px; }
+        .bl-right { right: 24px; top: 40px; bottom: 40px; width: 1px; }
         
-        /* Technical Corners */
-        .corner { position: absolute; width: 20px; height: 20px; border: 2px solid var(--brand-black); z-index: 50; }
-        .c-tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
-        .c-tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
-        .c-bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
-        .c-br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        /* Corners */
+        .corner { position: absolute; width: 16px; height: 16px; border: 1.5px solid var(--brand-black); z-index: 50; }
+        .c-tl { top: 24px; left: 24px; border-right: none; border-bottom: none; }
+        .c-tr { top: 24px; right: 24px; border-left: none; border-bottom: none; }
+        .c-bl { bottom: 24px; left: 24px; border-right: none; border-top: none; }
+        .c-br { bottom: 24px; right: 24px; border-left: none; border-top: none; }
+
 
         /* TAB SYSTEM */
         .tab-content {
@@ -93,6 +90,7 @@
             overflow-x: hidden;
             position: relative;
             scrollbar-width: none; 
+            padding-right: 4px; /* Breathing room for scrolling */
         }
         .tab-content::-webkit-scrollbar { display: none; }
 
@@ -126,41 +124,40 @@
             transition: all 0.3s ease;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             letter-spacing: 0.02em;
             text-transform: uppercase;
         }
         
         .nav-item:hover, .nav-item.active { color: var(--brand-black); }
         
-        /* Geometric Indicator */
+        /* Indicator */
         .nav-mark { 
             width: 6px; height: 6px; 
             background-color: #DDD; 
             transition: all 0.3s ease; 
-            /* Slanted shape for speed/tech feel */
-            clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
+            border-radius: 1px;
         }
         
         .nav-item:hover .nav-mark { background-color: var(--brand-black); transform: scale(1.2); }
-        #nav-capabilities.active .nav-mark { background-color: var(--brand-yellow); transform: scale(1.5); }
-        #nav-deployments.active .nav-mark { background-color: var(--brand-green); transform: scale(1.5); }
-        #nav-specialists.active .nav-mark { background-color: var(--brand-purple); transform: scale(1.5); }
-        #nav-contact.active .nav-mark { background-color: var(--brand-black); transform: scale(1.5); }
+        #nav-capabilities.active .nav-mark { background-color: var(--brand-yellow); }
+        #nav-deployments.active .nav-mark { background-color: var(--brand-green); }
+        #nav-specialists.active .nav-mark { background-color: var(--brand-purple); }
+        #nav-contact.active .nav-mark { background-color: var(--brand-black); }
 
     </style>
 </head>
 <body>
 
     <div id="app-frame">
-        <!-- Technical Frame Elements -->
+        <!-- Frame Elements -->
         <div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>
         <div class="border-line bl-top"></div><div class="border-line bl-bottom"></div><div class="border-line bl-left hidden md:block"></div><div class="border-line bl-right hidden md:block"></div>
 
         <!-- SIDEBAR -->
-        <aside class="w-full md:w-72 flex-none bg-white p-12 flex flex-col justify-between z-20 relative border-b md:border-b-0 md:border-r border-gray-100">
+        <aside class="w-full md:w-72 flex-none bg-white p-10 md:p-12 flex flex-col justify-between z-20 relative border-b md:border-b-0 md:border-r border-gray-100">
             <div>
-                <!-- Original Logo Image -->
+                <!-- LOGO IMAGE -->
                 <div class="w-32 mb-16 cursor-pointer hover:opacity-80 transition-opacity" onclick="switchTab('home')">
                     <img src="FACTLogo2025wline.png" alt="FACT Special Projects" class="w-full h-auto">
                 </div>
@@ -182,7 +179,7 @@
                 </nav>
             </div>
             <div class="hidden md:block">
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-mono">Doha &mdash; Qatar</p>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-mono">Doha &mdash; QA</p>
             </div>
         </aside>
 
@@ -193,7 +190,7 @@
             <div id="home" class="tab-content active">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center h-full w-full">
                     <div class="order-2 lg:order-1">
-                        <h1 class="text-5xl lg:text-7xl font-medium leading-[0.95] mb-8 tracking-tight text-primary">
+                        <h1 class="text-5xl lg:text-7xl font-medium leading-[0.95] mb-8 tracking-tight text-primary font-display">
                             <span class="text-[var(--brand-yellow)]">Strategy.</span><br>
                             <span class="text-[var(--brand-green)]">Structure.</span><br>
                             <span class="text-[var(--brand-purple)]">Story.</span>
@@ -201,7 +198,7 @@
                         
                         <div class="w-16 h-1 bg-black mb-8"></div>
                         
-                        <p class="text-lg text-gray-700 max-w-md leading-relaxed font-display font-medium">
+                        <p class="text-lg text-gray-700 max-w-md leading-relaxed font-medium">
                             Applied intelligence for complex systems.
                         </p>
                         <p class="text-sm text-gray-500 max-w-md leading-relaxed mt-3">
@@ -209,18 +206,15 @@
                         </p>
                     </div>
                     
-                    <!-- Visual: The Flow Dial (Yellow -> Green -> Purple) -->
+                    <!-- Visual: The Flow Dial -->
                     <div class="order-1 lg:order-2 flex justify-center lg:justify-end py-8 lg:py-0">
                         <div class="relative w-64 h-64 opacity-90">
-                            <!-- Conic Gradient reflecting the flow -->
                             <div class="absolute inset-0 rounded-full" style="background: conic-gradient(
                                 from 0deg,
-                                var(--brand-yellow) 0deg 120deg,   /* Strategy */
-                                var(--brand-green) 120deg 240deg,  /* Structure */
-                                var(--brand-purple) 240deg 360deg  /* Story */
+                                var(--brand-yellow) 0deg 120deg, 
+                                var(--brand-green) 120deg 240deg, 
+                                var(--brand-purple) 240deg 360deg
                             ); mask: radial-gradient(transparent 55%, black 55%); -webkit-mask: radial-gradient(transparent 55%, black 55%);"></div>
-                            
-                            <!-- Floating Indicator -->
                             <div class="absolute top-0 right-0 w-full h-full animate-[spin_25s_linear_infinite]">
                                 <div class="absolute top-2 left-1/2 w-3 h-3 bg-black rounded-full -translate-x-1/2"></div>
                             </div>
@@ -235,7 +229,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                         <!-- Yellow -->
                         <div class="group py-6 border-t border-gray-100 md:border-t-0 md:pt-0">
-                            <div class="text-[var(--brand-yellow)] font-mono text-xs mb-2">01</div>
+                            <div class="text-[var(--brand-yellow)] font-display text-xs mb-2 font-bold">01</div>
                             <h3 class="text-2xl font-display font-medium mb-4">Commercial<br>Strategy</h3>
                             <p class="text-sm text-gray-500 mb-6 leading-relaxed min-h-[3rem]">
                                 The business logic. Maximizing value through capital efficiency and operational rigor.
@@ -248,7 +242,7 @@
                         </div>
                         <!-- Green -->
                         <div class="group py-6 border-t border-gray-100 md:border-t-0 md:pt-0">
-                            <div class="text-[var(--brand-green)] font-mono text-xs mb-2">02</div>
+                            <div class="text-[var(--brand-green)] font-display text-xs mb-2 font-bold">02</div>
                             <h3 class="text-2xl font-display font-medium mb-4">Legal<br>Architecture</h3>
                             <p class="text-sm text-gray-500 mb-6 leading-relaxed min-h-[3rem]">
                                 The framework. Protecting assets and ensuring compliance across complex jurisdictions.
@@ -261,7 +255,7 @@
                         </div>
                         <!-- Purple -->
                         <div class="group py-6 border-t border-gray-100 md:border-t-0 md:pt-0">
-                            <div class="text-[var(--brand-purple)] font-mono text-xs mb-2">03</div>
+                            <div class="text-[var(--brand-purple)] font-display text-xs mb-2 font-bold">03</div>
                             <h3 class="text-2xl font-display font-medium mb-4">Narrative<br>Intelligence</h3>
                             <p class="text-sm text-gray-500 mb-6 leading-relaxed min-h-[3rem]">
                                 The interface. Leveraging AI and narrative design to position complex ideas.
@@ -276,116 +270,111 @@
                 </div>
             </div>
 
-            <!-- DEPLOYMENTS (Anonymized) -->
+            <!-- DEPLOYMENTS (Compact & Anonymized) -->
             <div id="deployments" class="tab-content">
                 <div class="w-full h-full flex flex-col justify-center">
-                    <div class="flex justify-between items-baseline mb-10 border-b border-gray-100 pb-4 flex-none">
+                    <div class="flex justify-between items-baseline mb-8 border-b border-gray-100 pb-4 flex-none">
                         <h2 class="text-xl font-display font-medium">Deployments</h2>
                         <span class="text-xs font-medium text-gray-400 font-mono">2023 — 2025</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 pb-8">
+                    <!-- Tightened Grid: Reduced gap-y to 6 and gap-x to 10 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 pb-8">
                         
                         <!-- Brew Lab -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-purple)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Story / Tech</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-purple)] transition-colors">Proprietary Gen-AI Machine</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">Generative AI framework designed to accelerate creative brainstorming from weeks to hours (Stealth).</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">Proprietary Gen-AI Machine</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">Generative AI framework accelerating creative brainstorming (Stealth).</p>
                         </div>
 
                         <!-- MCIT -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-purple)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Story / Gov</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-purple)] transition-colors">National Ministry Comms</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">English narrative lead for a Digital Industry department, overseeing PR and strategic communications.</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">National Ministry Comms</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">English narrative lead for Digital Industry Affairs, overseeing PR strategy.</p>
                         </div>
 
                         <!-- Samer / Telecom -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-yellow)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Strategy</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-yellow)] transition-colors">Regional Telco Restructuring</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">Carve-out and pro forma financials for a major GCC telecom operator supporting group-level restructuring.</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">Regional Telco Restructuring</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">Carve-out/Pro forma financials for a major GCC telecom group.</p>
                         </div>
 
                         <!-- Nicole / JV -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-green)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Structure</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-green)] transition-colors">Energy Sector PPP</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">Compliance mapping and contract architecture for a multi-stakeholder joint venture.</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">Energy Sector PPP</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">Compliance mapping and contract architecture for a multi-stakeholder JV.</p>
                         </div>
                         
                         <!-- Crossover -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-purple)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Tech / EdTech</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-purple)] transition-colors">US EdTech Scaling</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">AI-driven content workflow optimization for educational platforms, increasing output velocity by 3x.</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">US EdTech Scaling</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">AI-driven content workflow optimization for educational platforms.</p>
                         </div>
                         
                         <!-- DCT -->
-                        <div class="group">
-                            <div class="flex items-center gap-2 mb-2">
+                        <div class="group p-3 -ml-3 hover:bg-gray-50 rounded transition-colors">
+                            <div class="flex items-center gap-2 mb-1.5">
                                 <span class="w-1.5 h-1.5 bg-[var(--brand-purple)] rounded-full"></span>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-display">Story / Culture</span>
                             </div>
-                            <h4 class="text-lg font-display font-medium mb-1 group-hover:text-[var(--brand-purple)] transition-colors">National Cultural Narrative</h4>
-                            <p class="text-sm text-gray-500 line-clamp-2">Strategic copywriting and positioning for key tourism and heritage initiatives.</p>
+                            <h4 class="text-base font-display font-medium mb-1 text-gray-900">National Cultural Narrative</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">Strategic copywriting and positioning for key tourism/heritage initiatives.</p>
                         </div>
 
                     </div>
                 </div>
             </div>
 
-            <!-- SPECIALISTS -->
+            <!-- SPECIALISTS (No Titles) -->
             <div id="specialists" class="tab-content">
                 <div class="w-full h-full flex flex-col justify-center">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
                         
                         <!-- Samer -->
                         <div class="group">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-8 h-8 bg-[var(--brand-yellow)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display">01</div>
-                                <span class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display">Commercial Strategy</span>
-                            </div>
-                            <h3 class="text-xl font-display font-medium mb-4">Lead Specialist,<br>Capital & Systems</h3>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            <div class="w-8 h-8 bg-[var(--brand-yellow)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display mb-4">01</div>
+                            <h3 class="text-xl font-display font-medium mb-1">Commercial<br>Strategy</h3>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display mb-4">Capital & Systems</p>
+                            <p class="text-sm text-gray-600 leading-relaxed">
                                 Ex-Big 4 Manager. Specializes in M&A carve-outs, financial modeling, and target operating model design. Expertise in driving finance transformation and ESG assurance.
                             </p>
                         </div>
 
                         <!-- Nicole -->
                         <div class="group">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-8 h-8 bg-[var(--brand-green)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display">02</div>
-                                <span class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display">Legal Operations</span>
-                            </div>
-                            <h3 class="text-xl font-display font-medium mb-4">Lead Specialist,<br>Corporate Architecture</h3>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            <div class="w-8 h-8 bg-[var(--brand-green)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display mb-4">02</div>
+                            <h3 class="text-xl font-display font-medium mb-1">Legal<br>Architecture</h3>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display mb-4">Operations & Compliance</p>
+                            <p class="text-sm text-gray-600 leading-relaxed">
                                 Ex-Telecom Senior Paralegal (20+ years). Specializes in complex contract architecture, corporate formation, and operational compliance in the GCC.
                             </p>
                         </div>
 
                         <!-- Fares -->
                         <div class="group">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-8 h-8 bg-[var(--brand-purple)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display">03</div>
-                                <span class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display">Creative Tech</span>
-                            </div>
-                            <h3 class="text-xl font-display font-medium mb-4">Lead Specialist,<br>Narrative Design</h3>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            <div class="w-8 h-8 bg-[var(--brand-purple)] rounded-full flex items-center justify-center text-white font-bold text-xs font-display mb-4">03</div>
+                            <h3 class="text-xl font-display font-medium mb-1">Narrative<br>Design</h3>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 font-display mb-4">Creative Tech</p>
+                            <p class="text-sm text-gray-600 leading-relaxed">
                                 Former Gov Comms Lead. Specializes in AI-first ideation and strategic storytelling. Developer of proprietary AI frameworks that accelerate creative workflows.
                             </p>
                         </div>
