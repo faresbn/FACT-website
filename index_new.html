@@ -7,11 +7,14 @@
     <meta name="description" content="FACT Special Projects: Strategy, Structure, Story. A multidisciplinary bureau in Qatar.">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        /* Google Fonts: Space Grotesk (Tech/Creative) & DM Sans (Clean Body) */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap');
 
         :root {
-            --bg-color: #FFFFFF;
-            --text-color: #111111;
+            --bg-body: #F2F2F2; /* Light grey background for the 'frame' effect */
+            --bg-card: #FFFFFF;
+            --text-primary: #111111;
+            --text-secondary: #666666;
             
             /* FACT Palette */
             --brand-cream: #FCEFC7;
@@ -22,397 +25,371 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
-            overflow: hidden; /* App-like feel */
             height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Strict no-scroll on body */
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* The "Frame" Container */
+        #app-frame {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--bg-card);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            position: relative;
         }
-        
+
         @media (min-width: 768px) {
-            body {
+            #app-frame {
                 flex-direction: row;
             }
         }
 
-        /* Sidebar Transition Line */
-        #sidebar-border {
-            transition: background-color 0.5s ease;
-        }
-
-        /* Tab Content & Animation */
+        /* Animations */
         .tab-content {
             display: none;
             opacity: 0;
             height: 100%;
-            overflow-y: auto;
-            padding-bottom: 6rem; /* Ensure bottom content is visible */
-            /* Hide scrollbar for cleaner look but allow scroll */
-            scrollbar-width: thin; 
-            scrollbar-color: #e5e5e5 transparent;
+            width: 100%;
+            /* No scrolling allowed inside tabs on desktop */
+            overflow: hidden; 
+            position: relative;
         }
 
         .tab-content.active {
-            display: block;
-            animation: fadeSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex; /* Flex to center content */
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        @keyframes fadeSlide {
+        @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Nav Link Styling */
-        .nav-link {
+        /* Nav Links */
+        .nav-item {
             position: relative;
-            transition: color 0.3s ease;
             cursor: pointer;
-            width: 100%;
-            text-align: left;
+            transition: all 0.3s ease;
         }
         
-        /* The "Fringe" Indicator on Hover */
-        .nav-link::before {
+        .nav-item::after {
             content: '';
             position: absolute;
-            left: -1.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 0;
-            background-color: var(--brand-mustard); /* Default hover color fallback */
-            transition: height 0.3s ease;
+            left: 0;
+            bottom: -2px;
+            width: 0;
+            height: 1px;
+            background-color: currentColor;
+            transition: width 0.3s ease;
         }
 
-        .nav-link:hover::before,
-        .nav-link.active::before {
-            height: 100%;
+        .nav-item:hover::after,
+        .nav-item.active::after {
+            width: 100%;
         }
 
-        /* Active State Text styling */
-        .nav-link.active {
-            color: black;
-            font-weight: 600;
+        /* Card Hover Effects */
+        .hover-card {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
         }
-
-        /* Custom Scrollbar for Webkit */
-        .tab-content::-webkit-scrollbar {
-            width: 6px;
+        .hover-card:hover {
+            background-color: #FAFAFA;
+            transform: translateY(-2px);
         }
-        .tab-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .tab-content::-webkit-scrollbar-thumb {
-            background-color: #e5e5e5;
-            border-radius: 4px;
-        }
-
-        /* Specific Color Assignments for Nav Hover Fringes */
-        #nav-expertise::before { background-color: var(--brand-mustard); }
-        #nav-index::before { background-color: var(--brand-sage); }
-        #nav-principals::before { background-color: var(--brand-lavender); }
-        #nav-contact::before { background-color: #111; }
 
     </style>
 </head>
 <body>
 
-    <!-- LEFT SIDEBAR (Brand & Nav) -->
-    <aside class="w-full md:w-80 lg:w-96 flex-none bg-white z-20 relative flex flex-col justify-between p-8 md:p-12 h-auto md:h-full shadow-sm md:shadow-none border-b md:border-b-0 border-gray-100">
-        
-        <!-- Top: Logo Area -->
-        <div>
-            <div class="w-32 md:w-48 mb-8 md:mb-20 cursor-pointer" onclick="switchTab('home')">
-                <img src="FACTLogo2025wline.png" alt="FACT Special Projects" class="h-auto w-full object-contain">
+    <!-- MAIN APP FRAME -->
+    <div id="app-frame">
+
+        <!-- SIDEBAR (Left Panel) -->
+        <aside class="w-full md:w-72 lg:w-80 flex-none bg-white p-8 md:p-10 flex flex-col justify-between border-r border-gray-100 z-20 relative">
+            <!-- Logo -->
+            <div class="w-32 md:w-40 cursor-pointer hover:opacity-80 transition-opacity" onclick="switchTab('home')">
+                <img src="FACTLogo2025wline.png" alt="FACT" class="h-auto w-full object-contain">
             </div>
 
-            <!-- Nav -->
-            <nav class="flex flex-col space-y-6 md:space-y-8 text-lg md:text-xl font-medium text-gray-400">
-                <button onclick="switchTab('expertise')" class="nav-link hover:text-black" id="nav-expertise">Expertise</button>
-                <button onclick="switchTab('index')" class="nav-link hover:text-black" id="nav-index">Index</button>
-                <button onclick="switchTab('principals')" class="nav-link hover:text-black" id="nav-principals">Principals</button>
-                <button onclick="switchTab('contact')" class="nav-link hover:text-black" id="nav-contact">Contact</button>
+            <!-- Navigation -->
+            <nav class="flex flex-col space-y-5 text-lg font-medium text-gray-400 mt-8 md:mt-0">
+                <div onclick="switchTab('expertise')" id="nav-expertise" class="nav-item hover:text-black">Expertise</div>
+                <div onclick="switchTab('index')" id="nav-index" class="nav-item hover:text-black">Index</div>
+                <div onclick="switchTab('specialists')" id="nav-specialists" class="nav-item hover:text-black">Specialists</div>
+                <div onclick="switchTab('contact')" id="nav-contact" class="nav-item hover:text-black">Contact</div>
             </nav>
-        </div>
 
-        <!-- Bottom: Footer Info -->
-        <div class="hidden md:block text-xs text-gray-400 font-mono tracking-wider">
-            <p>DOHA, QATAR</p>
-            <p class="mt-2">&copy; 2025 FACT BUREAU</p>
-        </div>
-    </aside>
-
-    <!-- THE "FRINGE" BORDER -->
-    <!-- This line separates sidebar from content and changes color -->
-    <div id="sidebar-border" class="hidden md:block w-[1px] h-full bg-gray-100 flex-none"></div>
-
-    <!-- RIGHT CONTENT AREA -->
-    <!-- Changed to flex-1 and h-full to handle layout properly without clipping -->
-    <main class="flex-1 bg-white h-full relative overflow-hidden px-8 py-8 md:px-24 md:py-20">
-        
-        <!-- TAB 1: HOME (The Landing) -->
-        <div id="home" class="tab-content active">
-            <div class="flex flex-col justify-center h-full max-w-3xl">
-                <h1 class="text-5xl md:text-8xl font-medium tracking-tighter leading-[1] mb-12">
-                    <span class="text-black">Strategy.</span><br>
-                    <span class="text-black">Structure.</span><br>
-                    <span class="text-[var(--brand-lavender)]">Story.</span>
-                </h1>
-                
-                <div class="flex items-start space-x-6">
-                    <div class="w-1 h-24 bg-[var(--brand-mustard)] mt-2 flex-none"></div>
-                    <div class="max-w-lg">
-                        <p class="text-lg md:text-xl leading-relaxed text-gray-800 mb-6">
-                            FACT is a multidisciplinary bureau in Doha. A collective of independent specialists operating at the intersection of capital, compliance, and narrative.
-                        </p>
-                        <p class="text-sm text-gray-500 leading-relaxed">
-                            We serve as a unified interface for complex mandates where standard agency models fail. No bloat. Just senior practitioners.
-                        </p>
-                    </div>
-                </div>
+            <!-- Footer -->
+            <div class="hidden md:block text-xs text-gray-300 font-mono uppercase tracking-widest">
+                Doha &mdash; QA <br>
+                Est. 2023
             </div>
-        </div>
+        </aside>
 
-        <!-- TAB 2: EXPERTISE -->
-        <div id="expertise" class="tab-content">
-            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16 sticky top-0 bg-white py-4 z-10">Practice Areas</h2>
-            
-            <div class="grid grid-cols-1 gap-20 max-w-4xl pb-20">
-                
-                <!-- Strategy -->
-                <div class="group grid grid-cols-1 md:grid-cols-12 gap-8 items-start border-t border-gray-100 pt-8 hover:border-[var(--brand-mustard)] transition-colors duration-500">
-                    <div class="md:col-span-4">
-                        <span class="text-[var(--brand-mustard)] text-4xl font-light block mb-2">01</span>
-                        <h3 class="text-2xl font-medium">Strategy</h3>
-                    </div>
-                    <div class="md:col-span-8">
-                        <p class="text-gray-600 mb-6 text-lg leading-relaxed">The overarching logic. We align intent with capability, ensuring projects are feasible, funded, and positioned.</p>
-                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium text-gray-900">
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-mustard)] rounded-full"></span>Advisory & Feasibility</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-mustard)] rounded-full"></span>Applied Intelligence</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-mustard)] rounded-full"></span>Special Projects Mgmt</li>
-                        </ul>
-                    </div>
-                </div>
+        <!-- CONTENT AREA (Right Panel) -->
+        <!-- Padding adjusted to ensure content fits without scroll -->
+        <main class="flex-grow bg-white relative p-8 md:p-12 lg:p-16 h-full flex items-center">
 
-                <!-- Structure -->
-                <div class="group grid grid-cols-1 md:grid-cols-12 gap-8 items-start border-t border-gray-100 pt-8 hover:border-[var(--brand-sage)] transition-colors duration-500">
-                    <div class="md:col-span-4">
-                        <span class="text-[var(--brand-sage)] text-4xl font-light block mb-2">02</span>
-                        <h3 class="text-2xl font-medium">Structure</h3>
-                    </div>
-                    <div class="md:col-span-8">
-                        <p class="text-gray-600 mb-6 text-lg leading-relaxed">The operational backbone. From capital planning to legal compliance. We build the systems that sustain the vision.</p>
-                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium text-gray-900">
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-sage)] rounded-full"></span>Financial Modeling</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-sage)] rounded-full"></span>Legal Operations</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-sage)] rounded-full"></span>Contract Architecture</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Story -->
-                <div class="group grid grid-cols-1 md:grid-cols-12 gap-8 items-start border-t border-gray-100 pt-8 hover:border-[var(--brand-lavender)] transition-colors duration-500">
-                    <div class="md:col-span-4">
-                        <span class="text-[var(--brand-lavender)] text-4xl font-light block mb-2">03</span>
-                        <h3 class="text-2xl font-medium">Story</h3>
-                    </div>
-                    <div class="md:col-span-8">
-                        <p class="text-gray-600 mb-6 text-lg leading-relaxed">The human layer. We engineer narrative frameworks and deploy AI workflows to translate complexity into influence.</p>
-                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium text-gray-900">
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-lavender)] rounded-full"></span>Narrative Design</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-lavender)] rounded-full"></span>Gov/Public Comms</li>
-                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-[var(--brand-lavender)] rounded-full"></span>Generative AI Tools</li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- TAB 3: INDEX -->
-        <div id="index" class="tab-content">
-            <div class="flex items-center justify-between mb-16 max-w-5xl border-b border-gray-100 pb-4 sticky top-0 bg-white pt-4 z-10">
-                <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400">Selected Index</h2>
-                <span class="text-xs font-mono text-gray-300">2023 — 2025</span>
-            </div>
-            
-            <div class="max-w-5xl pb-20">
-                <!-- Grid of Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- TAB 1: HOME -->
+            <div id="home" class="tab-content active">
+                <div class="h-full flex flex-col justify-center max-w-4xl">
+                    <h1 class="text-6xl md:text-8xl font-medium tracking-tight leading-[0.95] mb-10 text-black">
+                        Strategy.<br>
+                        Structure.<br>
+                        <span class="text-gray-300">Story.</span>
+                    </h1>
                     
-                    <!-- Card 1 -->
-                    <div class="p-8 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 border-l-4 border-transparent hover:border-[var(--brand-mustard)]">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-xs font-mono text-[var(--brand-mustard)] uppercase tracking-wider">Strategy</span>
-                            <span class="text-xs text-gray-400">Doha</span>
+                    <div class="flex items-start gap-6 mt-4">
+                        <div class="w-1 h-20 bg-[var(--brand-mustard)] flex-none"></div>
+                        <div class="max-w-lg">
+                            <p class="text-xl text-gray-800 mb-4 font-display">
+                                Applied intelligence for complex systems.
+                            </p>
+                            <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
+                                FACT is a multidisciplinary bureau operating at the intersection of capital, compliance, and narrative. A unified interface for special projects.
+                            </p>
                         </div>
-                        <h4 class="text-xl font-medium mb-3">Series B Capital Strategy</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">Financial modeling, deck narrative, and investor readiness for a Fintech entity seeking regional expansion.</p>
                     </div>
-
-                    <!-- Card 2 -->
-                    <div class="p-8 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 border-l-4 border-transparent hover:border-[var(--brand-lavender)]">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-xs font-mono text-[var(--brand-lavender)] uppercase tracking-wider">Story / Tech</span>
-                            <span class="text-xs text-gray-400">Doha</span>
-                        </div>
-                        <h4 class="text-xl font-medium mb-3">AI Archive Implementation</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">Development of custom LLM framework for a national media organization to automate archive tagging.</p>
-                    </div>
-
-                    <!-- Card 3 -->
-                    <div class="p-8 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 border-l-4 border-transparent hover:border-[var(--brand-sage)]">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-xs font-mono text-[var(--brand-sage)] uppercase tracking-wider">Structure</span>
-                            <span class="text-xs text-gray-400">Doha</span>
-                        </div>
-                        <h4 class="text-xl font-medium mb-3">JV Architecture</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">Paralegal oversight and compliance mapping for a multi-stakeholder public-private partnership.</p>
-                    </div>
-
-                    <!-- Card 4 -->
-                    <div class="p-8 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 border-l-4 border-transparent hover:border-[var(--brand-mustard)]">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-xs font-mono text-[var(--brand-mustard)] uppercase tracking-wider">Strategy</span>
-                            <span class="text-xs text-gray-400">Private</span>
-                        </div>
-                        <h4 class="text-xl font-medium mb-3">Legacy Asset Restructuring</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">Advisory on dissolving and merging disparate legacy assets for a private family office.</p>
-                    </div>
-
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 4: PRINCIPALS -->
-        <div id="principals" class="tab-content">
-            <h2 class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-16 sticky top-0 bg-white py-4 z-10">Bureau Principals</h2>
-            
-            <div class="max-w-4xl space-y-16 pb-20">
-                
-                <!-- Profile 1 -->
-                <div class="flex flex-col md:flex-row gap-8 md:gap-16 group">
-                    <div class="md:w-1/3 pt-2">
-                        <div class="h-1 w-12 bg-[var(--brand-mustard)] mb-4 group-hover:w-full transition-all duration-500"></div>
-                        <h3 class="text-xl font-medium">Strategy & Capital</h3>
-                        <p class="text-sm text-gray-400 mt-1">Principal</p>
-                    </div>
-                    <div class="md:w-2/3">
-                        <p class="text-gray-600 leading-relaxed mb-6">
-                            Specializing in capital structure and financial advisory. Leads the bureau’s financial modeling and restructuring mandates. Utilizes high-velocity AI workflows for market analysis and projection.
-                        </p>
-                        <a href="mailto:samerb@fact.qa" class="inline-flex items-center text-sm font-medium border-b border-gray-200 hover:border-[var(--brand-mustard)] hover:text-[var(--brand-mustard)] transition-colors pb-0.5">
-                            samerb@fact.qa
-                        </a>
-                    </div>
-                </div>
+            <!-- TAB 2: EXPERTISE (3 Columns, No Scroll) -->
+            <div id="expertise" class="tab-content">
+                <div class="h-full flex flex-col">
+                    <h2 class="text-xs font-mono uppercase tracking-widest text-gray-300 mb-8 md:mb-12 flex-none">Core Capabilities</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 h-full">
+                        
+                        <!-- Strategy -->
+                        <div class="group border-t border-gray-100 pt-6 hover:border-[var(--brand-mustard)] transition-colors">
+                            <span class="text-[var(--brand-mustard)] font-mono text-xs mb-4 block opacity-0 group-hover:opacity-100 transition-opacity">01</span>
+                            <h3 class="text-3xl font-medium mb-4">Strategy</h3>
+                            <p class="text-sm text-gray-500 mb-6 leading-relaxed h-20">
+                                The overarching logic. Aligning intent with capability to ensure projects are feasible, funded, and positioned.
+                            </p>
+                            <ul class="text-sm space-y-2 font-medium text-gray-800">
+                                <li>Advisory & Feasibility</li>
+                                <li>Applied Intelligence</li>
+                                <li>Special Projects Mgmt</li>
+                            </ul>
+                        </div>
 
-                <!-- Profile 2 -->
-                <div class="flex flex-col md:flex-row gap-8 md:gap-16 group">
-                    <div class="md:w-1/3 pt-2">
-                        <div class="h-1 w-12 bg-[var(--brand-sage)] mb-4 group-hover:w-full transition-all duration-500"></div>
-                        <h3 class="text-xl font-medium">Structure & Legal</h3>
-                        <p class="text-sm text-gray-400 mt-1">Principal</p>
-                    </div>
-                    <div class="md:w-2/3">
-                        <p class="text-gray-600 leading-relaxed mb-6">
-                            Senior Paralegal with deep expertise in corporate formation, contract management, and operational rigor. Acts as the project manager for complex compliance and legal architecture mandates.
-                        </p>
-                        <a href="mailto:nicoleb@fact.qa" class="inline-flex items-center text-sm font-medium border-b border-gray-200 hover:border-[var(--brand-sage)] hover:text-[var(--brand-sage)] transition-colors pb-0.5">
-                            nicoleb@fact.qa
-                        </a>
-                    </div>
-                </div>
+                        <!-- Structure -->
+                        <div class="group border-t border-gray-100 pt-6 hover:border-[var(--brand-sage)] transition-colors">
+                            <span class="text-[var(--brand-sage)] font-mono text-xs mb-4 block opacity-0 group-hover:opacity-100 transition-opacity">02</span>
+                            <h3 class="text-3xl font-medium mb-4">Structure</h3>
+                            <p class="text-sm text-gray-500 mb-6 leading-relaxed h-20">
+                                The operational backbone. Building the legal, financial, and operational systems that sustain the vision.
+                            </p>
+                            <ul class="text-sm space-y-2 font-medium text-gray-800">
+                                <li>Financial Modeling</li>
+                                <li>Legal Operations</li>
+                                <li>Contract Architecture</li>
+                            </ul>
+                        </div>
 
-                <!-- Profile 3 -->
-                <div class="flex flex-col md:flex-row gap-8 md:gap-16 group">
-                    <div class="md:w-1/3 pt-2">
-                        <div class="h-1 w-12 bg-[var(--brand-lavender)] mb-4 group-hover:w-full transition-all duration-500"></div>
-                        <h3 class="text-xl font-medium">Story & Creative Tech</h3>
-                        <p class="text-sm text-gray-400 mt-1">Managing Principal</p>
+                        <!-- Story -->
+                        <div class="group border-t border-gray-100 pt-6 hover:border-[var(--brand-lavender)] transition-colors">
+                            <span class="text-[var(--brand-lavender)] font-mono text-xs mb-4 block opacity-0 group-hover:opacity-100 transition-opacity">03</span>
+                            <h3 class="text-3xl font-medium mb-4">Story</h3>
+                            <p class="text-sm text-gray-500 mb-6 leading-relaxed h-20">
+                                The interface. Engineering narrative frameworks and deploying AI workflows to translate complexity into influence.
+                            </p>
+                            <ul class="text-sm space-y-2 font-medium text-gray-800">
+                                <li>Narrative Design</li>
+                                <li>Gov/Public Comms</li>
+                                <li>Generative AI Tools</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="md:w-2/3">
-                        <p class="text-gray-600 leading-relaxed mb-6">
-                            Narrative designer and creative technologist. Focuses on government communications frameworks and the development of custom AI tools for content generation.
-                        </p>
-                        <a href="mailto:faresb@fact.qa" class="inline-flex items-center text-sm font-medium border-b border-gray-200 hover:border-[var(--brand-lavender)] hover:text-[var(--brand-lavender)] transition-colors pb-0.5">
-                            faresb@fact.qa
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- TAB 5: CONTACT -->
-        <div id="contact" class="tab-content">
-            <div class="h-full flex flex-col justify-center max-w-2xl">
-                <span class="text-[var(--brand-mint)] text-6xl mb-6">&bull;</span>
-                <h2 class="text-5xl md:text-6xl font-medium mb-12 tracking-tight">Initiate a mandate.</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div>
-                        <p class="text-xs uppercase tracking-widest text-gray-400 mb-4">General Inquiries</p>
-                        <a href="mailto:info@fact.qa" class="text-2xl border-b-2 border-transparent hover:border-black transition-all inline-block pb-1">info@fact.qa</a>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase tracking-widest text-gray-400 mb-4">Location</p>
-                        <p class="text-xl text-gray-800">Doha, Qatar</p>
-                    </div>
-                </div>
-
-                <div class="mt-20 pt-8 border-t border-gray-100 text-gray-400 text-sm">
-                    <p>Registered Commercial Entity.</p>
                 </div>
             </div>
-        </div>
 
-    </main>
+            <!-- TAB 3: INDEX (Grid Layout, No Scroll) -->
+            <div id="index" class="tab-content">
+                <div class="h-full flex flex-col">
+                    <div class="flex justify-between items-end mb-8 md:mb-12 flex-none">
+                        <h2 class="text-xs font-mono uppercase tracking-widest text-gray-300">Selected Deployments</h2>
+                        <span class="text-xs font-mono text-gray-300">Index 23-25</span>
+                    </div>
+                    
+                    <!-- Grid: 2 Columns, 3 Rows (Fits comfortably) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="hover-card p-4 -ml-4 rounded-lg cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-[var(--brand-mustard)]">Strategy</span>
+                                <span class="text-xs text-gray-300 group-hover:text-gray-500">Fintech</span>
+                            </div>
+                            <h4 class="text-lg font-medium mb-1">Series B Capital Strategy</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">Financial modeling and deck narrative for a Doha-based entity seeking regional expansion.</p>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="hover-card p-4 -ml-4 rounded-lg cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-[var(--brand-lavender)]">Story / Tech</span>
+                                <span class="text-xs text-gray-300 group-hover:text-gray-500">Media</span>
+                            </div>
+                            <h4 class="text-lg font-medium mb-1">AI Archive Implementation</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">Custom LLM framework for a national organization to automate archive tagging and retrieval.</p>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="hover-card p-4 -ml-4 rounded-lg cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-[var(--brand-sage)]">Structure</span>
+                                <span class="text-xs text-gray-300 group-hover:text-gray-500">Gov / PPP</span>
+                            </div>
+                            <h4 class="text-lg font-medium mb-1">JV Architecture</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">Paralegal oversight and compliance mapping for a multi-stakeholder public-private partnership.</p>
+                        </div>
+
+                        <!-- Item 4 -->
+                        <div class="hover-card p-4 -ml-4 rounded-lg cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-[var(--brand-lavender)]">Story</span>
+                                <span class="text-xs text-gray-300 group-hover:text-gray-500">Government</span>
+                            </div>
+                            <h4 class="text-lg font-medium mb-1">Executive Positioning</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">Narrative design and speechwriting for ministerial-level participation at economic forums.</p>
+                        </div>
+
+                         <!-- Item 5 -->
+                         <div class="hover-card p-4 -ml-4 rounded-lg cursor-default group">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-[var(--brand-mustard)]">Strategy</span>
+                                <span class="text-xs text-gray-300 group-hover:text-gray-500">Family Office</span>
+                            </div>
+                            <h4 class="text-lg font-medium mb-1">Legacy Asset Restructuring</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">Advisory on dissolving and merging disparate legacy assets to optimize operational efficiency.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: SPECIALISTS (Horizontal Layout) -->
+            <div id="specialists" class="tab-content">
+                <div class="h-full flex flex-col">
+                    <h2 class="text-xs font-mono uppercase tracking-widest text-gray-300 mb-12 flex-none">The Specialists</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 h-full items-start">
+                        
+                        <!-- Samer (Strategy) -->
+                        <div class="group relative">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-100 overflow-hidden">
+                                <div class="w-0 h-full bg-[var(--brand-mustard)] group-hover:w-full transition-all duration-500"></div>
+                            </div>
+                            <div class="pt-6">
+                                <h3 class="text-xl font-medium">Samer Bou Nassif</h3>
+                                <p class="text-xs font-mono text-[var(--brand-mustard)] mt-1 mb-4 uppercase tracking-wide">Strategy & Capital</p>
+                                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                                    Specialist in capital structure and financial advisory. Deploys high-velocity AI workflows for market analysis.
+                                </p>
+                                <a href="mailto:samerb@fact.qa" class="text-xs font-medium border-b border-gray-300 hover:border-black pb-0.5 transition-colors">samerb@fact.qa</a>
+                            </div>
+                        </div>
+
+                        <!-- Nicole (Structure) -->
+                        <div class="group relative">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-100 overflow-hidden">
+                                <div class="w-0 h-full bg-[var(--brand-sage)] group-hover:w-full transition-all duration-500"></div>
+                            </div>
+                            <div class="pt-6">
+                                <h3 class="text-xl font-medium">Nicole Bou Nassif</h3>
+                                <p class="text-xs font-mono text-[var(--brand-sage)] mt-1 mb-4 uppercase tracking-wide">Legal & Operations</p>
+                                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                                    Specialist in corporate formation and operational rigor. Oversees complex compliance and legal architecture.
+                                </p>
+                                <a href="mailto:nicoleb@fact.qa" class="text-xs font-medium border-b border-gray-300 hover:border-black pb-0.5 transition-colors">nicoleb@fact.qa</a>
+                            </div>
+                        </div>
+
+                        <!-- Fares (Story) -->
+                        <div class="group relative">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-100 overflow-hidden">
+                                <div class="w-0 h-full bg-[var(--brand-lavender)] group-hover:w-full transition-all duration-500"></div>
+                            </div>
+                            <div class="pt-6">
+                                <h3 class="text-xl font-medium">Fares Bou Nassif</h3>
+                                <p class="text-xs font-mono text-[var(--brand-lavender)] mt-1 mb-4 uppercase tracking-wide">Story & Creative Tech</p>
+                                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                                    Specialist in narrative design and creative technology. Builds government communications frameworks and custom AI tools.
+                                </p>
+                                <a href="mailto:faresb@fact.qa" class="text-xs font-medium border-b border-gray-300 hover:border-black pb-0.5 transition-colors">faresb@fact.qa</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CONTACT -->
+            <div id="contact" class="tab-content">
+                <div class="h-full flex flex-col justify-center max-w-2xl">
+                    <h2 class="text-5xl md:text-7xl font-medium mb-12 tracking-tighter">Initiate.</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div>
+                            <p class="text-xs font-mono uppercase tracking-widest text-gray-300 mb-2">Inquiries</p>
+                            <a href="mailto:info@fact.qa" class="text-xl font-medium border-b border-gray-200 hover:border-[var(--brand-mustard)] transition-all inline-block pb-1">info@fact.qa</a>
+                        </div>
+                        <div>
+                            <p class="text-xs font-mono uppercase tracking-widest text-gray-300 mb-2">Base</p>
+                            <p class="text-xl font-medium text-gray-800">Doha, Qatar</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-8 text-gray-300 text-xs font-mono">
+                        <p>Commercial Registration No. 123456</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
 
     <script>
-        // Brand colors for JS reference
-        const colors = {
-            'expertise': '#F4C44E', // Mustard
-            'index': '#75B876',     // Sage
-            'principals': '#D3C0D9', // Lavender
-            'contact': '#A8D5BA',   // Mint
-            'home': '#F5F5F5'       // Default grey (matched to background if needed)
-        };
-
         function switchTab(tabId) {
-            // 1. Hide all tabs
+            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.remove('active');
             });
             
-            // 2. Deactivate all nav links
-            document.querySelectorAll('.nav-link').forEach(el => {
+            // Deactivate all nav links
+            document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('active');
             });
 
-            // 3. Show selected tab content
-            const selectedTab = document.getElementById(tabId);
-            if (selectedTab) {
-                selectedTab.classList.add('active');
-                // Reset scroll position for better UX
-                selectedTab.scrollTop = 0;
-            }
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
 
-            // 4. Activate Nav Link (unless it's home/logo click which has no nav link)
+            // Activate Nav Link
             const navLink = document.getElementById('nav-' + tabId);
             if (navLink) {
                 navLink.classList.add('active');
-            }
-
-            // 5. Change Sidebar Border Color based on selection
-            const borderColor = colors[tabId] || '#f3f4f6'; 
-            const borderEl = document.getElementById('sidebar-border');
-            if (borderEl) {
-                borderEl.style.backgroundColor = borderColor;
             }
         }
     </script>
