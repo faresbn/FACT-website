@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACT Special Projects</title>
+    <meta name="description" content="FACT Special Projects: Strategy, Structure, Story. A multidisciplinary bureau in Qatar.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        :root {
+            --bg-color: #FFFFFF; /* Pure White */
+            --text-color: #111111;
+            
+            /* FACT Palette */
+            --brand-cream: #FCEFC7;
+            --brand-mustard: #F4C44E;
+            --brand-lavender: #D3C0D9;
+            --brand-sage: #75B876;
+            --brand-mint: #A8D5BA;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* Prevent scrolling */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Utility for the brand bar */
+        .brand-border-top {
+            background-image: linear-gradient(to right, 
+                var(--brand-cream) 0%, var(--brand-cream) 20%, 
+                var(--brand-mustard) 20%, var(--brand-mustard) 40%, 
+                var(--brand-lavender) 40%, var(--brand-lavender) 60%, 
+                var(--brand-sage) 60%, var(--brand-sage) 80%, 
+                var(--brand-mint) 80%, var(--brand-mint) 100%);
+            height: 4px;
+            width: 100%;
+        }
+
+        /* Tab Transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+            height: 100%;
+            overflow-y: auto; /* Allow content scroll if viewport is short */
+            padding-bottom: 4rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navigation Active State */
+        .nav-link.active {
+            color: black;
+            font-weight: 600;
+            border-bottom: 2px solid var(--brand-mustard);
+        }
+        
+        /* Custom Scrollbar for inner content */
+        .tab-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .tab-content::-webkit-scrollbar-track {
+            background: #fff;
+        }
+        .tab-content::-webkit-scrollbar-thumb {
+            background-color: #eee;
+            border-radius: 3px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- FIXED HEADER -->
+    <header class="flex-none w-full bg-white z-50 border-b border-gray-100 relative">
+        <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+            <!-- LOGO (Clicking resets to Home) -->
+            <div class="w-32 md:w-40 cursor-pointer" onclick="switchTab('home')">
+                <img src="FACTLogo2025wline.png" alt="FACT Special Projects" class="h-auto w-full object-contain">
+            </div>
+            
+            <!-- NAV -->
+            <nav class="flex space-x-6 md:space-x-10 text-sm text-gray-500">
+                <button onclick="switchTab('expertise')" class="nav-link hover:text-black transition-colors pb-1" id="nav-expertise">Expertise</button>
+                <button onclick="switchTab('mandates')" class="nav-link hover:text-black transition-colors pb-1" id="nav-mandates">Mandates</button>
+                <button onclick="switchTab('principals')" class="nav-link hover:text-black transition-colors pb-1" id="nav-principals">Principals</button>
+                <button onclick="switchTab('contact')" class="nav-link hover:text-black transition-colors pb-1" id="nav-contact">Contact</button>
+            </nav>
+        </div>
+        <!-- Brand Line (Optional subtle touch under header) -->
+        <!-- <div class="brand-border-top absolute bottom-0"></div> -->
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow relative max-w-7xl mx-auto w-full px-6 pt-12 md:pt-20">
+
+        <!-- TAB 1: HOME (Manifesto) -->
+        <div id="home" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 h-full items-center">
+                <div class="md:col-span-8">
+                    <h1 class="text-5xl md:text-8xl font-medium tracking-tight leading-[1.05] text-black mb-8">
+                        Strategy.<br>
+                        Structure.<br>
+                        <span class="text-gray-300">Story.</span>
+                    </h1>
+                </div>
+                <div class="md:col-span-4 flex flex-col justify-center h-full">
+                    <div class="h-1 w-16 bg-[var(--brand-mustard)] mb-8"></div>
+                    <p class="text-lg leading-relaxed text-gray-800 mb-6">
+                        FACT is a multidisciplinary bureau in Doha. We are a collective of independent specialists operating at the intersection of capital, compliance, and narrative.
+                    </p>
+                    <p class="text-sm text-gray-500 leading-relaxed">
+                        We serve as a unified interface for complex mandates where standard agency models fail. No account managers. No bloat. Just senior practitioners.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: EXPERTISE (3 Pillars) -->
+        <div id="expertise" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100 h-full">
+                
+                <!-- STRATEGY (Mustard) -->
+                <div class="md:pr-12 md:py-4 group">
+                    <span class="text-xs font-mono text-[var(--brand-mustard)] uppercase tracking-widest mb-6 block">01 — Synthesis</span>
+                    <h3 class="text-3xl font-medium mb-6">Strategy</h3>
+                    <p class="text-sm text-gray-600 mb-8 leading-relaxed">
+                        The overarching logic. We align intent with capability, ensuring that complex projects are feasible, funded, and positioned for impact.
+                    </p>
+                    <ul class="space-y-4 text-sm text-gray-800 font-medium">
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-mustard)] mr-3 rounded-full"></span>Advisory & Feasibility</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-mustard)] mr-3 rounded-full"></span>Applied Intelligence Integration</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-mustard)] mr-3 rounded-full"></span>Special Projects Management</li>
+                    </ul>
+                </div>
+
+                <!-- STRUCTURE (Sage) -->
+                <div class="md:px-12 py-12 md:py-4 group">
+                    <span class="text-xs font-mono text-[var(--brand-sage)] uppercase tracking-widest mb-6 block">02 — Foundations</span>
+                    <h3 class="text-3xl font-medium mb-6">Structure</h3>
+                    <p class="text-sm text-gray-600 mb-8 leading-relaxed">
+                        The operational backbone. From capital planning and legal frameworks to operational compliance. We build the systems that sustain the vision.
+                    </p>
+                    <ul class="space-y-4 text-sm text-gray-800 font-medium">
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-sage)] mr-3 rounded-full"></span>Financial Modeling & Capital Advisory</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-sage)] mr-3 rounded-full"></span>Corporate Structure & Legal Ops</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-sage)] mr-3 rounded-full"></span>Contract Architecture</li>
+                    </ul>
+                </div>
+
+                <!-- STORY (Lavender) -->
+                <div class="md:pl-12 py-12 md:py-4 group">
+                    <span class="text-xs font-mono text-[var(--brand-lavender)] uppercase tracking-widest mb-6 block">03 — Interface</span>
+                    <h3 class="text-3xl font-medium mb-6">Story</h3>
+                    <p class="text-sm text-gray-600 mb-8 leading-relaxed">
+                        The human layer. We engineer narrative frameworks and deploy AI-assisted content workflows to translate complexity into influence.
+                    </p>
+                    <ul class="space-y-4 text-sm text-gray-800 font-medium">
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-lavender)] mr-3 rounded-full"></span>Narrative Design & Speechwriting</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-lavender)] mr-3 rounded-full"></span>Gov/Public Sector Communications</li>
+                        <li class="flex items-center"><span class="w-2 h-2 bg-[var(--brand-lavender)] mr-3 rounded-full"></span>Generative AI Workflows</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: MANDATES -->
+        <div id="mandates" class="tab-content">
+            <div class="max-w-4xl">
+                <h2 class="text-sm font-mono uppercase tracking-widest text-gray-400 mb-12">Engagement Log</h2>
+                
+                <div class="space-y-0 divide-y divide-gray-100 border-t border-gray-100">
+                    <!-- Row 1 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 py-8 hover:bg-gray-50 transition-colors -mx-4 px-4 rounded-lg group">
+                        <div class="text-xs font-mono text-gray-400 uppercase tracking-wider pt-1 group-hover:text-[var(--brand-mustard)]">Strategy</div>
+                        <div class="md:col-span-3">
+                            <h4 class="text-lg font-medium mb-2">Series B Capital Strategy</h4>
+                            <p class="text-gray-500 text-sm leading-relaxed">Financial modeling, deck narrative, and investor readiness for a Doha-based Fintech entity seeking regional expansion.</p>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 py-8 hover:bg-gray-50 transition-colors -mx-4 px-4 rounded-lg group">
+                        <div class="text-xs font-mono text-gray-400 uppercase tracking-wider pt-1 group-hover:text-[var(--brand-lavender)]">Story / Tech</div>
+                        <div class="md:col-span-3">
+                            <h4 class="text-lg font-medium mb-2">AI Workflow Implementation</h4>
+                            <p class="text-gray-500 text-sm leading-relaxed">Development of custom LLM framework for a national media organization to automate archive tagging and content retrieval.</p>[...]
