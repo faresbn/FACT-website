@@ -7,13 +7,14 @@
     <meta name="description" content="FACT Special Projects: Strategy, Structure, Story. A multidisciplinary bureau in Qatar.">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap');
+        /* FONTS: IBM Plex Serif (Authority), IBM Plex Mono (Data), DM Sans (Body) */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
         :root {
-            --bg-body: #EAEAEA; 
+            --bg-body: #F0F0F0; 
             --bg-card: #FFFFFF;
             --text-primary: #1A1A1A;
-            --text-secondary: #666666;
+            --text-secondary: #555555;
             
             /* FACT Palette */
             --brand-cream: #FCEFC7;
@@ -27,6 +28,8 @@
         body {
             font-family: 'DM Sans', sans-serif;
             background-color: var(--bg-body);
+            background-image: radial-gradient(#cfcfcf 1px, transparent 1px);
+            background-size: 24px 24px; /* Slightly larger grid */
             color: var(--text-primary);
             height: 100vh;
             width: 100vw;
@@ -36,73 +39,55 @@
             overflow: hidden;
         }
 
-        h1, h2, h3, h4, .font-display {
-            font-family: 'Space Grotesk', sans-serif;
+        /* Typography System */
+        h1, h2, h3, .font-serif {
+            font-family: 'IBM Plex Serif', serif;
+        }
+        
+        .font-mono {
+            font-family: 'IBM Plex Mono', monospace;
         }
 
-        /* The Card Frame */
+        /* The Floating Interface */
         #app-frame {
-            width: 96vw;
-            height: 92vh;
-            max-width: 1500px;
-            max-height: 900px;
+            width: 90vw;
+            height: 85vh;
+            max-width: 1400px;
+            max-height: 850px;
             background-color: var(--bg-card);
-            /* Subtle, refined shadow */
-            box-shadow: 
-                0 1px 2px rgba(0,0,0,0.02), 
-                0 4px 8px rgba(0,0,0,0.02),
-                0 16px 32px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             position: relative;
-            border-radius: 4px; /* Slight rounding */
         }
 
         @media (min-width: 768px) {
             #app-frame {
                 flex-direction: row;
+                width: 85vw; 
+                height: 80vh;
             }
         }
 
-        /* The Circular Mark (CSS Recreation) */
-        .fact-dial {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            /* Recreating the pie chart look */
-            background: conic-gradient(
-                var(--brand-mustard) 0deg 90deg,   /* Strategy */
-                transparent 90deg 180deg,
-                var(--brand-sage) 180deg 270deg,   /* Structure */
-                var(--brand-lavender) 270deg 360deg /* Story */
-            );
-            /* Masking to make it a ring/complex shape if needed, simplified here to match intent */
-            -webkit-mask: radial-gradient(transparent 45%, black 45%);
-            mask: radial-gradient(transparent 45%, black 45%);
-        }
-
-        /* The Black Outline Layer for the Dial */
-        .fact-dial-outlines {
+        /* TECHNICAL "BROKEN" BORDER SYSTEM */
+        .frame-corner {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 8px solid var(--brand-black);
-            box-sizing: border-box;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--brand-black);
             pointer-events: none;
+            z-index: 50;
         }
-        
-        /* Inner circle outline */
-        .fact-dial-inner {
-            position: absolute;
-            top: 25%; left: 25%;
-            width: 50%; height: 50%;
-            border-radius: 50%;
-            border: 6px solid var(--brand-black);
-            box-sizing: border-box;
-        }
+        .tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        .bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        .br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+        /* Light connector lines */
+        .frame-line-top { position: absolute; top: -1px; left: 50px; right: 50px; height: 1px; background: #E5E5E5; z-index: 40; }
+        .frame-line-bottom { position: absolute; bottom: -1px; left: 50px; right: 50px; height: 1px; background: #E5E5E5; z-index: 40; }
+        .frame-line-left { position: absolute; left: -1px; top: 50px; bottom: 50px; width: 1px; background: #E5E5E5; z-index: 40; }
+        .frame-line-right { position: absolute; right: -1px; top: 50px; bottom: 50px; width: 1px; background: #E5E5E5; z-index: 40; }
+
 
         /* Tab System */
         .tab-content {
@@ -110,135 +95,163 @@
             opacity: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; 
+            overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
         }
+        .tab-content::-webkit-scrollbar { display: none; }
 
         .tab-content.active {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            animation: fadeIn 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+            animation: fadeIn 0.6s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+        }
+
+        @media (max-height: 700px) {
+            .tab-content.active {
+                justify-content: flex-start;
+                padding-top: 2rem;
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.99); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Vertical Sidebar Nav */
+        /* Nav Items */
         .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 0;
+            padding: 8px 0;
             cursor: pointer;
             color: #999;
             transition: all 0.3s ease;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem; /* Slightly smaller for tech feel */
+            letter-spacing: 0.05em;
         }
         
         .nav-item:hover, .nav-item.active {
             color: var(--brand-black);
         }
 
-        /* Circular Indicators in Nav */
         .nav-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #E5E5E5;
+            width: 4px; /* Smaller technical dot */
+            height: 4px;
+            border-radius: 0; /* Square dot for tech feel? Or keep round */
+            background-color: #CCC;
             transition: all 0.3s ease;
         }
+        
+        /* Square dots for the technical vibe */
+        .nav-dot { border-radius: 1px; }
 
-        .nav-item:hover .nav-dot {
-            transform: scale(1.2);
+        .nav-item:hover .nav-dot { transform: scale(1.5); background-color: var(--brand-black); }
+        #nav-expertise.active .nav-dot { background-color: var(--brand-mustard); transform: scale(1.5); }
+        #nav-index.active .nav-dot { background-color: var(--brand-sage); transform: scale(1.5); }
+        #nav-specialists.active .nav-dot { background-color: var(--brand-lavender); transform: scale(1.5); }
+        #nav-contact.active .nav-dot { background-color: var(--brand-black); transform: scale(1.5); }
+
+        /* Sidebar Divider */
+        .sidebar-divider {
+            position: absolute;
+            right: 0;
+            top: 40px;
+            bottom: 40px;
+            width: 1px;
+            background-color: #F0F0F0;
         }
 
-        /* Active states specific colors */
-        #nav-expertise.active .nav-dot { background-color: var(--brand-mustard); }
-        #nav-index.active .nav-dot { background-color: var(--brand-sage); }
-        #nav-specialists.active .nav-dot { background-color: var(--brand-lavender); }
-        #nav-contact.active .nav-dot { background-color: var(--brand-black); }
-
-        /* Custom Scrollbar for Card Content if needed on small screens */
-        .custom-scroll {
-            overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .custom-scroll::-webkit-scrollbar {
-            display: none;
-        }
+        /* Custom Utilities */
+        .text-balance { text-wrap: balance; }
     </style>
 </head>
 <body>
 
+    <!-- The Floating Interface -->
     <div id="app-frame">
+        
+        <!-- Broken Outline Elements -->
+        <div class="frame-corner tl"></div>
+        <div class="frame-corner tr"></div>
+        <div class="frame-corner bl"></div>
+        <div class="frame-corner br"></div>
+        
+        <!-- Connector lines -->
+        <div class="frame-line-top"></div>
+        <div class="frame-line-bottom"></div>
+        <div class="frame-line-left hidden md:block"></div>
+        <div class="frame-line-right hidden md:block"></div>
 
         <!-- SIDEBAR -->
-        <aside class="w-full md:w-72 flex-none bg-gray-50/50 p-8 md:p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-100 z-20 relative">
+        <aside class="w-full md:w-64 lg:w-72 flex-none bg-white p-8 flex flex-col justify-between z-20 relative">
             
+            <div class="sidebar-divider hidden md:block"></div>
+
             <!-- Brand Mark Top -->
             <div>
-                <!-- Using the image logo for the top brand anchor -->
-                <div class="w-32 mb-12 cursor-pointer opacity-100 hover:opacity-70 transition-opacity" onclick="switchTab('home')">
+                <div class="w-28 mb-12 cursor-pointer opacity-100 hover:opacity-70 transition-opacity" onclick="switchTab('home')">
                    <img src="FACTLogo2025wline.png" alt="FACT" class="w-full h-auto">
                 </div>
 
                 <!-- Nav -->
-                <nav class="flex flex-col space-y-2 font-display text-lg tracking-wide">
+                <nav class="flex flex-col space-y-3">
                     <div onclick="switchTab('expertise')" id="nav-expertise" class="nav-item">
                         <div class="nav-dot"></div>
-                        <span>Capabilities</span>
+                        <span>CAPABILITIES</span>
                     </div>
                     <div onclick="switchTab('index')" id="nav-index" class="nav-item">
                         <div class="nav-dot"></div>
-                        <span>Deployments</span>
+                        <span>DEPLOYMENT LOG</span>
                     </div>
                     <div onclick="switchTab('specialists')" id="nav-specialists" class="nav-item">
                         <div class="nav-dot"></div>
-                        <span>Specialists</span>
+                        <span>SPECIALISTS</span>
                     </div>
                     <div onclick="switchTab('contact')" id="nav-contact" class="nav-item">
                         <div class="nav-dot"></div>
-                        <span>Contact</span>
+                        <span>CONTACT</span>
                     </div>
                 </nav>
             </div>
 
             <!-- Footer Meta -->
             <div class="hidden md:block space-y-1">
-                <p class="text-[10px] font-mono uppercase text-gray-400 tracking-widest">Bureau Ref. QA-2023</p>
-                <p class="text-[10px] font-mono uppercase text-gray-400 tracking-widest">Doha, Qatar</p>
+                <p class="text-[10px] font-mono text-gray-400 tracking-widest">SYS.STATUS: ACTIVE</p>
+                <p class="text-[10px] font-mono text-gray-400 tracking-widest">LOC: DOHA, QA</p>
             </div>
         </aside>
 
         <!-- CONTENT -->
-        <main class="flex-grow bg-white relative p-8 md:p-16 lg:p-20 h-full flex items-center overflow-hidden">
+        <main class="flex-grow bg-white relative p-6 md:p-12 lg:p-16 h-full min-w-0">
 
             <!-- TAB: HOME -->
             <div id="home" class="tab-content active">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center h-full w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center h-full w-full">
                     <!-- Text Side -->
                     <div class="order-2 lg:order-1">
-                        <h1 class="text-6xl lg:text-7xl font-medium leading-[0.9] mb-8 tracking-tight">
-                            Strategy.<br>
+                        <h1 class="text-5xl lg:text-7xl font-medium leading-[0.9] mb-8 tracking-tight text-primary">
+                            <span class="italic">Strategy.</span><br>
                             Structure.<br>
                             Story.
                         </h1>
-                        <div class="w-12 h-1 bg-black mb-8"></div>
-                        <p class="text-lg text-gray-600 max-w-md leading-relaxed">
+                        <div class="w-16 h-1 bg-black mb-8"></div>
+                        <p class="text-base lg:text-lg text-gray-600 max-w-md leading-relaxed font-serif">
                             FACT is a multidisciplinary bureau for special projects. We operate as a unified interface for expert-led mandates in capital, compliance, and communications.
                         </p>
                     </div>
                     
                     <!-- Visual Side (The Dial) -->
-                    <div class="order-1 lg:order-2 flex justify-center lg:justify-end opacity-90">
-                        <!-- CSS Recreation of your Circular Logo -->
-                        <div class="relative w-64 h-64 md:w-80 md:h-80">
-                             <!-- Outer Ring -->
-                            <div class="absolute inset-0 rounded-full border-[12px] border-black z-10"></div>
-                            <!-- Segments -->
-                            <div class="absolute inset-0 rounded-full overflow-hidden opacity-90">
+                    <div class="order-1 lg:order-2 flex justify-center lg:justify-end opacity-90 py-8 lg:py-0">
+                        <!-- CSS Dial -->
+                        <div class="relative w-48 h-48 lg:w-72 lg:h-72">
+                            <div class="absolute inset-0 rounded-full border-[2px] border-black z-10 opacity-20"></div>
+                            <div class="absolute inset-2 rounded-full overflow-hidden opacity-90">
                                 <div class="w-full h-full" style="background: conic-gradient(
                                     var(--brand-mustard) 0deg 130deg,
                                     white 130deg 140deg, 
@@ -247,10 +260,8 @@
                                     var(--brand-sage) 270deg 360deg
                                 );"></div>
                             </div>
-                            <!-- Inner White Circle to make it a donut -->
-                            <div class="absolute inset-[25%] bg-white rounded-full z-10 border-[8px] border-black"></div>
-                            <!-- The small floating dot from your image -->
-                            <div class="absolute top-[10%] right-[5%] w-6 h-6 rounded-full bg-[var(--brand-sage)] z-20"></div>
+                            <div class="absolute inset-[25%] bg-white rounded-full z-10 border-[1px] border-black shadow-sm"></div>
+                            <div class="absolute top-[10%] right-[5%] w-3 h-3 rounded-full bg-[var(--brand-sage)] z-20"></div>
                         </div>
                     </div>
                 </div>
@@ -258,45 +269,45 @@
 
             <!-- TAB: CAPABILITIES -->
             <div id="expertise" class="tab-content">
-                <div class="h-full flex flex-col w-full">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-12 h-full border-t-2 border-black md:border-t-0">
+                <div class="h-full flex flex-col w-full justify-center">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-12 w-full">
                         
                         <!-- Col 1 -->
-                        <div class="group border-b border-gray-100 md:border-b-0 md:border-t-2 md:border-black py-8 hover:bg-yellow-50/50 transition-colors px-4 -mx-4">
-                            <div class="text-[var(--brand-mustard)] font-display text-xl mb-2">01</div>
-                            <h3 class="text-3xl font-medium mb-6">Strategy</h3>
-                            <p class="text-sm text-gray-500 mb-8 leading-relaxed min-h-[4rem]">
+                        <div class="group py-4 border-t border-gray-100 md:border-t-0 md:pt-0">
+                            <div class="text-[var(--brand-mustard)] font-mono text-xs mb-3">01 // SYNTHESIS</div>
+                            <h3 class="text-2xl lg:text-3xl font-medium mb-4 text-balance">Strategy</h3>
+                            <p class="text-sm text-gray-600 mb-6 leading-relaxed h-auto md:h-20">
                                 The logic layer. Feasibility, intelligence, and positioning for high-stakes initiatives.
                             </p>
-                            <div class="space-y-3">
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-mustard)] pl-3">Advisory</div>
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-mustard)] pl-3">Intelligence</div>
+                            <div class="space-y-2">
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-mustard)] pl-2 text-gray-500">Advisory</div>
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-mustard)] pl-2 text-gray-500">Applied Intelligence</div>
                             </div>
                         </div>
 
                         <!-- Col 2 -->
-                        <div class="group border-b border-gray-100 md:border-b-0 md:border-t-2 md:border-black py-8 hover:bg-green-50/50 transition-colors px-4 -mx-4">
-                            <div class="text-[var(--brand-sage)] font-display text-xl mb-2">02</div>
-                            <h3 class="text-3xl font-medium mb-6">Structure</h3>
-                            <p class="text-sm text-gray-500 mb-8 leading-relaxed min-h-[4rem]">
+                        <div class="group py-4 border-t border-gray-100 md:border-t-0 md:pt-0">
+                            <div class="text-[var(--brand-sage)] font-mono text-xs mb-3">02 // FOUNDATIONS</div>
+                            <h3 class="text-2xl lg:text-3xl font-medium mb-4 text-balance">Structure</h3>
+                            <p class="text-sm text-gray-600 mb-6 leading-relaxed h-auto md:h-20">
                                 The systems layer. Financial modeling, legal frameworks, and operational rigor.
                             </p>
-                            <div class="space-y-3">
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-sage)] pl-3">Capital</div>
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-sage)] pl-3">Compliance</div>
+                            <div class="space-y-2">
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-sage)] pl-2 text-gray-500">Capital Planning</div>
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-sage)] pl-2 text-gray-500">Compliance</div>
                             </div>
                         </div>
 
                         <!-- Col 3 -->
-                        <div class="group md:border-t-2 md:border-black py-8 hover:bg-purple-50/50 transition-colors px-4 -mx-4">
-                            <div class="text-[var(--brand-lavender)] font-display text-xl mb-2">03</div>
-                            <h3 class="text-3xl font-medium mb-6">Story</h3>
-                            <p class="text-sm text-gray-500 mb-8 leading-relaxed min-h-[4rem]">
+                        <div class="group py-4 border-t border-gray-100 md:border-t-0 md:pt-0">
+                            <div class="text-[var(--brand-lavender)] font-mono text-xs mb-3">03 // INTERFACE</div>
+                            <h3 class="text-2xl lg:text-3xl font-medium mb-4 text-balance">Story</h3>
+                            <p class="text-sm text-gray-600 mb-6 leading-relaxed h-auto md:h-20">
                                 The interface layer. Narrative design and AI workflows to translate complexity.
                             </p>
-                            <div class="space-y-3">
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-lavender)] pl-3">Narrative</div>
-                                <div class="text-xs font-mono uppercase tracking-wider border-l-2 border-[var(--brand-lavender)] pl-3">Tech</div>
+                            <div class="space-y-2">
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-lavender)] pl-2 text-gray-500">Narrative Design</div>
+                                <div class="text-[10px] font-mono uppercase tracking-wider border-l border-[var(--brand-lavender)] pl-2 text-gray-500">Creative Tech</div>
                             </div>
                         </div>
 
@@ -306,92 +317,102 @@
 
             <!-- TAB: DEPLOYMENTS (INDEX) -->
             <div id="index" class="tab-content">
-                <div class="w-full h-full flex flex-col">
-                    <div class="flex justify-between items-end mb-8 border-b border-black pb-4">
-                        <h2 class="font-display text-2xl">Deployment Log</h2>
-                        <span class="font-mono text-xs text-gray-400">2023 &mdash; 2025</span>
+                <div class="w-full h-full flex flex-col justify-center">
+                    <div class="flex justify-between items-end mb-8 border-b border-gray-200 pb-4 flex-none">
+                        <h2 class="font-serif text-2xl">Deployment Log</h2>
+                        <span class="font-mono text-[10px] text-gray-400">2023 &mdash; 2025</span>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8 custom-scroll pb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pb-8">
                         <!-- Entry -->
-                        <div class="group">
+                        <div class="group hover:opacity-100 opacity-80 transition-opacity">
                             <div class="flex items-center gap-3 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-[var(--brand-mustard)]"></div>
-                                <span class="font-mono text-xs text-gray-400 uppercase">Strategy</span>
+                                <div class="w-1.5 h-1.5 bg-[var(--brand-mustard)]"></div>
+                                <span class="font-mono text-[10px] text-gray-400 uppercase tracking-widest">Strategy</span>
                             </div>
-                            <h4 class="text-xl font-medium mb-2 group-hover:text-[var(--brand-mustard)] transition-colors">Series B Capital Strategy</h4>
-                            <p class="text-sm text-gray-500 leading-relaxed">Financial modeling and investor deck narrative for a Doha-based Fintech entity.</p>
+                            <h4 class="text-lg font-serif font-medium mb-1">Series B Capital Strategy</h4>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">Financial modeling and investor deck narrative for a Doha-based Fintech entity.</p>
                         </div>
 
                         <!-- Entry -->
-                        <div class="group">
+                        <div class="group hover:opacity-100 opacity-80 transition-opacity">
                             <div class="flex items-center gap-3 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-[var(--brand-lavender)]"></div>
-                                <span class="font-mono text-xs text-gray-400 uppercase">Story / Tech</span>
+                                <div class="w-1.5 h-1.5 bg-[var(--brand-lavender)]"></div>
+                                <span class="font-mono text-[10px] text-gray-400 uppercase tracking-widest">Story / Tech</span>
                             </div>
-                            <h4 class="text-xl font-medium mb-2 group-hover:text-[var(--brand-lavender)] transition-colors">AI Archive Implementation</h4>
-                            <p class="text-sm text-gray-500 leading-relaxed">Custom LLM framework for a national media organization.</p>
+                            <h4 class="text-lg font-serif font-medium mb-1">AI Archive Implementation</h4>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">Custom LLM framework for a national media organization.</p>
                         </div>
 
                         <!-- Entry -->
-                        <div class="group">
+                        <div class="group hover:opacity-100 opacity-80 transition-opacity">
                             <div class="flex items-center gap-3 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-[var(--brand-sage)]"></div>
-                                <span class="font-mono text-xs text-gray-400 uppercase">Structure</span>
+                                <div class="w-1.5 h-1.5 bg-[var(--brand-sage)]"></div>
+                                <span class="font-mono text-[10px] text-gray-400 uppercase tracking-widest">Structure</span>
                             </div>
-                            <h4 class="text-xl font-medium mb-2 group-hover:text-[var(--brand-sage)] transition-colors">JV Architecture</h4>
-                            <p class="text-sm text-gray-500 leading-relaxed">Compliance mapping for a multi-stakeholder public-private partnership.</p>
+                            <h4 class="text-lg font-serif font-medium mb-1">JV Architecture</h4>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">Compliance mapping for a multi-stakeholder public-private partnership.</p>
                         </div>
                         
                         <!-- Entry -->
-                        <div class="group">
+                        <div class="group hover:opacity-100 opacity-80 transition-opacity">
                             <div class="flex items-center gap-3 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-[var(--brand-lavender)]"></div>
-                                <span class="font-mono text-xs text-gray-400 uppercase">Story</span>
+                                <div class="w-1.5 h-1.5 bg-[var(--brand-lavender)]"></div>
+                                <span class="font-mono text-[10px] text-gray-400 uppercase tracking-widest">Story</span>
                             </div>
-                            <h4 class="text-xl font-medium mb-2 group-hover:text-[var(--brand-lavender)] transition-colors">Executive Positioning</h4>
-                            <p class="text-sm text-gray-500 leading-relaxed">Speechwriting for ministerial-level participation at economic forums.</p>
+                            <h4 class="text-lg font-serif font-medium mb-1">Executive Positioning</h4>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">Speechwriting for ministerial-level participation at economic forums.</p>
+                        </div>
+                        
+                        <!-- Entry -->
+                        <div class="group hover:opacity-100 opacity-80 transition-opacity">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-1.5 h-1.5 bg-[var(--brand-mustard)]"></div>
+                                <span class="font-mono text-[10px] text-gray-400 uppercase tracking-widest">Strategy</span>
+                            </div>
+                            <h4 class="text-lg font-serif font-medium mb-1">Asset Restructuring</h4>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-2">Advisory on dissolving and merging disparate legacy assets for a family office.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB: SPECIALISTS (Anonymous) -->
+            <!-- TAB: SPECIALISTS (Expertise Focus) -->
             <div id="specialists" class="tab-content">
                 <div class="w-full h-full flex flex-col justify-center">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
                         
-                        <!-- Profile 1 -->
+                        <!-- Expert 1 -->
                         <div class="group">
-                            <div class="w-12 h-12 rounded-full bg-[var(--brand-mustard)] mb-6 flex items-center justify-center text-white font-mono font-bold text-lg opacity-90">01</div>
-                            <h3 class="font-display text-2xl mb-2">Director,<br>Strategy & Capital</h3>
-                            <div class="w-8 h-1 bg-black mb-6 mt-2"></div>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-6">
-                                Specialist in capital structure and financial advisory. Deploys high-velocity AI workflows for market analysis and projection.
+                            <div class="w-8 h-8 bg-[var(--brand-mustard)] mb-6 flex items-center justify-center text-white font-mono text-xs opacity-100">01</div>
+                            <h3 class="font-serif text-2xl mb-4">Strategy &<br>Capital</h3>
+                            <div class="w-6 h-px bg-black mb-4 opacity-20"></div>
+                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                                Background in capital markets and financial restructuring. Expertise lies in high-velocity financial modeling and algorithmic market analysis.
                             </p>
-                            <a href="mailto:samerb@fact.qa" class="font-mono text-xs text-gray-400 hover:text-black border-b border-gray-200 hover:border-black pb-1 transition-all">samerb@fact.qa</a>
+                            <a href="mailto:samerb@fact.qa" class="font-mono text-[10px] text-gray-400 hover:text-black border-b border-transparent hover:border-black pb-0.5 transition-all">samerb@fact.qa</a>
                         </div>
 
-                        <!-- Profile 2 -->
+                        <!-- Expert 2 -->
                         <div class="group">
-                            <div class="w-12 h-12 rounded-full bg-[var(--brand-sage)] mb-6 flex items-center justify-center text-white font-mono font-bold text-lg opacity-90">02</div>
-                            <h3 class="font-display text-2xl mb-2">Director,<br>Legal Operations</h3>
-                            <div class="w-8 h-1 bg-black mb-6 mt-2"></div>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-6">
-                                Specialist in corporate formation and operational rigor. Oversees complex compliance and legal architecture for the bureau.
+                            <div class="w-8 h-8 bg-[var(--brand-sage)] mb-6 flex items-center justify-center text-white font-mono text-xs opacity-100">02</div>
+                            <h3 class="font-serif text-2xl mb-4">Legal &<br>Operations</h3>
+                            <div class="w-6 h-px bg-black mb-4 opacity-20"></div>
+                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                                Background in corporate law and operational compliance. Expertise in drafting complex commercial agreements and managing multi-entity corporate structures.
                             </p>
-                            <a href="mailto:nicoleb@fact.qa" class="font-mono text-xs text-gray-400 hover:text-black border-b border-gray-200 hover:border-black pb-1 transition-all">nicoleb@fact.qa</a>
+                            <a href="mailto:nicoleb@fact.qa" class="font-mono text-[10px] text-gray-400 hover:text-black border-b border-transparent hover:border-black pb-0.5 transition-all">nicoleb@fact.qa</a>
                         </div>
 
-                        <!-- Profile 3 -->
+                        <!-- Expert 3 -->
                         <div class="group">
-                            <div class="w-12 h-12 rounded-full bg-[var(--brand-lavender)] mb-6 flex items-center justify-center text-white font-mono font-bold text-lg opacity-90">03</div>
-                            <h3 class="font-display text-2xl mb-2">Director,<br>Creative Tech</h3>
-                            <div class="w-8 h-1 bg-black mb-6 mt-2"></div>
-                            <p class="text-sm text-gray-600 leading-relaxed mb-6">
-                                Specialist in narrative design and creative technology. Builds government communications frameworks and custom AI tools.
+                            <div class="w-8 h-8 bg-[var(--brand-lavender)] mb-6 flex items-center justify-center text-white font-mono text-xs opacity-100">03</div>
+                            <h3 class="font-serif text-2xl mb-4">Story &<br>Creative Tech</h3>
+                            <div class="w-6 h-px bg-black mb-4 opacity-20"></div>
+                            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                                Background in narrative design and government communications. Expertise in developing custom AI frameworks for content generation and archival management.
                             </p>
-                            <a href="mailto:faresb@fact.qa" class="font-mono text-xs text-gray-400 hover:text-black border-b border-gray-200 hover:border-black pb-1 transition-all">faresb@fact.qa</a>
+                            <a href="mailto:faresb@fact.qa" class="font-mono text-[10px] text-gray-400 hover:text-black border-b border-transparent hover:border-black pb-0.5 transition-all">faresb@fact.qa</a>
                         </div>
 
                     </div>
@@ -401,12 +422,12 @@
             <!-- TAB: CONTACT -->
             <div id="contact" class="tab-content">
                 <div class="w-full h-full flex flex-col justify-center items-center text-center">
-                    <div class="w-20 h-20 rounded-full border-2 border-black flex items-center justify-center mb-8 animate-pulse">
-                        <div class="w-4 h-4 bg-black rounded-full"></div>
+                    <div class="w-16 h-16 rounded-full border border-black flex items-center justify-center mb-8 animate-pulse">
+                        <div class="w-2 h-2 bg-black"></div>
                     </div>
-                    <h2 class="font-display text-5xl md:text-7xl mb-8">Initiate Mandate</h2>
-                    <a href="mailto:info@fact.qa" class="text-2xl text-gray-400 hover:text-black transition-colors border-b-2 border-transparent hover:border-black pb-1">info@fact.qa</a>
-                    <p class="mt-12 font-mono text-xs text-gray-300 uppercase tracking-widest">FACT Special Projects &copy; 2025</p>
+                    <h2 class="font-serif text-5xl md:text-6xl mb-8">Initiate Mandate</h2>
+                    <a href="mailto:info@fact.qa" class="text-2xl text-gray-400 hover:text-black transition-colors font-serif italic">info@fact.qa</a>
+                    <p class="mt-12 font-mono text-[10px] text-gray-300 uppercase tracking-widest">FACT Special Projects &copy; 2025</p>
                 </div>
             </div>
 
