@@ -2,1070 +2,1070 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QNB Finance Pro - Enhanced</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>QNB Finance Pro</title>
     
+    <!-- Optimized Tech Stack -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
 
     <script>
+        dayjs.extend(dayjs_plugin_isBetween);
+        dayjs.extend(dayjs_plugin_relativeTime);
+        
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 900: '#4c1d95' },
-                        dark: { bg: '#0f172a', card: '#1e293b', border: '#334155' }
+                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
+                        dark: { bg: '#0f172a', card: '#1e293b', border: '#334155', hover: '#283548' }
+                    },
+                    spacing: {
+                        'safe-b': 'env(safe-area-inset-bottom)',
+                        'safe-t': 'env(safe-area-inset-top)'
                     }
                 }
             }
         }
     </script>
+    
     <style>
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        .glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        @keyframes pulse-border {
-            0%, 100% { border-color: #ef4444; }
-            50% { border-color: #fca5a5; }
-        }
-        .uncategorized-highlight {
-            animation: pulse-border 2s ease-in-out infinite;
-            border-width: 2px;
-            border-style: solid;
+        * { -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
-        .modal { 
-            display: none; 
-            position: fixed; 
-            z-index: 50; 
-            left: 0; 
-            top: 0; 
-            width: 100%; 
-            height: 100%; 
-            background-color: rgba(0,0,0,0.5); 
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
-        .modal.active { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        .dark .skeleton {
+            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+            background-size: 200% 100%;
         }
-        .modal-content { 
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        /* Health Ring */
+        .health-ring { transform: rotate(-90deg); }
+        .health-ring circle { transition: stroke-dashoffset 0.8s ease-out; }
+        
+        /* Category Expansion */
+        .cat-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .cat-details.open { max-height: 400px; }
+        
+        /* Bottom Nav (Mobile) */
+        .bottom-nav {
+            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+        }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.6); }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-box { 
             background: white; 
             border-radius: 1rem; 
-            max-width: 600px; 
             width: 90%; 
-            max-height: 80vh; 
-            overflow-y: auto; 
+            max-width: 420px; 
+            max-height: 85vh; 
+            overflow-y: auto;
+            animation: modalIn 0.2s ease-out;
         }
+        .dark .modal-box { background: #1e293b; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        .dark .modal-content { background: #1e293b; }
-        
-        /* Health Score Gauge */
-        .score-circle {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
-        /* Heatmap */
-        .heatmap-day {
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .heatmap-day:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        /* Expandable category */
-        .category-row {
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .category-row:hover {
-            background: rgba(139, 92, 246, 0.05);
-        }
-        .merchant-detail {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        .merchant-detail.expanded {
-            max-height: 2000px;
-        }
-        
-        /* Floating Action Button */
-        .fab {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #8b5cf6;
+        /* Tooltip */
+        [data-tip]:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 8px;
+            padding: 4px 8px;
+            background: #1e293b;
             color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 40;
-        }
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.6);
+            font-size: 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 50;
         }
         
-        /* Progress ring animation */
-        @keyframes progress-ring {
-            from { stroke-dashoffset: 440; }
+        /* Responsive Breakpoints */
+        /* iPhone 13: 390px */
+        /* iPad Air 11": 820px */
+        /* MBP 14": ~1512px */
+        /* Studio Display: 2560px */
+        
+        @media (min-width: 768px) {
+            .mobile-only { display: none !important; }
         }
-        .progress-ring-circle {
-            transition: stroke-dashoffset 1s ease-in-out;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
+        @media (max-width: 767px) {
+            .desktop-only { display: none !important; }
         }
+        
+        /* Celebration */
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .celebrate { animation: celebrate 0.4s ease-out; }
+        
+        /* Touch-friendly tap targets */
+        .tap-target { min-height: 44px; min-width: 44px; }
+        
+        /* Chart container responsive */
+        .chart-wrap { position: relative; width: 100%; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-dark-bg text-slate-800 dark:text-slate-100 transition-colors duration-300 flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border h-full">
-        <div class="p-6 flex items-center gap-3 border-b border-gray-100 dark:border-dark-border">
-            <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-lg">Q</div>
-            <span class="font-bold text-xl tracking-tight">Finance Pro</span>
+<body class="bg-gray-50 dark:bg-dark-bg text-slate-800 dark:text-slate-100 min-h-screen">
+    
+    <!-- DESKTOP/TABLET SIDEBAR -->
+    <aside id="sidebar" class="desktop-only fixed left-0 top-0 h-full bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border z-40 transition-all duration-300 w-64 lg:w-64 md:w-16 flex flex-col">
+        
+        <!-- Logo -->
+        <div class="p-4 lg:p-5 flex items-center gap-3 border-b border-gray-100 dark:border-dark-border">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-brand-500/20 flex-shrink-0">Q</div>
+            <span class="font-bold text-lg tracking-tight hidden lg:block">Finance Pro</span>
         </div>
         
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-600 transition">
-                <i class="fa-solid fa-chart-line w-5"></i> Dashboard
+        <!-- Nav -->
+        <nav class="flex-1 p-2 lg:p-3 space-y-1 overflow-y-auto">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition tap-target relative" data-tip="Dashboard">
+                <i class="fa-solid fa-chart-pie w-5 text-center text-lg"></i>
+                <span class="hidden lg:inline">Dashboard</span>
             </button>
-            <button onclick="switchView('insights')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-lightbulb w-5"></i> Smart Insights
-            </button>
-            <button onclick="switchView('patterns')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-calendar-days w-5"></i> Patterns
-            </button>
-            <button onclick="switchView('merchants')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-shop w-5"></i> Merchants
-            </button>
-            <button onclick="switchView('goals')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-bullseye w-5"></i> Goals
-            </button>
-            <button onclick="switchView('uncategorized')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-tags w-5"></i> Categorize <span id="uncatBadge" class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0</span>
-            </button>
-            <button onclick="switchView('transactions')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-dark-border hover:text-slate-900 dark:hover:text-slate-100 rounded-xl transition">
-                <i class="fa-solid fa-list w-5"></i> Transactions
+            <button onclick="switchView('transactions')" id="nav-transactions" class="nav-btn w-full flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition tap-target relative" data-tip="Transactions">
+                <i class="fa-solid fa-list w-5 text-center text-lg"></i>
+                <span class="hidden lg:inline">Transactions</span>
             </button>
         </nav>
-
-        <div class="p-4 border-t border-gray-100 dark:border-dark-border space-y-3">
-            <div class="flex items-center justify-between px-2">
-                <span class="text-xs font-semibold text-gray-400 uppercase">Dark Mode</span>
-                <button onclick="toggleTheme()" class="text-gray-400 hover:text-brand-600 transition">
-                    <i class="fa-solid fa-moon text-lg"></i>
+        
+        <!-- Footer -->
+        <div class="p-3 lg:p-4 border-t border-gray-100 dark:border-dark-border space-y-2">
+            <!-- Uncategorized Alert -->
+            <div id="uncatAlertDesktop" class="hidden p-2 lg:p-3 bg-red-50 dark:bg-red-900/20 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 transition tap-target" onclick="openUncatModal()">
+                <div class="flex items-center gap-2 text-red-600 dark:text-red-400 justify-center lg:justify-start">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span class="text-sm font-medium hidden lg:inline"><span id="uncatCountDesktop">0</span> to fix</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition tap-target">
+                    <i id="themeIcon" class="fa-solid fa-moon text-gray-500"></i>
+                </button>
+                <button onclick="syncData()" id="syncBtn" class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 flex items-center justify-center transition tap-target">
+                    <i class="fa-solid fa-rotate text-brand-600" id="syncIcon"></i>
                 </button>
             </div>
-            <button onclick="openQuickActions()" class="w-full bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition">
-                Quick Actions
-            </button>
-            <div class="text-xs text-gray-400 px-2" id="lastUpdated">Syncing...</div>
+            
+            <div class="text-xs text-gray-400 text-center hidden lg:block" id="lastUpdatedDesktop">Not synced</div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-only fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border z-40 bottom-nav">
+        <div class="flex items-center justify-around py-2">
+            <button onclick="switchView('dashboard')" id="mob-dashboard" class="mob-nav-btn active flex flex-col items-center gap-1 px-4 py-2 tap-target">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span class="text-[10px] font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchView('transactions')" id="mob-transactions" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target">
+                <i class="fa-solid fa-list text-lg"></i>
+                <span class="text-[10px] font-medium">History</span>
+            </button>
+            <button onclick="openUncatModal()" id="mob-categorize" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target relative">
+                <i class="fa-solid fa-tags text-lg"></i>
+                <span class="text-[10px] font-medium">Categorize</span>
+                <span id="uncatBadgeMobile" class="hidden absolute -top-1 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+            </button>
+            <button onclick="openSettingsModal()" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[10px] font-medium">Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="md:ml-16 lg:ml-64 pb-24 md:pb-8 min-h-screen">
         
-        <!-- Topbar -->
-        <header class="bg-white/80 dark:bg-dark-card/80 glass border-b border-gray-200 dark:border-dark-border h-16 flex items-center justify-between px-4 sm:px-8 z-20">
-            <div class="md:hidden flex items-center gap-3">
-                <button onclick="toggleMobileMenu()" class="text-gray-500"><i class="fa-solid fa-bars text-xl"></i></button>
-                <span class="font-bold text-lg">Finance Pro</span>
+        <!-- MOBILE HEADER -->
+        <header class="mobile-only sticky top-0 bg-white/90 dark:bg-dark-card/90 backdrop-blur-lg border-b border-gray-200 dark:border-dark-border z-30 px-4 py-3 flex items-center justify-between" style="padding-top: max(0.75rem, env(safe-area-inset-top))">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-bold">Q</div>
+                <span class="font-semibold">Finance Pro</span>
             </div>
-            
-            <div class="flex items-center gap-4 ml-auto">
-                <button onclick="fetchData()" class="text-sm text-gray-500 hover:text-brand-600 transition">
-                    <i class="fa-solid fa-rotate"></i> Sync
+            <button onclick="openDateModal()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-border rounded-lg text-sm tap-target">
+                <i class="fa-regular fa-calendar text-brand-500"></i>
+                <span id="dateRangeMobile" class="text-xs">This Month</span>
+            </button>
+        </header>
+        
+        <!-- DESKTOP HEADER -->
+        <header class="desktop-only sticky top-0 bg-white/90 dark:bg-dark-card/90 backdrop-blur-lg border-b border-gray-200 dark:border-dark-border z-30 px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold" id="viewTitle">Dashboard</h1>
+                <p class="text-sm text-gray-500" id="viewSubtitle">Your financial overview</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openDateModal()" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg hover:border-brand-500 transition tap-target">
+                    <i class="fa-regular fa-calendar text-brand-500"></i>
+                    <span id="dateRangeDesktop" class="text-sm">This Month</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
                 </button>
-                <div id="reportrange" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 text-sm rounded-lg px-4 py-2 cursor-pointer hover:border-brand-500 transition flex items-center gap-2">
-                    <i class="fa-regular fa-calendar"></i>
-                    <span>Loading...</span>
-                    <i class="fa-solid fa-chevron-down text-xs opacity-50"></i>
-                </div>
             </div>
         </header>
 
-        <!-- Scrollable Content -->
-        <div id="contentArea" class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 bg-gray-50 dark:bg-dark-bg">
+        <!-- CONTENT AREA -->
+        <div class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
             
-            <!-- DASHBOARD VIEW -->
-            <div id="view-dashboard" class="space-y-8">
+            <!-- ==================== DASHBOARD VIEW ==================== -->
+            <div id="view-dashboard" class="space-y-4 md:space-y-6">
                 
-                <!-- Health Score Hero -->
-                <div class="bg-gradient-to-br from-brand-600 to-purple-700 text-white p-8 rounded-2xl shadow-lg">
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div class="flex-1">
-                            <h2 class="text-2xl font-bold mb-2">Monthly Financial Health</h2>
-                            <p class="text-brand-100 text-sm mb-4" id="healthPeriod">January 2026</p>
-                            
-                            <div class="grid grid-cols-2 gap-4 mt-6">
+                <!-- LOADING SKELETON -->
+                <div id="loadingSkeleton" class="space-y-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="skeleton h-28 rounded-2xl"></div>
+                        <div class="skeleton h-28 rounded-2xl"></div>
+                        <div class="skeleton h-28 rounded-2xl"></div>
+                        <div class="skeleton h-28 rounded-2xl"></div>
+                    </div>
+                    <div class="skeleton h-64 rounded-2xl"></div>
+                </div>
+                
+                <!-- ACTUAL CONTENT (hidden until loaded) -->
+                <div id="dashboardContent" class="hidden space-y-4 md:space-y-6">
+                    
+                    <!-- QUICK FIX BANNER (if uncategorized) -->
+                    <div id="quickFixBanner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-amber-900 dark:text-amber-100 text-sm">Quick Fix Available</div>
+                                <div class="text-xs text-amber-700 dark:text-amber-300 truncate max-w-[180px] md:max-w-none" id="quickFixMerchant">--</div>
+                            </div>
+                        </div>
+                        <button onclick="quickFixTop()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition tap-target flex-shrink-0">
+                            Fix Now
+                        </button>
+                    </div>
+                    
+                    <!-- KEY METRICS ROW -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        
+                        <!-- Health Score -->
+                        <div class="bg-gradient-to-br from-brand-600 to-purple-700 text-white p-4 rounded-2xl shadow-lg cursor-pointer tap-target" onclick="openHealthModal()">
+                            <div class="flex items-center justify-between">
                                 <div>
-                                    <div class="text-xs text-brand-200 uppercase tracking-wider mb-1">Spent</div>
-                                    <div class="text-2xl font-bold" id="heroSpent">--</div>
+                                    <div class="text-[10px] text-brand-200 uppercase tracking-wider font-semibold">Health</div>
+                                    <div class="text-2xl md:text-3xl font-bold mt-1" id="healthScore">--</div>
+                                    <div class="text-xs text-brand-200 mt-1" id="healthLabel">Tap for details</div>
                                 </div>
-                                <div>
-                                    <div class="text-xs text-brand-200 uppercase tracking-wider mb-1">Saved</div>
-                                    <div class="text-2xl font-bold" id="heroSaved">--</div>
+                                <div class="relative w-12 h-12 md:w-14 md:h-14">
+                                    <svg class="health-ring w-full h-full" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="10"/>
+                                        <circle id="healthRing" cx="50" cy="50" r="42" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="flex flex-col items-center">
-                            <div class="score-circle bg-white/10 backdrop-blur">
-                                <svg width="160" height="160" class="absolute">
-                                    <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="12"/>
-                                    <circle id="scoreCircle" cx="80" cy="80" r="70" fill="none" stroke="white" stroke-width="12" 
-                                            stroke-dasharray="440" stroke-dashoffset="440" class="progress-ring-circle"/>
-                                </svg>
-                                <div class="relative z-10 text-center">
-                                    <div class="text-5xl font-bold" id="healthScore">--</div>
-                                    <div class="text-xs text-brand-200 uppercase tracking-wider">Health Score</div>
-                                </div>
+                        <!-- Total Spend -->
+                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Spent</span>
+                                <i class="fa-solid fa-arrow-trend-up text-red-400 text-xs"></i>
                             </div>
-                            <div class="mt-4 text-center">
-                                <div class="text-sm font-medium" id="healthStatus">Calculating...</div>
+                            <div class="text-xl md:text-2xl font-bold" id="totalSpend">--</div>
+                            <div class="text-[10px] text-gray-400 mt-1" id="spendDelta">--</div>
+                        </div>
+                        
+                        <!-- Money Left / Daily Budget -->
+                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Daily Budget</span>
+                                <i class="fa-solid fa-calendar-day text-brand-400 text-xs"></i>
                             </div>
+                            <div class="text-xl md:text-2xl font-bold" id="dailyBudget">--</div>
+                            <div class="text-[10px] text-gray-400 mt-1" id="daysLeft">-- days left</div>
+                        </div>
+                        
+                        <!-- Savings Rate -->
+                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Saved</span>
+                                <i class="fa-solid fa-piggy-bank text-emerald-400 text-xs"></i>
+                            </div>
+                            <div class="text-xl md:text-2xl font-bold" id="savingsRate">--%</div>
+                            <div class="text-[10px] mt-1" id="savingsAmount">--</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Critical Alerts -->
-                <div id="criticalAlerts" class="hidden">
-                    <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-lg">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-1"></i>
-                            <div class="flex-1">
-                                <h3 class="font-bold text-amber-900 dark:text-amber-100 mb-1">Critical Alerts</h3>
-                                <div id="alertsList" class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
-                                    <!-- JS injected -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spending Projection -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                <i class="fa-solid fa-gauge-high text-blue-600"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase">Burn Rate</div>
-                                <div class="text-xl font-bold" id="burnRate">--</div>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span id="burnRateDetail">Per day average</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                                <i class="fa-solid fa-chart-line text-purple-600"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase">Projected</div>
-                                <div class="text-xl font-bold" id="projected">--</div>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span id="projectedDetail">End of month estimate</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                                <i class="fa-solid fa-piggy-bank text-emerald-600"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase">Savings Rate</div>
-                                <div class="text-xl font-bold" id="savingsRate">--</div>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span id="savingsDetail">Of total income</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spending Flow -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-6">Where Your Money Goes</h3>
-                    <div class="h-[300px]">
-                        <canvas id="flowChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Category Drill-Down -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-6">Spending by Category (Click to Expand)</h3>
-                    <div class="space-y-3" id="categoryDrillDown">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-
-                <!-- Top Merchants -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-6">Top Spending This Month</h3>
-                    <div class="space-y-3" id="topMerchantsList">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- INSIGHTS VIEW -->
-            <div id="view-insights" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold">Smart Insights</h2>
-                
-                <div id="insightsContainer" class="space-y-6">
-                    <!-- JS injected -->
-                </div>
-
-                <!-- Opportunity Calculator -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-4">Savings Opportunities</h3>
-                    <div class="space-y-4" id="opportunitiesList">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-
-                <!-- What-If Scenarios -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-4">What-If Scenarios</h3>
-                    <p class="text-sm text-gray-500 mb-6">See how small changes impact your monthly savings</p>
                     
-                    <div class="space-y-4" id="scenariosList">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- PATTERNS VIEW -->
-            <div id="view-patterns" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold">Spending Patterns</h2>
-
-                <!-- Calendar Heatmap -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-6">Spending Intensity Calendar</h3>
-                    <div id="calendarHeatmap" class="overflow-x-auto">
-                        <!-- JS injected -->
-                    </div>
-                    <div class="flex items-center justify-between mt-4 text-xs text-gray-500">
-                        <span>Low spending</span>
-                        <div class="flex gap-1">
-                            <div class="w-4 h-4 rounded" style="background: #f0fdf4"></div>
-                            <div class="w-4 h-4 rounded" style="background: #bbf7d0"></div>
-                            <div class="w-4 h-4 rounded" style="background: #86efac"></div>
-                            <div class="w-4 h-4 rounded" style="background: #4ade80"></div>
-                            <div class="w-4 h-4 rounded" style="background: #22c55e"></div>
-                            <div class="w-4 h-4 rounded" style="background: #16a34a"></div>
+                    <!-- MAIN GRID -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                        
+                        <!-- SPENDING BY CATEGORY (Chart) -->
+                        <div class="lg:col-span-2 bg-white dark:bg-dark-card p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-semibold">Spending by Category</h3>
+                                <span class="text-xs text-gray-400" id="catCount">-- categories</span>
+                            </div>
+                            <div class="chart-wrap h-48 md:h-64">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
                         </div>
-                        <span>High spending</span>
-                    </div>
-                </div>
-
-                <!-- Time Analysis -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <h3 class="font-bold text-lg mb-6">Spending by Day of Week</h3>
-                        <div class="h-[250px]">
-                            <canvas id="dowChart"></canvas>
+                        
+                        <!-- CATEGORY DRILL-DOWN -->
+                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 dark:border-dark-border">
+                                <h3 class="font-semibold">Category Details</h3>
+                                <p class="text-xs text-gray-400">Tap to see merchants</p>
+                            </div>
+                            <div id="catDrilldown" class="max-h-64 md:max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-dark-border">
+                                <!-- JS populated -->
+                            </div>
                         </div>
                     </div>
-
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <h3 class="font-bold text-lg mb-6">Spending by Time of Day</h3>
-                        <div class="h-[250px]">
-                            <canvas id="todChart"></canvas>
+                    
+                    <!-- BOTTOM ROW -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        
+                        <!-- TOP MERCHANTS -->
+                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                                <h3 class="font-semibold">Top Merchants</h3>
+                                <span class="text-xs text-gray-400">By spend</span>
+                            </div>
+                            <div id="topMerchants" class="divide-y divide-gray-50 dark:divide-dark-border max-h-72 overflow-y-auto">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+                        
+                        <!-- RECURRING PAYMENTS -->
+                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                                <h3 class="font-semibold">Recurring Payments</h3>
+                                <span class="text-xs text-gray-400">Auto-detected</span>
+                            </div>
+                            <div id="recurring" class="divide-y divide-gray-50 dark:divide-dark-border max-h-72 overflow-y-auto">
+                                <!-- JS populated -->
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Pattern Insights -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-4">Detected Patterns</h3>
-                    <div id="patternInsights" class="space-y-3">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- MERCHANTS VIEW -->
-            <div id="view-merchants" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold">Merchant Analysis</h2>
-
-                <!-- Subscription Detection -->
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                    <h3 class="font-bold text-lg mb-4">Detected Subscriptions</h3>
-                    <div id="subscriptionsList" class="space-y-3">
-                        <!-- JS injected -->
-                    </div>
-                </div>
-
-                <!-- Merchant Leaderboard -->
-                <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                    <div class="p-6 border-b border-gray-100 dark:border-dark-border">
-                        <h3 class="font-bold text-lg">All Merchants</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50 dark:bg-dark-border text-xs text-gray-500 uppercase font-semibold">
-                                <tr>
-                                    <th class="px-6 py-4">Rank</th>
-                                    <th class="px-6 py-4">Merchant</th>
-                                    <th class="px-6 py-4">Category</th>
-                                    <th class="px-6 py-4 text-right">Transactions</th>
-                                    <th class="px-6 py-4 text-right">Total (QAR)</th>
-                                    <th class="px-6 py-4 text-right">Avg/Txn</th>
-                                </tr>
-                            </thead>
-                            <tbody id="merchantTableBody" class="divide-y divide-gray-100 dark:divide-dark-border text-sm">
-                                <!-- JS injected -->
-                            </tbody>
-                        </table>
-                    </div>
+                    
+                    <!-- SPENDING PATTERNS (Collapsible) -->
+                    <details class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
+                        <summary class="p-4 cursor-pointer flex items-center justify-between tap-target">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-chart-line text-brand-500"></i>
+                                <span class="font-semibold">Spending Patterns</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-sm"></i>
+                        </summary>
+                        <div class="p-4 pt-0 border-t border-gray-100 dark:border-dark-border">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500 mb-3">By Day of Week</h4>
+                                    <div class="chart-wrap h-40">
+                                        <canvas id="dowChart"></canvas>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500 mb-3">By Hour</h4>
+                                    <div class="chart-wrap h-40">
+                                        <canvas id="hourChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
-
-            <!-- GOALS VIEW -->
-            <div id="view-goals" class="hidden space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold">Financial Goals</h2>
-                    <button onclick="openGoalModal()" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition">
-                        <i class="fa-solid fa-plus"></i> Add Goal
-                    </button>
-                </div>
-
-                <div id="goalsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- JS injected -->
-                </div>
-            </div>
-
-            <!-- UNCATEGORIZED VIEW -->
-            <div id="view-uncategorized" class="hidden space-y-6">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold">Uncategorized Transactions</h2>
-                        <p class="text-sm text-gray-500 mt-1">Click any transaction to assign a category and merchant name</p>
+            
+            <!-- ==================== TRANSACTIONS VIEW ==================== -->
+            <div id="view-transactions" class="hidden space-y-4">
+                
+                <!-- SEARCH & FILTER -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="txnSearch" placeholder="Search transactions..." 
+                               class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition tap-target">
                     </div>
-                    <button onclick="exportCategoryMappings()" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition">
-                        <i class="fa-solid fa-download"></i> Export
-                    </button>
-                </div>
-
-                <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 dark:bg-dark-border text-xs text-gray-500 uppercase font-semibold">
-                            <tr>
-                                <th class="px-6 py-4">Date</th>
-                                <th class="px-6 py-4">Raw Merchant</th>
-                                <th class="px-6 py-4">Amount</th>
-                                <th class="px-6 py-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="uncategorizedTableBody" class="divide-y divide-gray-100 dark:divide-dark-border text-sm">
-                            <!-- JS injected -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TRANSACTIONS VIEW -->
-            <div id="view-transactions" class="hidden space-y-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h2 class="text-2xl font-bold">Transaction History</h2>
-                    <div class="flex gap-3 w-full sm:w-auto">
-                        <input type="text" id="globalSearch" placeholder="Search..." 
-                               class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none flex-1 sm:w-64">
-                        <select id="categoryFilter" onchange="filterTransactions()" 
-                                class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
+                    <select id="catFilter" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target">
+                        <option value="">All Categories</option>
+                    </select>
                 </div>
                 
+                <!-- TRANSACTION LIST -->
                 <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50 dark:bg-dark-border text-xs text-gray-500 uppercase font-semibold">
-                                <tr>
-                                    <th class="px-6 py-4">Date</th>
-                                    <th class="px-6 py-4">Merchant</th>
-                                    <th class="px-6 py-4">Category</th>
-                                    <th class="px-6 py-4 text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody id="txnTableBody" class="divide-y divide-gray-100 dark:divide-dark-border text-sm">
-                                <!-- JS injected -->
-                            </tbody>
-                        </table>
+                    
+                    <!-- Desktop Table Header -->
+                    <div class="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-dark-border text-xs text-gray-500 uppercase font-semibold">
+                        <div class="col-span-2">Date</div>
+                        <div class="col-span-4">Merchant</div>
+                        <div class="col-span-3">Category</div>
+                        <div class="col-span-3 text-right">Amount</div>
                     </div>
-                    <div class="p-4 border-t border-gray-100 dark:border-dark-border flex justify-center">
-                        <button onclick="loadMoreTxns()" class="text-sm text-brand-600 font-medium hover:underline">Load More</button>
+                    
+                    <div id="txnList" class="divide-y divide-gray-100 dark:divide-dark-border max-h-[60vh] overflow-y-auto">
+                        <!-- JS populated -->
+                    </div>
+                    
+                    <div class="p-3 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
+                        <span class="text-sm text-gray-500" id="txnCount">Showing 0</span>
+                        <button onclick="loadMore()" id="loadMoreBtn" class="text-sm text-brand-600 font-medium tap-target">Load More</button>
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <!-- Categorize Modal -->
-    <div id="categorizeModal" class="modal">
-        <div class="modal-content dark:bg-dark-card">
-            <div class="p-6 border-b border-gray-100 dark:border-dark-border">
-                <h3 class="font-bold text-lg">Categorize Transaction</h3>
-                <p class="text-sm text-gray-500 mt-1" id="modalMerchantName">--</p>
+    <!-- ==================== MODALS ==================== -->
+    
+    <!-- DATE PICKER MODAL -->
+    <div id="dateModal" class="modal">
+        <div class="modal-box">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                <h3 class="font-semibold">Select Date Range</h3>
+                <button onclick="closeDateModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Consolidated Merchant Name</label>
-                    <input type="text" id="modalConsolidatedName" 
-                           class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none"
-                           placeholder="e.g., Battle.net, Woqood">
-                    <p class="text-xs text-gray-400 mt-1">This groups similar merchants together (e.g., all Woqood branches)</p>
+            <div class="p-4 space-y-2">
+                <button onclick="setDateRange('thisMonth')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">This Month</button>
+                <button onclick="setDateRange('lastMonth')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last Month</button>
+                <button onclick="setDateRange('last30')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last 30 Days</button>
+                <button onclick="setDateRange('last90')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last 90 Days</button>
+                <button onclick="setDateRange('thisYear')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">This Year</button>
+                <button onclick="setDateRange('allTime')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">All Time</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- HEALTH SCORE MODAL -->
+    <div id="healthModal" class="modal">
+        <div class="modal-box">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                <h3 class="font-semibold">Health Score Breakdown</h3>
+                <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 space-y-4" id="healthBreakdown">
+                <!-- JS populated -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- CATEGORIZE MODAL -->
+    <div id="catModal" class="modal">
+        <div class="modal-box">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                <h3 class="font-semibold">Categorize Transaction</h3>
+                <button onclick="closeCatModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="p-3 bg-gray-50 dark:bg-dark-border rounded-lg">
+                    <div class="text-xs text-gray-400 mb-1">Original Transaction</div>
+                    <div class="font-medium text-sm break-all" id="catModalRaw">--</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Display Name (optional)</label>
-                    <input type="text" id="modalDisplayName" 
-                           class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none"
-                           placeholder="Leave blank to use consolidated name">
+                    <label class="block text-sm font-medium mb-1.5">Merchant Name</label>
+                    <input type="text" id="catModalName" class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target" placeholder="e.g., Keeta, Netflix">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-2">Category</label>
-                    <select id="modalCategorySelect" 
-                            class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Food & Drink">Food & Drink</option>
-                        <option value="Groceries">Groceries</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Bars & Hotels">Bars & Hotels</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Gaming">Gaming</option>
-                        <option value="AI Tools">AI Tools</option>
-                        <option value="Subscriptions">Subscriptions</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Health">Health</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Education">Education</option>
-                        <option value="Fawran/Other">Fawran/Other</option>
-                        <option value="Other">Other</option>
+                    <label class="block text-sm font-medium mb-1.5">Category</label>
+                    <select id="catModalCat" class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target">
+                        <!-- JS populated -->
                     </select>
                 </div>
             </div>
-            <div class="p-6 border-t border-gray-100 dark:border-dark-border flex justify-end gap-3">
-                <button onclick="closeCategorizeModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-border rounded-lg transition">Cancel</button>
-                <button onclick="saveCategorization()" class="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition">Save</button>
+            <div class="p-4 border-t border-gray-100 dark:border-dark-border flex gap-2">
+                <button onclick="closeCatModal()" class="flex-1 px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-border rounded-lg transition tap-target">Cancel</button>
+                <button onclick="saveCategorization()" class="flex-1 px-4 py-3 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition tap-target">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- UNCATEGORIZED LIST MODAL -->
+    <div id="uncatModal" class="modal">
+        <div class="modal-box" style="max-width: 500px;">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold">Uncategorized Transactions</h3>
+                    <p class="text-xs text-gray-400">Tap to categorize</p>
+                </div>
+                <button onclick="closeUncatModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="uncatList" class="max-h-[50vh] overflow-y-auto divide-y divide-gray-100 dark:divide-dark-border">
+                <!-- JS populated -->
+            </div>
+            <div class="p-3 border-t border-gray-100 dark:border-dark-border flex justify-between items-center">
+                <button onclick="exportMappings()" class="text-sm text-brand-600 tap-target"><i class="fa-solid fa-download mr-1"></i> Export</button>
+                <button onclick="closeUncatModal()" class="px-4 py-2 text-sm text-gray-500 tap-target">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SETTINGS MODAL (Mobile) -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-box">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                <h3 class="font-semibold">Settings</h3>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">Dark Mode</span>
+                    <button onclick="toggleTheme()" class="w-12 h-7 rounded-full bg-gray-200 dark:bg-brand-600 relative transition tap-target">
+                        <div class="w-5 h-5 rounded-full bg-white absolute top-1 left-1 dark:left-6 transition-all shadow"></div>
+                    </button>
+                </div>
+                <button onclick="syncData(); closeSettingsModal();" class="w-full py-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-lg font-medium tap-target">
+                    <i class="fa-solid fa-rotate mr-2"></i> Sync Now
+                </button>
+                <div class="text-center text-xs text-gray-400" id="lastUpdatedMobile">Not synced</div>
             </div>
         </div>
     </div>
 
-    <!-- Goal Modal -->
-    <div id="goalModal" class="modal">
-        <div class="modal-content dark:bg-dark-card">
-            <div class="p-6 border-b border-gray-100 dark:border-dark-border">
-                <h3 class="font-bold text-lg">Add Financial Goal</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Goal Name</label>
-                    <input type="text" id="goalName" 
-                           class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none"
-                           placeholder="e.g., Gaming PC Upgrade">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Target Amount (QAR)</label>
-                    <input type="number" id="goalAmount" 
-                           class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none"
-                           placeholder="5000">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Target Date</label>
-                    <input type="date" id="goalDate" 
-                           class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-            </div>
-            <div class="p-6 border-t border-gray-100 dark:border-dark-border flex justify-end gap-3">
-                <button onclick="closeGoalModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-border rounded-lg transition">Cancel</button>
-                <button onclick="saveGoal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition">Save Goal</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Modal -->
-    <div id="quickActionsModal" class="modal">
-        <div class="modal-content dark:bg-dark-card">
-            <div class="p-6 border-b border-gray-100 dark:border-dark-border">
-                <h3 class="font-bold text-lg">Quick Actions</h3>
-            </div>
-            <div class="p-6 grid grid-cols-2 gap-4">
-                <button onclick="switchView('uncategorized'); closeQuickActions();" class="p-4 bg-gray-50 dark:bg-dark-border rounded-lg hover:bg-gray-100 dark:hover:bg-dark-bg transition">
-                    <i class="fa-solid fa-tags text-2xl text-brand-600 mb-2"></i>
-                    <div class="font-medium text-sm">Categorize</div>
-                </button>
-                <button onclick="switchView('goals'); closeQuickActions();" class="p-4 bg-gray-50 dark:bg-dark-border rounded-lg hover:bg-gray-100 dark:hover:bg-dark-bg transition">
-                    <i class="fa-solid fa-bullseye text-2xl text-brand-600 mb-2"></i>
-                    <div class="font-medium text-sm">Add Goal</div>
-                </button>
-                <button onclick="fetchData(); closeQuickActions();" class="p-4 bg-gray-50 dark:bg-dark-border rounded-lg hover:bg-gray-100 dark:hover:bg-dark-bg transition">
-                    <i class="fa-solid fa-rotate text-2xl text-brand-600 mb-2"></i>
-                    <div class="font-medium text-sm">Sync Data</div>
-                </button>
-                <button onclick="exportCategoryMappings(); closeQuickActions();" class="p-4 bg-gray-50 dark:bg-dark-border rounded-lg hover:bg-gray-100 dark:hover:bg-dark-bg transition">
-                    <i class="fa-solid fa-download text-2xl text-brand-600 mb-2"></i>
-                    <div class="font-medium text-sm">Export</div>
-                </button>
-            </div>
-            <div class="p-6 border-t border-gray-100 dark:border-dark-border flex justify-end">
-                <button onclick="closeQuickActions()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-border rounded-lg transition">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Floating Action Button (Mobile) -->
-    <div class="fab md:hidden" onclick="openQuickActions()">
-        <i class="fa-solid fa-bolt text-xl"></i>
-    </div>
-
+    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
-        const SHEET_ID = '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw';
-        
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
+            STORAGE_VERSION: 2,
+            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
+        };
+
+        // ============================================
+        // STATE
+        // ============================================
         const STATE = {
             allTxns: [],
-            filteredTxns: [],
+            filtered: [],
             merchantMap: [],
+            categories: new Set(),
+            catColors: {},
+            fxRates: { ...CONFIG.DEFAULT_FX },
             localMappings: {},
-            goals: [],
-            fxRates: { 'USD': 3.65, 'EUR': 3.9, 'GBP': 4.6 },
-            dateRange: { start: moment().startOf('month'), end: moment() },
-            theme: localStorage.getItem('theme') || 'light',
-            currentView: 'dashboard',
-            txnDisplayLimit: 50,
-            currentCategorizeTarget: null,
-            expandedCategories: new Set()
+            dateRange: { start: dayjs().startOf('month'), end: dayjs() },
+            dateLabel: 'This Month',
+            view: 'dashboard',
+            txnLimit: 30,
+            expandedCats: new Set(),
+            catTarget: null,
+            isLoading: true
         };
 
-        const CATEGORIES = ['Food & Drink', 'Groceries', 'Transport', 'Bars & Hotels', 'Shopping', 'Gaming', 'AI Tools', 'Subscriptions', 'Utilities', 'Health', 'Entertainment', 'Education', 'Fawran/Other', 'Other'];
-        
-        const PALETTE = {
-            'Food & Drink': '#F59E0B',
-            'Groceries': '#D97706',
-            'Transport': '#3B82F6',
-            'Bars & Hotels': '#EC4899',
-            'Shopping': '#F43F5E',
-            'Gaming': '#8B5CF6',
-            'AI Tools': '#7C3AED',
-            'Subscriptions': '#A855F7',
-            'Utilities': '#10B981',
-            'Health': '#059669',
-            'Entertainment': '#06B6D4',
-            'Education': '#6366F1',
-            'Fawran/Other': '#64748B',
-            'Other': '#94A3B8',
-            'Uncategorized': '#EF4444'
-        };
+        // ============================================
+        // COLOR PALETTE (Divergent, WCAG AA)
+        // ============================================
+        const COLORS = [
+            '#7C3AED', '#F59E0B', '#10B981', '#3B82F6', '#EC4899',
+            '#06B6D4', '#EF4444', '#84CC16', '#8B5CF6', '#F97316',
+            '#14B8A6', '#A855F7', '#0EA5E9', '#F43F5E', '#22C55E'
+        ];
 
-        // Initialize
-        $(function() {
+        function assignColors(cats) {
+            const arr = Array.from(cats).filter(c => c !== 'Uncategorized').sort();
+            const colors = {};
+            arr.forEach((c, i) => colors[c] = COLORS[i % COLORS.length]);
+            colors['Uncategorized'] = '#DC2626';
+            return colors;
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
             initTheme();
-            initDatePicker();
-            fetchData();
-            $('#globalSearch').on('input', debounce(filterTransactions, 300));
+            syncData();
+            
+            // Event listeners
+            document.getElementById('txnSearch').addEventListener('input', debounce(filterTxns, 200));
+            document.getElementById('catFilter').addEventListener('change', filterTxns);
         });
 
         function loadLocalData() {
-            const mappings = localStorage.getItem('categoryMappings');
-            if (mappings) STATE.localMappings = JSON.parse(mappings);
-            
-            const goals = localStorage.getItem('goals');
-            if (goals) STATE.goals = JSON.parse(goals);
+            try {
+                const stored = localStorage.getItem('qnb_data');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.version === CONFIG.STORAGE_VERSION) {
+                        STATE.localMappings = data.mappings || {};
+                    }
+                }
+            } catch (e) { console.warn('localStorage parse error', e); }
         }
 
-        function saveLocalMappings() {
-            localStorage.setItem('categoryMappings', JSON.stringify(STATE.localMappings));
-        }
-
-        function saveGoalsToLocal() {
-            localStorage.setItem('goals', JSON.stringify(STATE.goals));
+        function saveLocalData() {
+            localStorage.setItem('qnb_data', JSON.stringify({
+                version: CONFIG.STORAGE_VERSION,
+                mappings: STATE.localMappings
+            }));
         }
 
         function initTheme() {
-            if (STATE.theme === 'dark') {
+            if (localStorage.getItem('qnb_theme') === 'dark') {
                 document.documentElement.classList.add('dark');
             }
+            updateThemeIcon();
         }
 
         function toggleTheme() {
-            const html = document.documentElement;
-            html.classList.toggle('dark');
-            STATE.theme = html.classList.contains('dark') ? 'dark' : 'light';
-            localStorage.setItem('theme', STATE.theme);
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('qnb_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateThemeIcon();
+            renderCharts();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-gray-500';
+            }
+        }
+
+        // ============================================
+        // DATA FETCHING
+        // ============================================
+        async function syncData() {
+            STATE.isLoading = true;
+            showLoading(true);
             
-            // Redraw charts with new theme
-            updateAllViews();
-        }
+            const icon = document.getElementById('syncIcon');
+            if (icon) icon.classList.add('fa-spin');
 
-        function initDatePicker() {
-            $('#reportrange').daterangepicker({
-                startDate: STATE.dateRange.start,
-                endDate: STATE.dateRange.end,
-                ranges: {
-                   'This Month': [moment().startOf('month'), moment()],
-                   'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-                   'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                   'Last 90 Days': [moment().subtract(89, 'days'), moment()],
-                   'This Year': [moment().startOf('year'), moment()],
-                   'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
-                }
-            }, updateDateRange);
+            const url = (sheet) => `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
 
-            updateDateRange(STATE.dateRange.start, STATE.dateRange.end);
-        }
-
-        function updateDateRange(start, end) {
-            $('#reportrange span').html(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
-            STATE.dateRange = { start: start, end: end };
-            filterData();
-        }
-
-        // Data Fetching
-        async function fetchData() {
-            const getUrl = (s) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${s}&tq=select%20*&_=${Date.now()}`;
-            
             try {
-                const [l, m, f] = await Promise.all([
-                    fetchCSV(getUrl('RawLedger')),
-                    fetchCSV(getUrl('MerchantMap')),
-                    fetchCSV(getUrl('FXRates'))
+                const [ledger, map, fx] = await Promise.all([
+                    fetchCSV(url('RawLedger')),
+                    fetchCSV(url('MerchantMap')),
+                    fetchCSV(url('FXRates'))
                 ]);
 
-                processFX(f);
-                processMap(m);
-                processTxns(l);
-                
-                document.getElementById('lastUpdated').innerText = 'Synced: ' + moment().format('HH:mm');
+                processFX(fx);
+                processMerchantMap(map);
+                processTxns(ledger);
+
+                const now = dayjs().format('HH:mm');
+                ['lastUpdatedDesktop', 'lastUpdatedMobile'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = `Synced ${now}`;
+                });
+
+                STATE.isLoading = false;
+                showLoading(false);
                 filterData();
 
-            } catch (e) {
-                console.error('Sync error:', e);
-                alert("Failed to sync data. Check console.");
+            } catch (err) {
+                console.error('Sync error:', err);
+                STATE.isLoading = false;
+                showLoading(false);
+                showError('Sync failed. Check your connection and try again.');
+            } finally {
+                if (icon) icon.classList.remove('fa-spin');
             }
         }
 
         function fetchCSV(url) {
-            return new Promise((resolve) => Papa.parse(url, { 
-                download: true, 
-                header: false, 
-                skipEmptyLines: true, 
-                complete: res => resolve(res.data) 
-            }));
-        }
-
-        function processFX(rows) { 
-            rows.forEach(r => { 
-                if(r[0] && r[1] && !isNaN(parseFloat(r[1]))) 
-                    STATE.fxRates[clean(r[0])] = parseFloat(r[1]); 
+            return new Promise((resolve, reject) => {
+                Papa.parse(url, {
+                    download: true,
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: res => resolve(res.data),
+                    error: err => reject(err)
+                });
             });
         }
-        
-        function processMap(rows) {
-            if (rows.length > 0 && rows[0][0].includes('Pattern')) rows.shift();
-            // Format: Pattern, Display Name, Consolidated Name, Category
-            STATE.merchantMap = rows.map(r => ({ 
-                p: clean(r[0]).toLowerCase(), 
-                displayName: clean(r[1]), 
-                consolidatedName: clean(r[2]) || clean(r[1]), // Fallback to display name
-                cat: clean(r[3]) 
-            })).filter(x => x.p);
+
+        function showLoading(show) {
+            const skeleton = document.getElementById('loadingSkeleton');
+            const content = document.getElementById('dashboardContent');
+            if (skeleton) skeleton.classList.toggle('hidden', !show);
+            if (content) content.classList.toggle('hidden', show);
+        }
+
+        function showError(msg) {
+            alert(msg); // Simple for now - could enhance with toast
+        }
+
+        // ============================================
+        // DATA PROCESSING
+        // ============================================
+        function processFX(rows) {
+            rows.forEach(r => {
+                const cur = clean(r[0]);
+                const rate = parseFloat(r[1]);
+                if (cur && !isNaN(rate)) STATE.fxRates[cur] = rate;
+            });
+        }
+
+        function processMerchantMap(rows) {
+            // Skip header
+            if (rows.length && rows[0][0]?.toLowerCase().includes('pattern')) rows.shift();
+
+            STATE.merchantMap = [];
+            STATE.categories.clear();
+
+            rows.forEach(r => {
+                const pattern = clean(r[0]).toLowerCase();
+                const display = clean(r[1]);
+                const consolidated = clean(r[2]) || display;
+                const category = clean(r[3]);
+
+                if (pattern && category) {
+                    STATE.merchantMap.push({ pattern, display, consolidated, category });
+                    STATE.categories.add(category);
+                }
+            });
+
+            STATE.categories.add('Uncategorized');
+            STATE.catColors = assignColors(STATE.categories);
+            updateCatDropdowns();
         }
 
         function processTxns(rows) {
-            const valid = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
-            
-            STATE.allTxns = valid.map(r => {
-                const rawName = clean(r[3]);
-                const cur = clean(r[2]) || 'QAR';
-                const amt = parseFloat(r[1]);
-                const rate = STATE.fxRates[cur] || 1;
-                const finalAmt = cur === 'QAR' ? amt : amt * rate;
-                
-                let meta = categorizeTransaction(rawName);
+            const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
+
+            STATE.allTxns = data.map(r => {
+                const raw = clean(r[3]);
+                const currency = clean(r[2]) || 'QAR';
+                const amount = parseFloat(r[1]);
+                const rate = STATE.fxRates[currency] || 1;
+                const amtQAR = currency === 'QAR' ? amount : amount * rate;
+                const meta = categorize(raw);
 
                 return {
-                    date: moment(clean(r[0])),
-                    amt: finalAmt,
-                    cur: cur,
-                    rawName: rawName,
-                    displayName: meta.displayName || rawName,
-                    consolidatedName: meta.consolidatedName || rawName,
-                    cat: meta.cat || 'Uncategorized',
-                    dir: clean(r[5]),
+                    date: dayjs(clean(r[0])),
+                    amount: amtQAR,
+                    currency,
+                    raw,
+                    display: meta.display,
+                    consolidated: meta.consolidated,
+                    category: meta.category,
+                    direction: clean(r[5]),
                     type: clean(r[6])
                 };
             }).sort((a, b) => b.date - a.date);
         }
 
-        function categorizeTransaction(rawName) {
-            const lowerName = rawName.toLowerCase();
-            
-            // Check local mappings first
-            if (STATE.localMappings[lowerName]) {
-                return STATE.localMappings[lowerName];
+        function categorize(raw) {
+            const lower = raw.toLowerCase();
+
+            // Local mappings first
+            if (STATE.localMappings[lower]) {
+                return STATE.localMappings[lower];
             }
-            
-            // Check sheet mappings
-            const match = STATE.merchantMap.find(m => lowerName.includes(m.p));
-            if (match) return { 
-                displayName: match.displayName, 
-                consolidatedName: match.consolidatedName,
-                cat: match.cat 
-            };
-            
-            return { displayName: rawName, consolidatedName: rawName, cat: 'Uncategorized' };
+
+            // MerchantMap
+            const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
+            if (match) {
+                return { display: match.display, consolidated: match.consolidated, category: match.category };
+            }
+
+            return { display: raw, consolidated: raw, category: 'Uncategorized' };
         }
 
-        function clean(str) { 
-            return str ? str.toString().replace(/^"|"$/g, '').trim() : ''; 
+        function clean(str) {
+            return str ? str.toString().replace(/^"|"$/g, '').trim() : '';
         }
 
-        // Filtering
+        // ============================================
+        // FILTERING
+        // ============================================
         function filterData() {
             const { start, end } = STATE.dateRange;
-            STATE.filteredTxns = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
-            updateAllViews();
+            STATE.filtered = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
+            STATE.txnLimit = 30;
+            updateAll();
         }
 
-        function updateAllViews() {
-            if (STATE.currentView === 'dashboard') updateDashboard();
-            else if (STATE.currentView === 'insights') updateInsights();
-            else if (STATE.currentView === 'patterns') updatePatterns();
-            else if (STATE.currentView === 'merchants') updateMerchants();
-            else if (STATE.currentView === 'goals') updateGoals();
-            else if (STATE.currentView === 'uncategorized') updateUncategorized();
-            else if (STATE.currentView === 'transactions') updateTransactions();
-            
-            updateCategoryFilter();
+        function filterTxns() {
+            const search = document.getElementById('txnSearch').value.toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+
+            let txns = STATE.filtered;
+            if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search));
+            if (cat) txns = txns.filter(t => t.category === cat);
+
+            renderTxnList(txns);
         }
 
-        // Dashboard
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateAll() {
+            updateDashboard();
+            updateTxnView();
+            updateUncatAlerts();
+        }
+
         function updateDashboard() {
-            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
-            const inc = STATE.filteredTxns.filter(t => t.dir === 'IN');
-            
-            const totalSpend = out.reduce((sum, t) => sum + t.amt, 0);
-            const totalInc = inc.reduce((sum, t) => sum + t.amt, 0);
-            const totalSaved = totalInc - totalSpend;
-            const savingsRate = totalInc > 0 ? ((totalSaved / totalInc) * 100) : 0;
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const inc = STATE.filtered.filter(t => t.direction === 'IN');
 
-            // Health Score Calculation (0-100)
-            let score = 0;
-            
-            // Component 1: Savings Rate (40 points)
-            if (savingsRate >= 30) score += 40;
-            else if (savingsRate >= 20) score += 30;
-            else if (savingsRate >= 10) score += 20;
-            else if (savingsRate >= 0) score += 10;
-            
-            // Component 2: Budget Adherence (30 points) - placeholder
-            score += 20; // Assume decent adherence
-            
-            // Component 3: Uncategorized (20 points)
-            const uncatCount = out.filter(t => t.cat === 'Uncategorized').length;
+            const totalSpend = out.reduce((s, t) => s + t.amount, 0);
+            const totalIncome = inc.reduce((s, t) => s + t.amount, 0);
+            const saved = totalIncome - totalSpend;
+            const savingsRate = totalIncome > 0 ? (saved / totalIncome) * 100 : 0;
+
+            // Days left in period
+            const daysTotal = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
+            const daysPassed = dayjs().diff(STATE.dateRange.start, 'day') + 1;
+            const daysLeft = Math.max(0, daysTotal - daysPassed);
+
+            // Daily budget (remaining / days left)
+            const remaining = totalIncome - totalSpend;
+            const dailyBudget = daysLeft > 0 ? remaining / daysLeft : remaining;
+
+            // Health Score
+            const uncatCount = out.filter(t => t.category === 'Uncategorized').length;
             const uncatRatio = out.length > 0 ? uncatCount / out.length : 0;
-            if (uncatRatio < 0.05) score += 20;
-            else if (uncatRatio < 0.15) score += 15;
-            else if (uncatRatio < 0.30) score += 10;
-            else score += 5;
-            
-            // Component 4: Consistent tracking (10 points)
-            score += 10;
-            
-            // Update UI
-            document.getElementById('healthScore').innerText = Math.round(score);
-            document.getElementById('heroSpent').innerText = Math.round(totalSpend).toLocaleString() + ' QAR';
-            document.getElementById('heroSaved').innerText = Math.round(totalSaved).toLocaleString() + ' QAR';
-            document.getElementById('savingsRate').innerText = Math.round(savingsRate) + '%';
-            
-            // Health status
-            let status = 'Excellent';
-            if (score < 40) status = 'Needs Work';
-            else if (score < 60) status = 'Fair';
-            else if (score < 80) status = 'Good';
-            document.getElementById('healthStatus').innerText = status;
-            
-            // Animate progress ring
-            const circumference = 2 * Math.PI * 70;
-            const offset = circumference - (score / 100) * circumference;
-            document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+            const healthData = calculateHealth(savingsRate, uncatRatio);
 
-            // Period
-            document.getElementById('healthPeriod').innerText = STATE.dateRange.start.format('MMMM YYYY');
+            // Week over week comparison
+            const thisWeekSpend = out.filter(t => t.date.isAfter(dayjs().subtract(7, 'day'))).reduce((s, t) => s + t.amount, 0);
+            const lastWeekSpend = out.filter(t => t.date.isBetween(dayjs().subtract(14, 'day'), dayjs().subtract(7, 'day'), 'day', '[]')).reduce((s, t) => s + t.amount, 0);
+            const weekDelta = lastWeekSpend > 0 ? ((thisWeekSpend - lastWeekSpend) / lastWeekSpend * 100) : 0;
 
-            // Burn rate & projection
-            const days = STATE.dateRange.end.diff(STATE.dateRange.start, 'days') + 1;
-            const dailyBurn = totalSpend / days;
-            const daysInMonth = moment().daysInMonth();
-            const projected = dailyBurn * daysInMonth;
-            
-            document.getElementById('burnRate').innerText = Math.round(dailyBurn).toLocaleString() + ' QAR';
-            document.getElementById('projected').innerText = Math.round(projected).toLocaleString() + ' QAR';
+            // Update DOM
+            document.getElementById('healthScore').textContent = healthData.score;
+            document.getElementById('healthLabel').textContent = healthData.label;
+            const ring = document.getElementById('healthRing');
+            ring.style.strokeDashoffset = 264 - (healthData.score / 100) * 264;
 
-            // Critical alerts
-            const alerts = [];
-            if (uncatCount > 10) {
-                alerts.push(`You have ${uncatCount} uncategorized transactions. Fix them for better insights.`);
-            }
-            if (savingsRate < 10 && totalInc > 0) {
-                alerts.push(`Your savings rate is only ${Math.round(savingsRate)}%. Consider reducing discretionary spending.`);
-            }
-            
-            const alertsDiv = document.getElementById('criticalAlerts');
-            if (alerts.length > 0) {
-                alertsDiv.classList.remove('hidden');
-                document.getElementById('alertsList').innerHTML = alerts.map(a => 
-                    `<div class="flex items-start gap-2"><i class="fa-solid fa-circle text-[6px] mt-1.5"></i><span>${a}</span></div>`
-                ).join('');
-            } else {
-                alertsDiv.classList.add('hidden');
-            }
+            document.getElementById('totalSpend').textContent = formatNum(totalSpend);
+            document.getElementById('spendDelta').textContent = weekDelta >= 0 ? `+${Math.round(weekDelta)}% vs last week` : `${Math.round(weekDelta)}% vs last week`;
+            document.getElementById('spendDelta').className = `text-[10px] mt-1 ${weekDelta >= 0 ? 'text-red-500' : 'text-emerald-500'}`;
+
+            document.getElementById('dailyBudget').textContent = formatNum(Math.max(0, dailyBudget));
+            document.getElementById('daysLeft').textContent = `${daysLeft} days left`;
+
+            document.getElementById('savingsRate').textContent = `${Math.round(savingsRate)}%`;
+            document.getElementById('savingsAmount').textContent = saved >= 0 ? `+${formatNum(saved)} saved` : `${formatNum(saved)} deficit`;
+            document.getElementById('savingsAmount').className = `text-[10px] mt-1 ${saved >= 0 ? 'text-emerald-500' : 'text-red-500'}`;
 
             // Category breakdown
             const catSpend = {};
-            out.forEach(t => {
-                catSpend[t.cat] = (catSpend[t.cat] || 0) + t.amt;
-            });
-
+            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
             const sortedCats = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
-            renderFlowChart(sortedCats);
 
-            // Category drill-down
-            renderCategoryDrillDown(sortedCats, out);
+            document.getElementById('catCount').textContent = `${sortedCats.length} categories`;
+            renderCategoryChart(sortedCats);
+            renderCatDrilldown(sortedCats, out);
 
             // Top merchants
-            const merchantSpend = {};
+            const merchSpend = {};
             out.forEach(t => {
-                const key = t.consolidatedName;
-                if (!merchantSpend[key]) {
-                    merchantSpend[key] = { sum: 0, count: 0, cat: t.cat };
-                }
-                merchantSpend[key].sum += t.amt;
-                merchantSpend[key].count++;
+                const key = t.consolidated;
+                if (!merchSpend[key]) merchSpend[key] = { sum: 0, count: 0, cat: t.category };
+                merchSpend[key].sum += t.amount;
+                merchSpend[key].count++;
             });
+            renderTopMerchants(Object.entries(merchSpend).sort((a, b) => b[1].sum - a[1].sum).slice(0, 8));
 
-            const topMerchants = Object.entries(merchantSpend)
-                .sort((a, b) => b[1].sum - a[1].sum)
-                .slice(0, 10);
+            // Recurring
+            detectRecurring(out);
 
-            const topMerchantsList = document.getElementById('topMerchantsList');
-            topMerchantsList.innerHTML = topMerchants.map((m, idx) => `
-                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/20 flex items-center justify-center font-bold text-brand-600">
-                            ${idx + 1}
-                        </div>
-                        <div>
-                            <div class="font-medium">${m[0]}</div>
-                            <div class="text-xs text-gray-500">${m[1].cat} • ${m[1].count} transactions</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-lg">${Math.round(m[1].sum).toLocaleString()}</div>
-                        <div class="text-xs text-gray-400">QAR</div>
-                    </div>
-                </div>
-            `).join('');
+            // Patterns
+            renderPatterns(out);
+
+            // Quick fix banner
+            const topUncat = out.find(t => t.category === 'Uncategorized');
+            const banner = document.getElementById('quickFixBanner');
+            if (topUncat) {
+                banner.classList.remove('hidden');
+                document.getElementById('quickFixMerchant').textContent = topUncat.raw;
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            // Store health breakdown for modal
+            STATE.healthBreakdown = healthData.breakdown;
         }
 
-        function renderFlowChart(sortedCats) {
-            const labels = sortedCats.slice(0, 8).map(x => x[0]);
-            const data = sortedCats.slice(0, 8).map(x => x[1]);
-            const colors = labels.map(l => PALETTE[l] || '#CBD5E1');
+        function calculateHealth(savingsRate, uncatRatio) {
+            const breakdown = [];
+            let score = 0;
 
-            renderChart('flowChart', 'bar', labels, data, colors);
+            // Savings (40 pts)
+            let savingsPts = 0;
+            if (savingsRate >= 30) savingsPts = 40;
+            else if (savingsRate >= 20) savingsPts = 30;
+            else if (savingsRate >= 10) savingsPts = 20;
+            else if (savingsRate >= 0) savingsPts = 10;
+            score += savingsPts;
+            breakdown.push({ label: 'Savings Rate', pts: savingsPts, max: 40, detail: `${Math.round(savingsRate)}% saved` });
+
+            // Categorization (30 pts)
+            let catPts = 0;
+            if (uncatRatio < 0.05) catPts = 30;
+            else if (uncatRatio < 0.15) catPts = 20;
+            else if (uncatRatio < 0.30) catPts = 10;
+            else catPts = 5;
+            score += catPts;
+            breakdown.push({ label: 'Categorization', pts: catPts, max: 30, detail: `${Math.round(uncatRatio * 100)}% uncategorized` });
+
+            // Data completeness (20 pts) - placeholder
+            score += 20;
+            breakdown.push({ label: 'Data Completeness', pts: 20, max: 20, detail: 'All transactions tracked' });
+
+            // Consistency (10 pts) - placeholder
+            score += 10;
+            breakdown.push({ label: 'Tracking Consistency', pts: 10, max: 10, detail: 'Regular tracking' });
+
+            let label = 'Excellent';
+            if (score < 40) label = 'Needs Work';
+            else if (score < 60) label = 'Fair';
+            else if (score < 80) label = 'Good';
+
+            return { score, label, breakdown };
         }
 
-        function renderCategoryDrillDown(sortedCats, transactions) {
-            const container = document.getElementById('categoryDrillDown');
-            
-            container.innerHTML = sortedCats.map(cat => {
-                const [catName, catSum] = cat;
-                const catTxns = transactions.filter(t => t.cat === catName);
-                
-                // Group by consolidated merchant
+        // ============================================
+        // CHART RENDERING
+        // ============================================
+        const charts = {};
+
+        function renderCategoryChart(sortedCats) {
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+            if (charts.category) charts.category.destroy();
+
+            const labels = sortedCats.slice(0, 8).map(c => c[0]);
+            const data = sortedCats.slice(0, 8).map(c => c[1]);
+            const colors = labels.map(l => STATE.catColors[l] || '#94A3B8');
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? '#334155' : '#f1f5f9';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+
+            charts.category = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{ data, backgroundColor: colors, borderRadius: 6, barThickness: window.innerWidth < 768 ? 20 : 32 }]
+                },
+                options: {
+                    indexAxis: window.innerWidth < 768 ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: window.innerWidth >= 768, color: gridColor }, ticks: { color: textColor, maxRotation: 0 } },
+                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { color: textColor } }
+                    }
+                }
+            });
+        }
+
+        function renderPatterns(txns) {
+            // Day of week
+            const dow = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
+            txns.forEach(t => dow[t.date.format('ddd')] += t.amount);
+            renderSmallChart('dowChart', Object.keys(dow), Object.values(dow), '#8B5CF6');
+
+            // Hour
+            const hours = Array(24).fill(0);
+            txns.forEach(t => hours[t.date.hour()] += t.amount);
+            renderSmallChart('hourChart', hours.map((_, i) => `${i}h`), hours, '#F59E0B');
+        }
+
+        function renderSmallChart(id, labels, data, color) {
+            const ctx = document.getElementById(id);
+            if (!ctx) return;
+            if (charts[id]) charts[id].destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? '#334155' : '#f1f5f9';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+
+            charts[id] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{ data, backgroundColor: color, borderRadius: 3, barThickness: 12 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 }, maxRotation: 0 } },
+                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { color: textColor, font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        function renderCharts() {
+            // Re-render after theme change
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const catSpend = {};
+            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+            renderCategoryChart(Object.entries(catSpend).sort((a, b) => b[1] - a[1]));
+            renderPatterns(out);
+        }
+
+        // ============================================
+        // COMPONENT RENDERING
+        // ============================================
+        function renderCatDrilldown(sortedCats, txns) {
+            const container = document.getElementById('catDrilldown');
+            if (!container) return;
+
+            container.innerHTML = sortedCats.map(([cat, sum]) => {
+                const catTxns = txns.filter(t => t.category === cat);
                 const merchants = {};
                 catTxns.forEach(t => {
-                    const key = t.consolidatedName;
-                    if (!merchants[key]) merchants[key] = { sum: 0, count: 0 };
-                    merchants[key].sum += t.amt;
-                    merchants[key].count++;
+                    if (!merchants[t.consolidated]) merchants[t.consolidated] = { sum: 0, count: 0 };
+                    merchants[t.consolidated].sum += t.amount;
+                    merchants[t.consolidated].count++;
                 });
+                const sorted = Object.entries(merchants).sort((a, b) => b[1].sum - a[1].sum).slice(0, 6);
+                const open = STATE.expandedCats.has(cat);
+                const color = STATE.catColors[cat] || '#94A3B8';
 
-                const sortedMerchants = Object.entries(merchants)
-                    .sort((a, b) => b[1].sum - a[1].sum)
-                    .slice(0, 10);
-
-                const isExpanded = STATE.expandedCategories.has(catName);
-                
                 return `
-                    <div class="border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden">
-                        <div class="category-row p-4 flex items-center justify-between" onclick="toggleCategory('${catName}')">
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded" style="background: ${PALETTE[catName] || '#CBD5E1'}"></div>
-                                <div>
-                                    <div class="font-medium">${catName}</div>
-                                    <div class="text-xs text-gray-500">${catTxns.length} transactions</div>
-                                </div>
+                    <div>
+                        <div class="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-hover tap-target" onclick="toggleCat('${cat}')">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded" style="background:${color}"></div>
+                                <span class="font-medium text-sm">${cat}</span>
+                                <span class="text-xs text-gray-400">(${catTxns.length})</span>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="text-right">
-                                    <div class="font-bold text-lg">${Math.round(catSum).toLocaleString()}</div>
-                                    <div class="text-xs text-gray-400">QAR</div>
-                                </div>
-                                <i class="fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400"></i>
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-sm">${formatNum(sum)}</span>
+                                <i class="fa-solid fa-chevron-${open ? 'up' : 'down'} text-gray-400 text-xs"></i>
                             </div>
                         </div>
-                        
-                        <div class="merchant-detail ${isExpanded ? 'expanded' : ''} bg-gray-50 dark:bg-dark-bg">
-                            <div class="p-4 space-y-2">
-                                ${sortedMerchants.map(m => `
-                                    <div class="flex items-center justify-between text-sm">
-                                        <div class="flex items-center gap-2">
-                                            <i class="fa-solid fa-circle text-[6px] text-gray-400"></i>
-                                            <span>${m[0]}</span>
-                                            <span class="text-xs text-gray-400">(${m[1].count}x)</span>
-                                        </div>
-                                        <span class="font-medium">${Math.round(m[1].sum).toLocaleString()} QAR</span>
+                        <div class="cat-details ${open ? 'open' : ''} bg-gray-50 dark:bg-dark-bg">
+                            <div class="px-4 pb-3 space-y-1">
+                                ${sorted.map(([name, d]) => `
+                                    <div class="flex justify-between text-xs py-1">
+                                        <span class="text-gray-600 dark:text-gray-400">${name} <span class="text-gray-400">(${d.count}x)</span></span>
+                                        <span class="font-medium">${formatNum(d.sum)}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1075,692 +1075,358 @@
             }).join('');
         }
 
-        function toggleCategory(catName) {
-            if (STATE.expandedCategories.has(catName)) {
-                STATE.expandedCategories.delete(catName);
-            } else {
-                STATE.expandedCategories.add(catName);
-            }
-            updateDashboard();
-        }
-
-        // Insights
-        function updateInsights() {
-            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
-            const insights = [];
-
-            // Spending spike
-            const prevPeriod = getPreviousPeriod();
-            const currentSpend = out.reduce((sum, t) => sum + t.amt, 0);
-            const prevSpend = prevPeriod.reduce((sum, t) => sum + t.amt, 0);
-            const change = ((currentSpend - prevSpend) / prevSpend * 100);
+        function toggleCat(cat) {
+            if (STATE.expandedCats.has(cat)) STATE.expandedCats.delete(cat);
+            else STATE.expandedCats.add(cat);
             
-            if (Math.abs(change) > 15) {
-                insights.push({
-                    type: change > 0 ? 'warning' : 'success',
-                    icon: change > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down',
-                    title: change > 0 ? 'Spending Increased' : 'Spending Decreased',
-                    message: `Your spending ${change > 0 ? 'increased' : 'decreased'} by ${Math.abs(Math.round(change))}% compared to the previous period (${Math.round(prevSpend).toLocaleString()} QAR → ${Math.round(currentSpend).toLocaleString()} QAR).`
-                });
-            }
-
-            // Category concentration
-            const cats = {};
-            out.forEach(t => { cats[t.cat] = (cats[t.cat] || 0) + t.amt; });
-            const topCat = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
-            
-            if (topCat) {
-                const percent = (topCat[1] / currentSpend * 100).toFixed(0);
-                insights.push({
-                    type: 'info',
-                    icon: 'fa-chart-pie',
-                    title: 'Spending Concentration',
-                    message: `${topCat[0]} dominates your spending at ${percent}% (${Math.round(topCat[1]).toLocaleString()} QAR). This category has ${cats[topCat[0]] ? Object.keys(cats).length : 0} total categories.`
-                });
-            }
-
-            // Render
-            const container = document.getElementById('insightsContainer');
-            container.innerHTML = insights.map(i => {
-                const colors = {
-                    warning: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100',
-                    success: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100',
-                    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100'
-                };
-                
-                return `
-                    <div class="p-6 rounded-2xl border ${colors[i.type]}">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid ${i.icon} text-xl mt-1"></i>
-                            <div class="flex-1">
-                                <h3 class="font-bold text-lg mb-2">${i.title}</h3>
-                                <p class="text-sm">${i.message}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // Opportunities
-            renderOpportunities(out, cats);
-
-            // Scenarios
-            renderScenarios(out, cats);
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const catSpend = {};
+            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+            renderCatDrilldown(Object.entries(catSpend).sort((a, b) => b[1] - a[1]), out);
         }
 
-        function renderOpportunities(transactions, categories) {
-            const opportunities = [];
+        function renderTopMerchants(merchants) {
+            const container = document.getElementById('topMerchants');
+            if (!container) return;
 
-            // Find top 3 categories
-            const topCats = Object.entries(categories)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 3);
-
-            topCats.forEach(cat => {
-                const saving = cat[1] * 0.25; // 25% reduction
-                opportunities.push({
-                    category: cat[0],
-                    current: cat[1],
-                    potential: saving,
-                    action: `Reduce ${cat[0]} by 25%`
-                });
-            });
-
-            const container = document.getElementById('opportunitiesList');
-            container.innerHTML = opportunities.map(o => `
-                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div>
-                        <div class="font-medium">${o.action}</div>
-                        <div class="text-xs text-gray-500 mt-1">Current: ${Math.round(o.current).toLocaleString()} QAR</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-emerald-600 font-bold text-lg">+${Math.round(o.potential).toLocaleString()}</div>
-                        <div class="text-xs text-gray-400">QAR saved/month</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderScenarios(transactions, categories) {
-            const scenarios = [
-                { desc: 'Skip 2 bar/hotel visits', reduction: 400 },
-                { desc: 'Reduce food delivery by 30%', reduction: categories['Food & Drink'] ? categories['Food & Drink'] * 0.3 : 300 },
-                { desc: 'Cancel 1 unused subscription', reduction: 100 }
-            ];
-
-            const container = document.getElementById('scenariosList');
-            container.innerHTML = scenarios.map(s => `
-                <div class="p-4 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-medium">${s.desc}</span>
-                        <span class="text-emerald-600 font-bold">+${Math.round(s.reduction).toLocaleString()} QAR</span>
-                    </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div class="bg-emerald-500 h-2 rounded-full" style="width: ${Math.min(100, (s.reduction / 500) * 100)}%"></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function getPreviousPeriod() {
-            const { start, end } = STATE.dateRange;
-            const days = end.diff(start, 'days') + 1;
-            const prevStart = moment(start).subtract(days, 'days');
-            const prevEnd = moment(start).subtract(1, 'days');
-            
-            return STATE.allTxns.filter(t => 
-                t.dir === 'OUT' && 
-                t.date.isBetween(prevStart, prevEnd, 'day', '[]')
-            );
-        }
-
-        // Patterns
-        function updatePatterns() {
-            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
-            
-            // Calendar heatmap
-            renderCalendarHeatmap(out);
-
-            // Day of week analysis
-            renderDayOfWeekChart(out);
-
-            // Time of day analysis
-            renderTimeOfDayChart(out);
-
-            // Pattern insights
-            renderPatternInsights(out);
-        }
-
-        function renderCalendarHeatmap(transactions) {
-            const container = document.getElementById('calendarHeatmap');
-            
-            const dailySpend = {};
-            transactions.forEach(t => {
-                const day = t.date.format('YYYY-MM-DD');
-                dailySpend[day] = (dailySpend[day] || 0) + t.amt;
-            });
-
-            const maxSpend = Math.max(...Object.values(dailySpend));
-            const start = moment(STATE.dateRange.start);
-            const end = moment(STATE.dateRange.end);
-            
-            const weeks = [];
-            let currentWeek = [];
-            
-            for (let d = moment(start); d.isSameOrBefore(end); d.add(1, 'days')) {
-                const dayKey = d.format('YYYY-MM-DD');
-                const spend = dailySpend[dayKey] || 0;
-                const intensity = maxSpend > 0 ? spend / maxSpend : 0;
-                
-                let color = '#f0fdf4';
-                if (intensity > 0.8) color = '#16a34a';
-                else if (intensity > 0.6) color = '#22c55e';
-                else if (intensity > 0.4) color = '#4ade80';
-                else if (intensity > 0.2) color = '#86efac';
-                else if (intensity > 0) color = '#bbf7d0';
-                
-                currentWeek.push({
-                    date: d.format('MMM D'),
-                    spend: spend,
-                    color: color
-                });
-                
-                if (d.day() === 6 || d.isSame(end, 'day')) {
-                    weeks.push([...currentWeek]);
-                    currentWeek = [];
-                }
-            }
-
-            container.innerHTML = `
-                <div class="flex gap-1">
-                    ${weeks.map(week => `
-                        <div class="flex flex-col gap-1">
-                            ${week.map(day => `
-                                <div class="heatmap-day" style="background: ${day.color}" title="${day.date}: ${Math.round(day.spend)} QAR"></div>
-                            `).join('')}
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        function renderDayOfWeekChart(transactions) {
-            const dow = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
-            transactions.forEach(t => {
-                const day = t.date.format('ddd');
-                dow[day] += t.amt;
-            });
-
-            const labels = Object.keys(dow);
-            const data = Object.values(dow);
-
-            renderChart('dowChart', 'bar', labels, data, ['#8B5CF6']);
-        }
-
-        function renderTimeOfDayChart(transactions) {
-            const hours = Array(24).fill(0);
-            transactions.forEach(t => {
-                const hour = t.date.hour();
-                hours[hour] += t.amt;
-            });
-
-            const labels = hours.map((_, i) => i + ':00');
-            renderChart('todChart', 'line', labels, hours, ['#F59E0B'], { tension: 0.4 });
-        }
-
-        function renderPatternInsights(transactions) {
-            const patterns = [];
-
-            // Weekend vs weekday
-            let weekendSpend = 0, weekdaySpend = 0;
-            transactions.forEach(t => {
-                const day = t.date.day();
-                if (day === 0 || day === 6) weekendSpend += t.amt;
-                else weekdaySpend += t.amt;
-            });
-
-            if (weekendSpend > weekdaySpend * 0.4) {
-                patterns.push(`You spend ${Math.round((weekendSpend / (weekendSpend + weekdaySpend)) * 100)}% of your money on weekends.`);
-            }
-
-            // Late night
-            let lateNight = transactions.filter(t => t.date.hour() >= 22 || t.date.hour() <= 4);
-            if (lateNight.length > 0) {
-                const lateSum = lateNight.reduce((sum, t) => sum + t.amt, 0);
-                patterns.push(`${lateNight.length} transactions after 10 PM totaling ${Math.round(lateSum).toLocaleString()} QAR.`);
-            }
-
-            const container = document.getElementById('patternInsights');
-            container.innerHTML = patterns.length > 0
-                ? patterns.map(p => `<div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">${p}</div>`).join('')
-                : '<div class="text-gray-400 text-sm">No unusual patterns detected.</div>';
-        }
-
-        // Merchants
-        function updateMerchants() {
-            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
-            
-            // Subscription detection
-            detectSubscriptions(out);
-
-            // Merchant table
-            const merchants = {};
-            out.forEach(t => {
-                const key = t.consolidatedName;
-                if (!merchants[key]) {
-                    merchants[key] = { count: 0, sum: 0, cat: t.cat };
-                }
-                merchants[key].count++;
-                merchants[key].sum += t.amt;
-            });
-
-            const sorted = Object.entries(merchants)
-                .sort((a, b) => b[1].sum - a[1].sum)
-                .slice(0, 50);
-
-            const tbody = document.getElementById('merchantTableBody');
-            tbody.innerHTML = sorted.map((m, idx) => `
-                <tr>
-                    <td class="px-6 py-4 text-gray-400 font-mono">#${idx + 1}</td>
-                    <td class="px-6 py-4 font-medium">${m[0]}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded text-xs" style="background: ${PALETTE[m[1].cat]}20; color: ${PALETTE[m[1].cat]}">
-                            ${m[1].cat}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right text-gray-500">${m[1].count}</td>
-                    <td class="px-6 py-4 text-right font-bold">${Math.round(m[1].sum).toLocaleString()}</td>
-                    <td class="px-6 py-4 text-right text-gray-500">${Math.round(m[1].sum / m[1].count).toLocaleString()}</td>
-                </tr>
-            `).join('');
-        }
-
-        function detectSubscriptions(transactions) {
-            const byMerchant = {};
-            
-            transactions.forEach(t => {
-                const key = t.consolidatedName;
-                if (!byMerchant[key]) byMerchant[key] = [];
-                byMerchant[key].push(t);
-            });
-
-            const subscriptions = [];
-            
-            Object.entries(byMerchant).forEach(([merchant, txns]) => {
-                if (txns.length < 2) return;
-                
-                txns.sort((a, b) => a.date - b.date);
-                
-                let intervals = [];
-                for (let i = 1; i < txns.length; i++) {
-                    const diff = txns[i].date.diff(txns[i-1].date, 'days');
-                    intervals.push(diff);
-                }
-                
-                const avgInterval = intervals.reduce((sum, i) => sum + i, 0) / intervals.length;
-                const isRecurring = avgInterval >= 25 && avgInterval <= 35; // ~30 days
-                
-                if (isRecurring) {
-                    const avgAmount = txns.reduce((sum, t) => sum + t.amt, 0) / txns.length;
-                    subscriptions.push({
-                        merchant: merchant,
-                        amount: avgAmount,
-                        frequency: Math.round(avgInterval),
-                        count: txns.length,
-                        cat: txns[0].cat
-                    });
-                }
-            });
-
-            const container = document.getElementById('subscriptionsList');
-            if (subscriptions.length === 0) {
-                container.innerHTML = '<div class="text-gray-400 text-sm">No recurring subscriptions detected.</div>';
+            if (!merchants.length) {
+                container.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">No spending data</div>';
                 return;
             }
 
-            container.innerHTML = subscriptions.map(s => `
-                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div>
-                        <div class="font-medium">${s.merchant}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            Every ~${s.frequency} days • ${s.count} payments
+            container.innerHTML = merchants.map(([name, d], i) => `
+                <div class="p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-full bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-xs font-bold text-brand-600">${i + 1}</div>
+                        <div>
+                            <div class="font-medium text-sm">${name}</div>
+                            <div class="text-xs text-gray-400">${d.cat} · ${d.count}x</div>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="font-bold text-lg">${Math.round(s.amount).toLocaleString()}</div>
-                        <div class="text-xs text-gray-400">QAR / month</div>
-                    </div>
+                    <div class="font-semibold">${formatNum(d.sum)}</div>
                 </div>
             `).join('');
         }
 
-        // Goals
-        function updateGoals() {
-            const container = document.getElementById('goalsList');
-            
-            if (STATE.goals.length === 0) {
-                container.innerHTML = '<div class="col-span-2 text-center py-12 text-gray-400">No goals set. Add a goal to start tracking!</div>';
+        function detectRecurring(txns) {
+            const container = document.getElementById('recurring');
+            if (!container) return;
+
+            const byMerch = {};
+            txns.forEach(t => {
+                if (!byMerch[t.consolidated]) byMerch[t.consolidated] = [];
+                byMerch[t.consolidated].push(t);
+            });
+
+            const subs = [];
+            Object.entries(byMerch).forEach(([name, arr]) => {
+                if (arr.length < 2) return;
+                arr.sort((a, b) => a.date - b.date);
+                const intervals = [];
+                for (let i = 1; i < arr.length; i++) {
+                    intervals.push(arr[i].date.diff(arr[i-1].date, 'day'));
+                }
+                const avg = intervals.reduce((s, i) => s + i, 0) / intervals.length;
+                if (avg >= 25 && avg <= 35) {
+                    subs.push({ name, amount: arr.reduce((s, t) => s + t.amount, 0) / arr.length, freq: Math.round(avg), count: arr.length });
+                }
+            });
+
+            if (!subs.length) {
+                container.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">No recurring detected</div>';
                 return;
             }
 
-            // Calculate progress based on savings
-            const inc = STATE.filteredTxns.filter(t => t.dir === 'IN');
-            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
-            const totalSaved = inc.reduce((sum, t) => sum + t.amt, 0) - out.reduce((sum, t) => sum + t.amt, 0);
+            container.innerHTML = subs.sort((a, b) => b.amount - a.amount).map(s => `
+                <div class="p-3 flex items-center justify-between">
+                    <div>
+                        <div class="font-medium text-sm">${s.name}</div>
+                        <div class="text-xs text-gray-400">~${s.freq} days · ${s.count} payments</div>
+                    </div>
+                    <div class="font-semibold">${formatNum(s.amount)}</div>
+                </div>
+            `).join('');
+        }
 
-            container.innerHTML = STATE.goals.map(g => {
-                const progress = (g.current / g.target) * 100;
-                const daysLeft = moment(g.targetDate).diff(moment(), 'days');
-                
+        // ============================================
+        // TRANSACTION VIEW
+        // ============================================
+        function updateTxnView() {
+            renderTxnList(STATE.filtered);
+        }
+
+        function renderTxnList(txns) {
+            const container = document.getElementById('txnList');
+            if (!container) return;
+
+            const show = txns.slice(0, STATE.txnLimit);
+            document.getElementById('txnCount').textContent = `Showing ${show.length} of ${txns.length}`;
+            document.getElementById('loadMoreBtn').style.display = show.length < txns.length ? 'block' : 'none';
+
+            container.innerHTML = show.map(t => {
+                const isOut = t.direction === 'OUT';
+                const isUncat = t.category === 'Uncategorized';
+                const color = STATE.catColors[t.category] || '#94A3B8';
+
                 return `
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-lg">${g.name}</h3>
-                            <button onclick="deleteGoal('${g.id}')" class="text-gray-400 hover:text-red-500">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                    <div class="${isUncat ? 'bg-red-50 dark:bg-red-900/10' : ''} p-3 md:grid md:grid-cols-12 md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-hover transition tap-target" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div class="md:col-span-2 text-xs text-gray-500 mb-1 md:mb-0">${t.date.format('MMM D, HH:mm')}</div>
+                        <div class="md:col-span-4 font-medium text-sm mb-1 md:mb-0">${t.display}</div>
+                        <div class="md:col-span-3 mb-1 md:mb-0">
+                            <span class="text-xs px-2 py-1 rounded" style="background:${color}20;color:${color}">${t.category}</span>
                         </div>
-                        
-                        <div class="mb-4">
-                            <div class="flex justify-between text-sm mb-2">
-                                <span class="text-gray-500">${Math.round(g.current).toLocaleString()} QAR</span>
-                                <span class="font-medium">${Math.round(progress)}%</span>
-                                <span class="text-gray-500">${Math.round(g.target).toLocaleString()} QAR</span>
-                            </div>
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                                <div class="bg-brand-600 h-3 rounded-full transition-all" style="width: ${Math.min(progress, 100)}%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between text-sm text-gray-500">
-                            <span>${daysLeft > 0 ? daysLeft + ' days left' : 'Target date passed'}</span>
-                            <span>${moment(g.targetDate).format('MMM D, YYYY')}</span>
+                        <div class="md:col-span-3 text-right font-semibold ${isOut ? '' : 'text-emerald-600'}">
+                            ${isOut ? '' : '+'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function openGoalModal() {
-            document.getElementById('goalModal').classList.add('active');
+        function loadMore() {
+            STATE.txnLimit += 30;
+            filterTxns();
         }
 
-        function closeGoalModal() {
-            document.getElementById('goalModal').classList.remove('active');
-        }
+        // ============================================
+        // UNCATEGORIZED
+        // ============================================
+        function updateUncatAlerts() {
+            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const count = uncat.length;
 
-        function saveGoal() {
-            const name = document.getElementById('goalName').value;
-            const amount = parseFloat(document.getElementById('goalAmount').value);
-            const date = document.getElementById('goalDate').value;
-            
-            if (!name || !amount || !date) {
-                alert('Please fill all fields');
-                return;
+            // Desktop
+            const alertD = document.getElementById('uncatAlertDesktop');
+            const countD = document.getElementById('uncatCountDesktop');
+            if (alertD) alertD.classList.toggle('hidden', count === 0);
+            if (countD) countD.textContent = count;
+
+            // Mobile
+            const badge = document.getElementById('uncatBadgeMobile');
+            if (badge) {
+                badge.classList.toggle('hidden', count === 0);
+                badge.textContent = count > 9 ? '9+' : count;
             }
-
-            STATE.goals.push({
-                id: Date.now().toString(),
-                name: name,
-                target: amount,
-                current: 0,
-                targetDate: date
-            });
-
-            saveGoalsToLocal();
-            closeGoalModal();
-            updateGoals();
         }
 
-        function deleteGoal(id) {
-            if (!confirm('Delete this goal?')) return;
-            STATE.goals = STATE.goals.filter(g => g.id !== id);
-            saveGoalsToLocal();
-            updateGoals();
-        }
+        function openUncatModal() {
+            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const container = document.getElementById('uncatList');
 
-        // Uncategorized
-        function updateUncategorized() {
-            const uncat = STATE.filteredTxns.filter(t => t.cat === 'Uncategorized');
-            
-            const badge = document.getElementById('uncatBadge');
-            if (uncat.length > 0) {
-                badge.innerText = uncat.length;
-                badge.classList.remove('hidden');
+            if (!uncat.length) {
+                container.innerHTML = '<div class="p-6 text-center text-gray-400"><i class="fa-solid fa-check-circle text-emerald-500 text-2xl mb-2"></i><br>All categorized!</div>';
             } else {
-                badge.classList.add('hidden');
+                container.innerHTML = uncat.slice(0, 20).map(t => `
+                    <div class="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-hover cursor-pointer tap-target" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div>
+                            <div class="font-medium text-sm">${t.raw}</div>
+                            <div class="text-xs text-gray-400">${t.date.format('MMM D')}</div>
+                        </div>
+                        <div class="font-semibold">${formatNum(t.amount)}</div>
+                    </div>
+                `).join('');
             }
 
-            const tbody = document.getElementById('uncategorizedTableBody');
-            
-            if (uncat.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-400">All transactions categorized!</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = uncat.map(t => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-dark-border cursor-pointer uncategorized-highlight" onclick="openCategorizeModal('${t.rawName.replace(/'/g, "\\'")}')">
-                    <td class="px-6 py-4 text-gray-500">${t.date.format('MMM D')}</td>
-                    <td class="px-6 py-4 font-medium">${t.rawName}</td>
-                    <td class="px-6 py-4 text-right font-bold">${t.amt.toFixed(2)}</td>
-                    <td class="px-6 py-4">
-                        <button class="text-brand-600 hover:text-brand-700 font-medium text-sm">Fix</button>
-                    </td>
-                </tr>
-            `).join('');
+            document.getElementById('uncatModal').classList.add('show');
         }
 
-        function openCategorizeModal(merchantName) {
-            STATE.currentCategorizeTarget = merchantName;
-            document.getElementById('modalMerchantName').innerText = merchantName;
-            document.getElementById('modalConsolidatedName').value = '';
-            document.getElementById('modalDisplayName').value = '';
-            document.getElementById('modalCategorySelect').value = 'Food & Drink';
-            document.getElementById('categorizeModal').classList.add('active');
+        function closeUncatModal() {
+            document.getElementById('uncatModal').classList.remove('show');
         }
 
-        function closeCategorizeModal() {
-            document.getElementById('categorizeModal').classList.remove('active');
+        // ============================================
+        // CATEGORIZATION
+        // ============================================
+        function openCatModal(raw) {
+            STATE.catTarget = raw;
+            document.getElementById('catModalRaw').textContent = raw;
+            document.getElementById('catModalName').value = '';
+            document.getElementById('catModal').classList.add('show');
+        }
+
+        function closeCatModal() {
+            document.getElementById('catModal').classList.remove('show');
         }
 
         function saveCategorization() {
-            const merchant = STATE.currentCategorizeTarget;
-            const consolidated = document.getElementById('modalConsolidatedName').value || merchant;
-            const display = document.getElementById('modalDisplayName').value || consolidated;
-            const category = document.getElementById('modalCategorySelect').value;
-            
-            STATE.localMappings[merchant.toLowerCase()] = {
-                displayName: display,
-                consolidatedName: consolidated,
-                cat: category
-            };
-            
-            saveLocalMappings();
-            closeCategorizeModal();
-            
+            const raw = STATE.catTarget;
+            const name = document.getElementById('catModalName').value || raw;
+            const cat = document.getElementById('catModalCat').value;
+
+            if (!cat) {
+                alert('Please select a category');
+                return;
+            }
+
+            STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
+            saveLocalData();
+
             // Re-categorize
             STATE.allTxns.forEach(t => {
-                if (t.rawName.toLowerCase() === merchant.toLowerCase()) {
-                    t.displayName = display;
-                    t.consolidatedName = consolidated;
-                    t.cat = category;
+                if (t.raw.toLowerCase() === raw.toLowerCase()) {
+                    t.display = name;
+                    t.consolidated = name;
+                    t.category = cat;
                 }
             });
-            
+
+            closeCatModal();
             filterData();
         }
 
-        function exportCategoryMappings() {
-            const csv = ['Pattern,Display Name,Consolidated Name,Category'];
-            Object.entries(STATE.localMappings).forEach(([pattern, data]) => {
-                csv.push(`"${pattern}","${data.displayName}","${data.consolidatedName}","${data.cat}"`);
-            });
+        function quickFixTop() {
+            const top = STATE.filtered.find(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            if (top) openCatModal(top.raw);
+        }
+
+        function updateCatDropdowns() {
+            const cats = Array.from(STATE.categories).filter(c => c !== 'Uncategorized').sort();
             
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            // Modal
+            const modal = document.getElementById('catModalCat');
+            if (modal) modal.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // Filter
+            const filter = document.getElementById('catFilter');
+            if (filter) filter.innerHTML = '<option value="">All Categories</option>' + Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function exportMappings() {
+            const rows = ['Pattern,Display Name,Consolidated Name,Category'];
+            Object.entries(STATE.localMappings).forEach(([p, d]) => {
+                rows.push(`"${p}","${d.display}","${d.consolidated}","${d.category}"`);
+            });
+            download('qnb_mappings.csv', rows.join('\n'));
+        }
+
+        // ============================================
+        // DATE RANGE
+        // ============================================
+        function openDateModal() {
+            document.getElementById('dateModal').classList.add('show');
+        }
+
+        function closeDateModal() {
+            document.getElementById('dateModal').classList.remove('show');
+        }
+
+        function setDateRange(preset) {
+            const now = dayjs();
+            let start, end, label;
+
+            switch (preset) {
+                case 'thisMonth':
+                    start = now.startOf('month'); end = now; label = 'This Month'; break;
+                case 'lastMonth':
+                    start = now.subtract(1, 'month').startOf('month'); end = now.subtract(1, 'month').endOf('month'); label = 'Last Month'; break;
+                case 'last30':
+                    start = now.subtract(30, 'day'); end = now; label = 'Last 30 Days'; break;
+                case 'last90':
+                    start = now.subtract(90, 'day'); end = now; label = 'Last 90 Days'; break;
+                case 'thisYear':
+                    start = now.startOf('year'); end = now; label = 'This Year'; break;
+                case 'allTime':
+                    start = dayjs('2020-01-01'); end = now; label = 'All Time'; break;
+            }
+
+            STATE.dateRange = { start, end };
+            STATE.dateLabel = label;
+
+            document.getElementById('dateRangeMobile').textContent = label;
+            document.getElementById('dateRangeDesktop').textContent = label;
+
+            closeDateModal();
+            filterData();
+        }
+
+        // ============================================
+        // HEALTH MODAL
+        // ============================================
+        function openHealthModal() {
+            const container = document.getElementById('healthBreakdown');
+            if (!container || !STATE.healthBreakdown) return;
+
+            container.innerHTML = STATE.healthBreakdown.map(b => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-border rounded-lg">
+                    <div>
+                        <div class="font-medium">${b.label}</div>
+                        <div class="text-xs text-gray-400">${b.detail}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-brand-600">${b.pts}/${b.max}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('healthModal').classList.add('show');
+        }
+
+        function closeHealthModal() {
+            document.getElementById('healthModal').classList.remove('show');
+        }
+
+        // ============================================
+        // SETTINGS MODAL
+        // ============================================
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('show');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+        function switchView(view) {
+            STATE.view = view;
+
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+
+            // Desktop nav
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600'));
+            const deskBtn = document.getElementById(`nav-${view}`);
+            if (deskBtn) {
+                deskBtn.classList.add('active', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600');
+            }
+
+            // Mobile nav
+            document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active', 'text-brand-600'));
+            const mobBtn = document.getElementById(`mob-${view}`);
+            if (mobBtn) {
+                mobBtn.classList.add('active', 'text-brand-600');
+            }
+
+            // Header text
+            const titles = { dashboard: ['Dashboard', 'Your financial overview'], transactions: ['Transactions', 'Full transaction history'] };
+            document.getElementById('viewTitle').textContent = titles[view]?.[0] || 'Finance Pro';
+            document.getElementById('viewSubtitle').textContent = titles[view]?.[1] || '';
+
+            // Re-render if needed
+            if (view === 'transactions') filterTxns();
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function formatNum(n) {
+            return Math.round(n).toLocaleString();
+        }
+
+        function debounce(fn, wait) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+        }
+
+        function download(filename, content) {
+            const blob = new Blob([content], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'mappings_' + moment().format('YYYY-MM-DD') + '.csv';
+            a.download = filename;
             a.click();
-        }
-
-        // Transactions
-        function updateCategoryFilter() {
-            const select = document.getElementById('categoryFilter');
-            const cats = [...new Set(STATE.filteredTxns.map(t => t.cat))].sort();
-            select.innerHTML = '<option value="">All Categories</option>' + 
-                cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        }
-
-        function filterTransactions() {
-            const search = document.getElementById('globalSearch').value.toLowerCase();
-            const catFilter = document.getElementById('categoryFilter').value;
-            
-            let filtered = STATE.filteredTxns;
-            
-            if (search) {
-                filtered = filtered.filter(t => 
-                    t.displayName.toLowerCase().includes(search) || 
-                    t.rawName.toLowerCase().includes(search) ||
-                    t.consolidatedName.toLowerCase().includes(search) ||
-                    t.cat.toLowerCase().includes(search)
-                );
-            }
-            
-            if (catFilter) {
-                filtered = filtered.filter(t => t.cat === catFilter);
-            }
-            
-            renderTransactions(filtered);
-        }
-
-        function updateTransactions() {
-            renderTransactions(STATE.filteredTxns);
-        }
-
-        function renderTransactions(txns) {
-            const tbody = document.getElementById('txnTableBody');
-            const toShow = txns.slice(0, STATE.txnDisplayLimit);
-            
-            tbody.innerHTML = toShow.map(t => {
-                const isOut = t.dir === 'OUT';
-                const isUncat = t.cat === 'Uncategorized';
-                
-                return `
-                    <tr class="${isUncat ? 'bg-red-50 dark:bg-red-900/10' : ''}">
-                        <td class="px-6 py-4 text-gray-500">${t.date.format('MMM D, HH:mm')}</td>
-                        <td class="px-6 py-4 font-medium">${t.displayName}</td>
-                        <td class="px-6 py-4">
-                            <span class="text-xs px-2 py-1 rounded" style="background: ${PALETTE[t.cat]}20; color: ${PALETTE[t.cat]}">
-                                ${t.cat}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-right font-bold ${isOut ? '' : 'text-emerald-600'}">
-                            ${isOut ? '' : '+'}${t.amt.toFixed(2)}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function loadMoreTxns() {
-            STATE.txnDisplayLimit += 50;
-            updateTransactions();
-        }
-
-        // Charts
-        let charts = {};
-
-        function renderChart(id, type, labels, data, colors, extraDataset = {}) {
-            const ctx = document.getElementById(id);
-            if (!ctx) return;
-            
-            if (charts[id]) charts[id].destroy();
-            
-            const isDark = document.documentElement.classList.contains('dark');
-            const gridColor = isDark ? '#334155' : '#f1f5f9';
-            const textColor = isDark ? '#cbd5e1' : '#64748b';
-
-            charts[id] = new Chart(ctx, {
-                type: type,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: colors,
-                        borderColor: colors,
-                        borderWidth: type === 'line' ? 2 : 0,
-                        borderRadius: type === 'bar' ? 6 : 0,
-                        barThickness: 40,
-                        ...extraDataset
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: isDark ? '#1e293b' : 'white',
-                            titleColor: textColor,
-                            bodyColor: textColor,
-                            borderColor: gridColor,
-                            borderWidth: 1
-                        }
-                    },
-                    scales: type === 'line' || type === 'bar' ? {
-                        y: { 
-                            grid: { color: gridColor }, 
-                            beginAtZero: true,
-                            ticks: { color: textColor }
-                        },
-                        x: { 
-                            grid: { display: false },
-                            ticks: { color: textColor }
-                        }
-                    } : {}
-                }
-            });
-        }
-
-        // View Switching
-        function switchView(viewName) {
-            STATE.currentView = viewName;
-            
-            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600');
-                el.classList.add('text-slate-500', 'dark:text-slate-400');
-            });
-            
-            event.currentTarget.classList.add('bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600');
-            event.currentTarget.classList.remove('text-slate-500', 'dark:text-slate-400');
-            
-            updateAllViews();
-        }
-
-        // Quick Actions
-        function openQuickActions() {
-            document.getElementById('quickActionsModal').classList.add('active');
-        }
-
-        function closeQuickActions() {
-            document.getElementById('quickActionsModal').classList.remove('active');
-        }
-
-        // Utilities
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
-
-        function toggleMobileMenu() {
-            alert('Mobile menu - implement sidebar toggle');
         }
     </script>
 </body>
