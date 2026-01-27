@@ -3,470 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QNB Spend Tracker</title>
+    <title>QNB Finance Pro</title>
     
+    <!-- Tech Stack -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Date Range Picker -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     <script>
         tailwind.config = {
-            darkMode: 'media', // Uses system dark mode
+            darkMode: 'class', // Manual toggle for better control
             theme: {
                 extend: {
                     colors: {
-                        qnb: {
-                            purple: '#6B46C1',
-                            darkPurple: '#553C9A',
-                            yellow: '#ECC94B',
-                            bg: '#f8fafc',
-                            darkBg: '#0f172a',
-                            card: '#ffffff',
-                            darkCard: '#1e293b'
-                        }
+                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 900: '#4c1d95' },
+                        dark: { bg: '#0f172a', card: '#1e293b', border: '#334155' }
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif']
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
-
     <style>
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        .glass-panel {
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        /* Custom Scrollbar for Table */
-        .scroller::-webkit-scrollbar { width: 6px; height: 6px; }
-        .scroller::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        .dark .scroller::-webkit-scrollbar-thumb { background-color: #475569; }
+        body { font-family: 'Inter', sans-serif; }
+        .glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .chart-container { position: relative; height: 100%; width: 100%; }
+        
+        /* Custom Checkbox */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
     </style>
 </head>
-<body class="bg-qnb-bg dark:bg-qnb-darkBg text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+<body class="bg-gray-50 text-slate-800 transition-colors duration-300 flex h-screen overflow-hidden">
 
-    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-qnb-darkCard/80 glass-panel border-b border-slate-200 dark:border-slate-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-qnb-purple flex items-center justify-center text-white font-bold">Q</div>
-                    <span class="font-bold text-xl tracking-tight">QNB Tracker</span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span id="lastUpdated" class="text-xs text-slate-500 hidden sm:block">Syncing...</span>
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-full">
+        <div class="p-6 flex items-center gap-3 border-b border-gray-100">
+            <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-lg">Q</div>
+            <span class="font-bold text-xl tracking-tight text-slate-800">Finance Pro</span>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl bg-brand-50 text-brand-600 transition">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </button>
+            <button onclick="switchView('transactions')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-gray-50 hover:text-slate-900 rounded-xl transition">
+                <i class="fa-solid fa-list w-5"></i> Transactions
+            </button>
+            <button onclick="switchView('merchants')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-gray-50 hover:text-slate-900 rounded-xl transition">
+                <i class="fa-solid fa-shop w-5"></i> Merchants
+            </button>
+            <button onclick="switchView('subscriptions')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-gray-50 hover:text-slate-900 rounded-xl transition">
+                <i class="fa-solid fa-rotate w-5"></i> Subscriptions
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center justify-between px-2">
+                <span class="text-xs font-semibold text-gray-400 uppercase">Dark Mode</span>
+                <button onclick="toggleTheme()" class="text-gray-400 hover:text-brand-600 transition">
+                    <i class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+            <div class="mt-4 text-xs text-gray-400 px-2" id="lastUpdated">Syncing...</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Topbar (Mobile Header + Date Picker) -->
+        <header class="bg-white/80 glass border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-8 z-20">
+            <div class="md:hidden flex items-center gap-3">
+                <button class="text-gray-500"><i class="fa-solid fa-bars text-xl"></i></button>
+                <span class="font-bold text-lg">Finance Pro</span>
+            </div>
+            
+            <div class="flex items-center gap-4 ml-auto">
+                <div id="reportrange" class="bg-white border border-gray-200 text-gray-600 text-sm rounded-lg px-4 py-2 cursor-pointer hover:border-brand-500 transition flex items-center gap-2">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Loading...</span>
+                    <i class="fa-solid fa-chevron-down text-xs opacity-50"></i>
                 </div>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        <!-- Scrollable Content Area -->
+        <div id="contentArea" class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 bg-gray-50">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="space-y-8 fade-in">
+                <!-- Big Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <span class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Spend</span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-slate-800" id="kpiSpend">--</span>
+                            <span class="text-sm font-medium text-gray-400">QAR</span>
+                        </div>
+                        <div class="mt-4 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full w-fit flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> <span id="spendTrend">--</span> vs prev
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <span class="text-sm font-medium text-gray-400 uppercase tracking-wider">Money In</span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-emerald-600" id="kpiIncome">--</span>
+                            <span class="text-sm font-medium text-gray-400">QAR</span>
+                        </div>
+                         <div class="mt-4 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full w-fit flex items-center gap-1">
+                            <i class="fa-solid fa-wallet"></i> Total Inflow
+                        </div>
+                    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white dark:bg-qnb-darkCard p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-24 bg-red-500/5 rounded-full -mr-10 -mt-10 transition group-hover:bg-red-500/10"></div>
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Spend (30d)</p>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span class="text-2xl font-bold text-slate-900 dark:text-white" id="kpiOut">--</span>
-                    <span class="text-xs font-medium text-slate-400">QAR</span>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <span class="text-sm font-medium text-gray-400 uppercase tracking-wider">Top Leak</span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-slate-800" id="kpiLeakName">--</span>
+                        </div>
+                        <div class="mt-4 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full w-fit">
+                            <span id="kpiLeakAmount">--</span> QAR spent
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Spend Breakdown -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <h3 class="font-bold text-lg text-slate-800 mb-6">Where is the money going?</h3>
+                        <div class="h-[300px]">
+                            <canvas id="mainBreakdownChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- The "Coffee Factor" / Small Txns -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 class="font-bold text-lg text-slate-800 mb-2">The "Coffee Factor"</h3>
+                        <p class="text-xs text-gray-400 mb-6">Transactions under 30 QAR</p>
+                        
+                        <div class="flex-1 flex flex-col justify-center items-center">
+                            <div class="text-4xl font-bold text-brand-600 mb-2" id="coffeeCount">--</div>
+                            <div class="text-sm text-gray-500">Transactions</div>
+                            <div class="w-full h-px bg-gray-100 my-4"></div>
+                            <div class="text-2xl font-bold text-slate-800 mb-1" id="coffeeSum">--</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide">Total Cost (QAR)</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="bg-white dark:bg-qnb-darkCard p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-10 -mt-10 transition group-hover:bg-emerald-500/10"></div>
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Income (30d)</p>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="kpiIn">--</span>
-                    <span class="text-xs font-medium text-slate-400">QAR</span>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-qnb-darkCard p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-24 bg-qnb-purple/5 rounded-full -mr-10 -mt-10 transition group-hover:bg-qnb-purple/10"></div>
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Net Flow</p>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span class="text-2xl font-bold text-slate-900 dark:text-white" id="kpiNet">--</span>
-                    <span class="text-xs font-medium text-slate-400">QAR</span>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-qnb-darkCard p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-24 bg-qnb-yellow/10 rounded-full -mr-10 -mt-10 transition group-hover:bg-qnb-yellow/20"></div>
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Transactions</p>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span class="text-2xl font-bold text-slate-900 dark:text-white" id="kpiCount">--</span>
-                    <span class="text-xs font-medium text-slate-400">Txns</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-white dark:bg-qnb-darkCard p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-1 flex flex-col">
-                <h3 class="font-bold text-lg mb-4">Spend by Category</h3>
-                <div class="relative flex-grow min-h-[250px] flex items-center justify-center">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-qnb-darkCard p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2 flex flex-col">
-                <h3 class="font-bold text-lg mb-4">Spending Trend</h3>
-                <div class="relative flex-grow min-h-[250px]">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-qnb-darkCard rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                <h3 class="font-bold text-lg">Transactions</h3>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="text" id="searchInput" placeholder="Search merchant..." 
-                        class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:ring-2 focus:ring-qnb-purple outline-none">
-                    <select id="typeFilter" class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-qnb-purple outline-none">
-                        <option value="ALL">All Types</option>
-                        <option value="Purchase">Purchases</option>
-                        <option value="Fawran">Fawran</option>
-                        <option value="Transfer">Transfer</option>
-                        <option value="Received">Money In</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto scroller">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50 sticky top-0">
-                        <tr>
-                            <th class="px-6 py-3">Date</th>
-                            <th class="px-6 py-3">Merchant / Entity</th>
-                            <th class="px-6 py-3">Category</th>
-                            <th class="px-6 py-3">Method</th>
-                            <th class="px-6 py-3 text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="txnTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
+            <!-- VIEW: MERCHANTS (Hidden by default) -->
+            <div id="view-merchants" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800">Merchant Leaderboard</h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-semibold">
+                            <tr>
+                                <th class="px-6 py-4">Rank</th>
+                                <th class="px-6 py-4">Merchant</th>
+                                <th class="px-6 py-4">Category</th>
+                                <th class="px-6 py-4 text-right">Count</th>
+                                <th class="px-6 py-4 text-right">Total (QAR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantTableBody" class="divide-y divide-gray-100 text-sm">
+                            <!-- JS Injected -->
                         </tbody>
-                </table>
-            </div>
-            <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500">
-                <span id="showingCount">Showing 0 of 0</span>
-                <div class="flex gap-2">
-                    <button id="prevBtn" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded disabled:opacity-50">Prev</button>
-                    <button id="nextBtn" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded disabled:opacity-50">Next</button>
+                    </table>
                 </div>
             </div>
-        </div>
 
+            <!-- VIEW: TRANSACTIONS (Hidden by default) -->
+            <div id="view-transactions" class="hidden space-y-6">
+                 <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-slate-800">Transaction History</h2>
+                    <input type="text" id="globalSearch" placeholder="Search..." class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none w-64">
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Entity</th>
+                                    <th class="px-6 py-4">Category</th>
+                                    <th class="px-6 py-4 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="txnTableBody" class="divide-y divide-gray-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                     <div class="p-4 border-t border-gray-100 flex justify-center">
+                        <button onclick="loadMoreTxns()" class="text-sm text-brand-600 font-medium hover:underline">Load More</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </main>
 
+    <!-- JS LOGIC -->
     <script>
-        // ==========================================
-        // CONFIGURATION SECTION
-        // ==========================================
+        // --- CONFIG ---
+        const SHEET_ID = '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw'; // Your ID
         
-        // YOUR HARDCODED GOOGLE SHEET ID
-        const SHEET_ID = '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw'; 
-
-        // ==========================================
-
-        // --- APP STATE ---
+        // --- STATE ---
         const STATE = {
-            transactions: [],
+            allTxns: [],
+            filteredTxns: [],
             merchantMap: [],
-            fxRates: { 'USD': 3.65, 'EUR': 3.9, 'GBP': 4.6 }, 
-            displayData: [],
-            page: 1,
-            rowsPerPage: 20
+            fxRates: { 'USD': 3.65, 'EUR': 3.9, 'GBP': 4.6 },
+            dateRange: { start: moment().subtract(29, 'days'), end: moment() },
+            theme: 'light'
         };
 
-        // --- URL BUILDER ---
-        function getSheetUrl(sheetName) {
-            // Added cache buster (Date.now) to prevent browser from serving old CSVs
-            const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
-            const query = encodeURIComponent('select *'); 
-            return `${base}?tqx=out:csv&sheet=${sheetName}&tq=${query}&_=${Date.now()}`;
-        }
+        // --- COLORS (Grouped) ---
+        const PALETTE = {
+            'Food & Drink': '#F59E0B', 'Groceries': '#D97706', // Amber/Orange
+            'Transport': '#3B82F6', 'Hotels': '#60A5FA', // Blue
+            'Shopping': '#EC4899', 'Gaming': '#F43F5E', // Pink/Rose
+            'AI Tools': '#8B5CF6', 'Subscriptions': '#7C3AED', // Violet
+            'Utilities': '#10B981', 'Health': '#059669', // Emerald
+            'Uncategorized': '#94A3B8' // Slate
+        };
 
         // --- INIT ---
-        window.addEventListener('DOMContentLoaded', () => {
-            initDataLoad();
+        $(function() {
+            // Date Picker Init
+            $('#reportrange').daterangepicker({
+                startDate: STATE.dateRange.start,
+                endDate: STATE.dateRange.end,
+                ranges: {
+                   'This Month': [moment().startOf('month'), moment().endOf('month')],
+                   'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                   'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                   'This Year': [moment().startOf('year'), moment()]
+                }
+            }, cb);
+
+            function cb(start, end) {
+                $('#reportrange span').html(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+                STATE.dateRange = { start: start, end: end };
+                filterData();
+            }
+
+            cb(STATE.dateRange.start, STATE.dateRange.end);
+            fetchData();
         });
 
         // --- DATA FETCHING ---
-        async function initDataLoad() {
-            // We fetch the 3 core sheets by NAME
-            const ledgerUrl = getSheetUrl('RawLedger');
-            const mapUrl = getSheetUrl('MerchantMap');
-            const fxUrl = getSheetUrl('FXRates');
-
-            const promises = [fetchCSV(ledgerUrl), fetchCSV(mapUrl), fetchCSV(fxUrl)];
-
+        async function fetchData() {
+            const getUrl = (s) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${s}&tq=select%20*&_=${Date.now()}`;
+            
             try {
-                const results = await Promise.all(promises);
-                const rawTxns = results[0];
-                const rawMap = results[1] || [];
-                const rawFX = results[2] || [];
+                const [l, m, f] = await Promise.all([
+                    fetchCSV(getUrl('RawLedger')),
+                    fetchCSV(getUrl('MerchantMap')),
+                    fetchCSV(getUrl('FXRates'))
+                ]);
 
-                processFX(rawFX);
-                processMap(rawMap);
-                processTransactions(rawTxns);
+                processFX(f);
+                processMap(m);
+                processTxns(l);
                 
-                document.getElementById('lastUpdated').innerText = `Updated: ${new Date().toLocaleTimeString()}`;
-            } catch (err) {
-                console.error(err);
-                document.getElementById('lastUpdated').innerText = `Error Syncing`;
-                alert("Error loading data. Ensure your Google Sheet is shared as 'Anyone with the link' (Viewer).");
+                document.getElementById('lastUpdated').innerText = 'Synced: ' + moment().format('HH:mm');
+                filterData(); // Initial Render
+
+            } catch (e) {
+                console.error(e);
+                alert("Sync Error. Check console.");
             }
         }
 
         function fetchCSV(url) {
-            return new Promise((resolve, reject) => {
-                Papa.parse(url, {
-                    download: true,
-                    header: false,
-                    skipEmptyLines: true,
-                    complete: (res) => resolve(res.data),
-                    error: (err) => reject(err)
-                });
-            });
+            return new Promise((resolve) => Papa.parse(url, { download: true, header: false, skipEmptyLines: true, complete: res => resolve(res.data) }));
         }
 
-        // --- PROCESSING LOGIC ---
-        function cleanString(str) {
-            if (!str) return '';
-            // Remove extra quotes that Google Viz API might add
-            return str.toString().replace(/^"|"$/g, '');
+        // --- PROCESSING ---
+        function processFX(rows) { 
+            rows.forEach(r => { if(r[0] && r[1] && !isNaN(parseFloat(r[1]))) STATE.fxRates[clean(r[0])] = parseFloat(r[1]); });
         }
-
-        function processFX(rows) {
-            // Remove header if exists
-            if (rows.length > 0 && (rows[0][0] === 'Currency' || rows[0][0].includes('Currency'))) rows.shift();
-            
-            rows.forEach(r => {
-                if(r[0] && r[1]) {
-                    const cur = cleanString(r[0]);
-                    const rate = parseFloat(r[1]);
-                    if (!isNaN(rate)) STATE.fxRates[cur] = rate;
-                }
-            });
-        }
-
+        
         function processMap(rows) {
-            if (rows.length > 0 && rows[0][0].includes('Pattern')) rows.shift();
-            
-            STATE.merchantMap = rows.map(r => ({
-                pattern: r[0] ? cleanString(r[0]).toLowerCase() : '',
-                cleanName: cleanString(r[1]),
-                category: cleanString(r[2])
-            })).filter(x => x.pattern);
+             if (rows.length > 0 && rows[0][0].includes('Pattern')) rows.shift();
+             STATE.merchantMap = rows.map(r => ({ p: clean(r[0]).toLowerCase(), name: clean(r[1]), cat: clean(r[2]) })).filter(x=>x.p);
         }
 
-        function categorize(rawName) {
-            if (!rawName) return { name: "Unknown", cat: "Uncategorized" };
-            const lower = rawName.toLowerCase();
+        function processTxns(rows) {
+            // 0:Time, 1:Amt, 2:Cur, 3:Counterparty, 4:Card, 5:Dir, 6:Type
+            const valid = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
             
-            // 1. Check Map
-            const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
-            if (match) return { name: match.cleanName, cat: match.category };
-
-            // 2. Simple Heuristics (Fallback)
-            if (lower.includes("uber") || lower.includes("karwa")) return { name: "Transport", cat: "Transport" };
-            if (lower.includes("ooredoo") || lower.includes("vodafone")) return { name: "Telecom", cat: "Utilities" };
-            if (lower.includes("talabat") || lower.includes("deliveroo")) return { name: "Food Delivery", cat: "Food & Drink" };
-            
-            return { name: rawName, cat: "Uncategorized" };
-        }
-
-        function processTransactions(rows) {
-            // Spec: 0:Time, 1:Amt, 2:Cur, 3:Counterparty, 4:Card, 5:Dir, 6:Type
-            
-            // Filter out header
-            const cleanRows = rows.filter(r => {
-                const val = cleanString(r[1]);
-                // Ensure it's not the header row and has a valid amount
-                return val !== 'Amount' && !isNaN(parseFloat(val));
-            });
-
-            STATE.transactions = cleanRows.map(r => {
-                const rawName = cleanString(r[3]);
-                const meta = categorize(rawName);
-                const rawAmt = parseFloat(r[1]);
-                const cur = cleanString(r[2]) || 'QAR';
+            STATE.allTxns = valid.map(r => {
+                const rawName = clean(r[3]);
+                const cur = clean(r[2]) || 'QAR';
+                const amt = parseFloat(r[1]);
                 const rate = STATE.fxRates[cur] || 1;
+                const finalAmt = cur === 'QAR' ? amt : amt * rate;
+                
+                // Categorize
+                let meta = { name: rawName, cat: 'Uncategorized' };
+                const match = STATE.merchantMap.find(m => rawName.toLowerCase().includes(m.p));
+                if (match) meta = match;
+                else if (rawName.toLowerCase().includes('uber')) meta = {name:'Uber', cat:'Transport'}; // Fallback
 
                 return {
-                    date: new Date(cleanString(r[0])),
-                    amountRaw: rawAmt,
-                    currency: cur,
-                    amountQAR: cur === 'QAR' ? rawAmt : rawAmt * rate,
-                    counterparty: rawName,
-                    cleanName: meta.name,
-                    category: meta.cat,
-                    card: cleanString(r[4]),
-                    direction: cleanString(r[5]), // IN or OUT
-                    type: cleanString(r[6])
+                    date: moment(clean(r[0])),
+                    amt: finalAmt,
+                    cur: cur,
+                    rawName: rawName,
+                    name: meta.name || rawName,
+                    cat: meta.cat || 'Uncategorized',
+                    dir: clean(r[5]),
+                    type: clean(r[6])
                 };
-            }).filter(t => !isNaN(t.amountRaw) && t.date instanceof Date && !isNaN(t.date));
+            }).sort((a,b) => b.date - a.date);
+        }
 
-            // Sort desc (Newest first)
-            STATE.transactions.sort((a,b) => b.date - a.date);
+        function clean(str) { return str ? str.toString().replace(/^"|"$/g, '') : ''; }
+
+        // --- FILTERING & UI ---
+        function filterData() {
+            const start = STATE.dateRange.start;
+            const end = STATE.dateRange.end;
+
+            STATE.filteredTxns = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
             
-            updateUI();
+            updateDashboard();
+            updateMerchants();
+            updateTransactions();
         }
 
-        // --- RENDERING ---
-        function updateUI() {
-            // 1. Filter
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const typeFilter = document.getElementById('typeFilter').value;
+        function updateDashboard() {
+            // 1. KPI Stats
+            const out = STATE.filteredTxns.filter(t => t.dir === 'OUT');
+            const inc = STATE.filteredTxns.filter(t => t.dir === 'IN');
+            
+            const totalSpend = out.reduce((sum, t) => sum + t.amt, 0);
+            const totalInc = inc.reduce((sum, t) => sum + t.amt, 0);
 
-            STATE.displayData = STATE.transactions.filter(t => {
-                const matchesSearch = t.cleanName.toLowerCase().includes(search) || t.counterparty.toLowerCase().includes(search);
-                const matchesType = typeFilter === 'ALL' || t.type === typeFilter || (typeFilter === 'Received' && t.direction === 'IN');
-                return matchesSearch && matchesType;
-            });
+            animateValue('kpiSpend', totalSpend);
+            animateValue('kpiIncome', totalInc);
 
-            renderKPIs();
-            renderCharts();
-            STATE.page = 1;
-            renderTable();
-        }
-
-        function renderKPIs() {
-            const now = new Date();
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(now.getDate() - 30);
-
-            let kpiOut = 0, kpiIn = 0, count = 0;
-
-            STATE.transactions.forEach(t => {
-                if (t.date >= thirtyDaysAgo) {
-                    count++;
-                    if (t.direction === 'OUT') kpiOut += t.amountQAR;
-                    else kpiIn += t.amountQAR;
-                }
-            });
-
-            document.getElementById('kpiOut').innerText = kpiOut.toLocaleString('en-QA', {maximumFractionDigits: 0});
-            document.getElementById('kpiIn').innerText = kpiIn.toLocaleString('en-QA', {maximumFractionDigits: 0});
-            document.getElementById('kpiNet').innerText = (kpiIn - kpiOut).toLocaleString('en-QA', {maximumFractionDigits: 0});
-            document.getElementById('kpiCount').innerText = count;
-        }
-
-        let catChartInstance = null;
-        let trendChartInstance = null;
-
-        function renderCharts() {
+            // 2. Breakdown Chart (Grouped)
             const cats = {};
-            const dates = {};
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(new Date().getDate() - 30);
-
-            // Chart Logic
-            STATE.transactions.forEach(t => {
-                if (t.date < thirtyDaysAgo || t.direction !== 'OUT') return;
-                
-                // Aggregate Categories
-                cats[t.category] = (cats[t.category] || 0) + t.amountQAR;
-                
-                // Aggregate Dates
-                const dStr = t.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                dates[dStr] = (dates[dStr] || 0) + t.amountQAR;
-            });
-
-            // Donut Chart
-            const catCtx = document.getElementById('categoryChart').getContext('2d');
-            if (catChartInstance) catChartInstance.destroy();
-
-            catChartInstance = new Chart(catCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(cats),
-                    datasets: [{
-                        data: Object.values(cats),
-                        backgroundColor: ['#6B46C1', '#ECC94B', '#F56565', '#48BB78', '#4299E1', '#ED8936', '#9F7AEA'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
-                }
-            });
-
-            // Bar Chart
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            if (trendChartInstance) trendChartInstance.destroy();
+            out.forEach(t => { cats[t.cat] = (cats[t.cat] || 0) + t.amt; });
             
-            // We need to sort the dates correctly for the chart, currently just reversing the keys
-            // which works because we iterated through sorted transactions (desc)
-            const sortedDates = Object.keys(dates).reverse(); 
+            // Sort categories by spend
+            const sortedCats = Object.entries(cats).sort((a,b) => b[1] - a[1]);
+            const topCats = sortedCats.slice(0, 6); // Top 6
+            const otherSum = sortedCats.slice(6).reduce((sum, i) => sum + i[1], 0);
             
-            trendChartInstance = new Chart(trendCtx, {
-                type: 'bar',
-                data: {
-                    labels: sortedDates,
-                    datasets: [{
-                        label: 'Daily Spend (QAR)',
-                        data: Object.values(dates).reverse(),
-                        backgroundColor: '#6B46C1',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
+            const labels = topCats.map(x => x[0]);
+            const data = topCats.map(x => x[1]);
+            const bgColors = labels.map(l => PALETTE[l] || '#CBD5E1');
+
+            if (otherSum > 0) { labels.push('Other'); data.push(otherSum); bgColors.push('#E2E8F0'); }
+
+            // Find Top Leak (Category)
+            if (sortedCats.length > 0) {
+                document.getElementById('kpiLeakName').innerText = sortedCats[0][0];
+                document.getElementById('kpiLeakAmount').innerText = Math.round(sortedCats[0][1]).toLocaleString();
+            }
+
+            renderChart('mainBreakdownChart', 'bar', labels, data, bgColors);
+
+            // 3. Coffee Factor (< 30 QAR)
+            const coffeeTxns = out.filter(t => t.amt < 30);
+            const coffeeSum = coffeeTxns.reduce((s, t) => s + t.amt, 0);
+            document.getElementById('coffeeCount').innerText = coffeeTxns.length;
+            document.getElementById('coffeeSum').innerText = Math.round(coffeeSum).toLocaleString();
         }
 
-        function renderTable() {
-            const start = (STATE.page - 1) * STATE.rowsPerPage;
-            const end = start + STATE.rowsPerPage;
-            const pageData = STATE.displayData.slice(start, end);
-            const tbody = document.getElementById('txnTableBody');
+        function updateMerchants() {
+            const merchs = {};
+            STATE.filteredTxns.filter(t => t.dir === 'OUT').forEach(t => {
+                if (!merchs[t.name]) merchs[t.name] = { count: 0, sum: 0, cat: t.cat };
+                merchs[t.name].count++;
+                merchs[t.name].sum += t.amt;
+            });
+
+            const sorted = Object.entries(merchs).sort((a,b) => b[1].sum - a[1].sum).slice(0, 10);
+            const tbody = document.getElementById('merchantTableBody');
             tbody.innerHTML = '';
 
-            pageData.forEach(t => {
-                const isInc = t.direction === 'IN';
-                const colorClass = isInc ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-slate-100';
-                const sign = isInc ? '+' : '';
-                
+            sorted.forEach((m, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-slate-500">${t.date.toLocaleDateString()} <span class="text-xs opacity-50 block">${t.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></td>
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-slate-900 dark:text-white">${t.cleanName}</div>
-                        <div class="text-xs text-slate-400 truncate max-w-[150px]">${t.counterparty}</div>
-                    </td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${t.category}</span></td>
-                    <td class="px-6 py-4 text-xs text-slate-500">${t.type} <span class="opacity-50">${t.card}</span></td>
-                    <td class="px-6 py-4 text-right font-bold ${colorClass}">
-                        ${sign}${t.currency} ${t.amountRaw.toLocaleString()}
+                    <td class="px-6 py-4 text-gray-400 font-mono">#${idx+1}</td>
+                    <td class="px-6 py-4 font-medium text-slate-800">${m[0]}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">${m[1].cat}</span></td>
+                    <td class="px-6 py-4 text-right text-gray-500">${m[1].count}</td>
+                    <td class="px-6 py-4 text-right font-bold text-slate-800">${Math.round(m[1].sum).toLocaleString()}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateTransactions() {
+            const tbody = document.getElementById('txnTableBody');
+            tbody.innerHTML = '';
+            // Show first 50 for performance
+            STATE.filteredTxns.slice(0, 50).forEach(t => {
+                const tr = document.createElement('tr');
+                const isOut = t.dir === 'OUT';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-gray-500">${t.date.format('MMM D, HH:mm')}</td>
+                    <td class="px-6 py-4 font-medium text-slate-800">${t.name}</td>
+                    <td class="px-6 py-4"><span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${t.cat}</span></td>
+                    <td class="px-6 py-4 text-right font-bold ${isOut ? 'text-slate-800' : 'text-emerald-600'}">
+                        ${isOut ? '' : '+'}${t.amt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('showingCount').innerText = `Showing ${Math.min(end, STATE.displayData.length)} of ${STATE.displayData.length}`;
-            document.getElementById('prevBtn').disabled = STATE.page === 1;
-            document.getElementById('nextBtn').disabled = end >= STATE.displayData.length;
         }
 
-        // Listeners
-        document.getElementById('searchInput').addEventListener('input', updateUI);
-        document.getElementById('typeFilter').addEventListener('change', updateUI);
-        document.getElementById('prevBtn').addEventListener('click', () => { STATE.page--; renderTable(); });
-        document.getElementById('nextBtn').addEventListener('click', () => { STATE.page++; renderTable(); });
+        // --- UTILS ---
+        let mainChart = null;
+        function renderChart(id, type, labels, data, colors) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (mainChart) mainChart.destroy();
+            
+            mainChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#f1f5f9' }, beginAtZero: true },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
 
+        function animateValue(id, end) {
+            const obj = document.getElementById(id);
+            const start = 0; // Simplified for MVP
+            obj.innerText = Math.round(end).toLocaleString();
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-brand-50', 'text-brand-600');
+                el.classList.add('text-slate-500');
+            });
+            // Highlight active (simplified selection logic for demo)
+            event.currentTarget.classList.add('bg-brand-50', 'text-brand-600');
+            event.currentTarget.classList.remove('text-slate-500');
+        }
+
+        // Toggle Theme (Basic Implementation)
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            // In a real app, save to localStorage and update Tailwind classes
+            alert("Dark mode toggle logic to be fully implemented via Tailwind 'dark:' classes.");
+        }
     </script>
 </body>
 </html>
+
