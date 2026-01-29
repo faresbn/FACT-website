@@ -588,6 +588,7 @@
         }
 
         function processMerchantMap(rows) {
+            console.log('MerchantMap raw rows:', rows.length, rows.slice(0, 5));
             if (rows.length && rows[0][0]?.toLowerCase().includes('pattern')) rows.shift();
 
             STATE.merchantMap = [];
@@ -605,6 +606,8 @@
                 }
             });
 
+            console.log('Parsed patterns:', STATE.merchantMap.length);
+            console.log('Categories found:', Array.from(STATE.categories));
             STATE.categories.add('Uncategorized');
             updateCatDropdowns();
         }
@@ -646,6 +649,7 @@
                 return { display: match.display, consolidated: match.consolidated, category: match.category };
             }
 
+            console.log('No match for:', raw);
             return { display: raw, consolidated: raw, category: 'Uncategorized' };
         }
 
@@ -715,6 +719,8 @@
             
             const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
             const total = sorted.reduce((s, c) => s + c[1], 0);
+
+            console.log('Category spend breakdown:', sorted);
 
             document.getElementById('catTotalLabel').textContent = `${sorted.length} categories · QAR ${formatNum(total)}`;
 
