@@ -4,33 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>QNB Finance Pro</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>QNB Tracker — FACT</title>
     
-    <!-- Optimized Tech Stack -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
-
+    
     <script>
         dayjs.extend(dayjs_plugin_isBetween);
-        dayjs.extend(dayjs_plugin_relativeTime);
         
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: 'media',
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
-                        dark: { bg: '#0f172a', card: '#1e293b', border: '#334155', hover: '#283548' }
+                        fact: {
+                            bg: '#F3F3F3',
+                            card: '#FFFFFF',
+                            ink: '#111111',
+                            muted: '#666666',
+                            border: '#E5E5E5',
+                            yellow: '#F4C44E',
+                            green: '#75B876',
+                            purple: '#B593C6',
+                            'yellow-t': '#FBF3DC',
+                            'green-t': '#E8F5E9',
+                            'purple-t': '#F3EBF6',
+                            // Dark mode
+                            'dark-bg': '#0F0F0F',
+                            'dark-card': '#1A1A1A',
+                            'dark-ink': '#F3F3F3',
+                            'dark-muted': '#888888',
+                            'dark-border': '#2A2A2A',
+                            'dark-yellow-t': '#3D3020',
+                            'dark-green-t': '#1A2E1A',
+                            'dark-purple-t': '#2A2030',
+                        }
                     },
-                    spacing: {
-                        'safe-b': 'env(safe-area-inset-bottom)',
-                        'safe-t': 'env(safe-area-inset-top)'
+                    fontFamily: {
+                        display: ['Noto Sans Display', 'Noto Sans', 'system-ui', 'sans-serif'],
+                        body: ['Noto Sans', 'system-ui', 'sans-serif'],
                     }
                 }
             }
@@ -38,519 +54,407 @@
     </script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Display:wght@500;600;700&display=swap');
         
-        * { -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; }
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans', system-ui, sans-serif;
+            background-color: #F3F3F3;
+            background-image: radial-gradient(#D1D1D1 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
             padding-bottom: env(safe-area-inset-bottom);
         }
         
-        /* Skeleton Loading */
-        .skeleton {
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0F0F0F;
+                background-image: radial-gradient(#2A2A2A 1px, transparent 1px);
+            }
         }
-        .dark .skeleton {
-            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
-            background-size: 200% 100%;
+        
+        .font-display { font-family: 'Noto Sans Display', 'Noto Sans', system-ui, sans-serif; }
+        
+        /* Card styling */
+        .card {
+            background: white;
+            border: 1px solid #E5E5E5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         
-        /* Health Ring */
-        .health-ring { transform: rotate(-90deg); }
-        .health-ring circle { transition: stroke-dashoffset 0.8s ease-out; }
+        @media (prefers-color-scheme: dark) {
+            .card {
+                background: #1A1A1A;
+                border-color: #2A2A2A;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+        }
         
-        /* Category Expansion */
-        .cat-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .cat-details.open { max-height: 400px; }
+        /* Period pill */
+        .period-btn {
+            transition: all 0.15s ease;
+        }
+        .period-btn:hover {
+            background: #F4C44E;
+            color: #111;
+        }
+        .period-btn.active {
+            background: #111;
+            color: white;
+        }
         
-        /* Bottom Nav (Mobile) */
-        .bottom-nav {
-            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+        @media (prefers-color-scheme: dark) {
+            .period-btn.active {
+                background: #F3F3F3;
+                color: #111;
+            }
+        }
+        
+        /* Category bar */
+        .cat-bar {
+            height: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .cat-row:hover .cat-bar {
+            height: 12px;
+        }
+        
+        /* Transaction row */
+        .txn-row {
+            transition: background 0.15s ease;
+        }
+        .txn-row:hover {
+            background: #FAFAFA;
+        }
+        .txn-row.uncat {
+            background: #FEF3E2;
+        }
+        .txn-row.uncat:hover {
+            background: #FDE9CC;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .txn-row:hover {
+                background: #222;
+            }
+            .txn-row.uncat {
+                background: #3D3020;
+            }
+            .txn-row.uncat:hover {
+                background: #4D4030;
+            }
         }
         
         /* Modal */
-        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.6); }
-        .modal.show { display: flex; align-items: center; justify-content: center; }
-        .modal-box { 
-            background: white; 
-            border-radius: 1rem; 
-            width: 90%; 
-            max-width: 420px; 
-            max-height: 85vh; 
-            overflow-y: auto;
+        .modal-backdrop {
+            background: rgba(17, 17, 17, 0.4);
+            backdrop-filter: blur(4px);
+        }
+        .modal-box {
             animation: modalIn 0.2s ease-out;
         }
-        .dark .modal-box { background: #1e293b; }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         
-        /* Tooltip */
-        [data-tip]:hover::after {
-            content: attr(data-tip);
+        @media (prefers-color-scheme: dark) {
+            .modal-backdrop {
+                background: rgba(0, 0, 0, 0.6);
+            }
+        }
+        
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #E5E5E5 25%, #F0F0F0 50%, #E5E5E5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .skeleton {
+                background: linear-gradient(90deg, #2A2A2A 25%, #333 50%, #2A2A2A 75%);
+                background-size: 200% 100%;
+            }
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D1D1D1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #B0B0B0; }
+        
+        @media (prefers-color-scheme: dark) {
+            ::-webkit-scrollbar-thumb { background: #444; }
+            ::-webkit-scrollbar-thumb:hover { background: #555; }
+        }
+        
+        /* Corner marks (FACT brand element) */
+        .corner-mark {
             position: absolute;
-            left: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            margin-left: 8px;
-            padding: 4px 8px;
-            background: #1e293b;
-            color: white;
-            font-size: 12px;
-            border-radius: 4px;
-            white-space: nowrap;
-            z-index: 50;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #111;
         }
+        .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
         
-        /* Responsive Breakpoints */
-        /* iPhone 13: 390px */
-        /* iPad Air 11": 820px */
-        /* MBP 14": ~1512px */
-        /* Studio Display: 2560px */
-        
-        @media (min-width: 768px) {
-            .mobile-only { display: none !important; }
+        @media (prefers-color-scheme: dark) {
+            .corner-mark {
+                border-color: #F3F3F3;
+            }
         }
-        @media (max-width: 767px) {
-            .desktop-only { display: none !important; }
-        }
-        
-        /* Celebration */
-        @keyframes celebrate {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        .celebrate { animation: celebrate 0.4s ease-out; }
-        
-        /* Touch-friendly tap targets */
-        .tap-target { min-height: 44px; min-width: 44px; }
-        
-        /* Chart container responsive */
-        .chart-wrap { position: relative; width: 100%; }
     </style>
 </head>
 
-<body class="bg-gray-50 dark:bg-dark-bg text-slate-800 dark:text-slate-100 min-h-screen">
+<body class="text-fact-ink dark:text-fact-dark-ink">
     
-    <!-- DESKTOP/TABLET SIDEBAR -->
-    <aside id="sidebar" class="desktop-only fixed left-0 top-0 h-full bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border z-40 transition-all duration-300 w-64 lg:w-64 md:w-16 flex flex-col">
+    <div class="max-w-4xl mx-auto px-4 py-6 md:py-10">
         
-        <!-- Logo -->
-        <div class="p-4 lg:p-5 flex items-center gap-3 border-b border-gray-100 dark:border-dark-border">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-brand-500/20 flex-shrink-0">Q</div>
-            <span class="font-bold text-lg tracking-tight hidden lg:block">Finance Pro</span>
-        </div>
-        
-        <!-- Nav -->
-        <nav class="flex-1 p-2 lg:p-3 space-y-1 overflow-y-auto">
-            <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition tap-target relative" data-tip="Dashboard">
-                <i class="fa-solid fa-chart-pie w-5 text-center text-lg"></i>
-                <span class="hidden lg:inline">Dashboard</span>
-            </button>
-            <button onclick="switchView('transactions')" id="nav-transactions" class="nav-btn w-full flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition tap-target relative" data-tip="Transactions">
-                <i class="fa-solid fa-list w-5 text-center text-lg"></i>
-                <span class="hidden lg:inline">Transactions</span>
-            </button>
-        </nav>
-        
-        <!-- Footer -->
-        <div class="p-3 lg:p-4 border-t border-gray-100 dark:border-dark-border space-y-2">
-            <!-- Uncategorized Alert -->
-            <div id="uncatAlertDesktop" class="hidden p-2 lg:p-3 bg-red-50 dark:bg-red-900/20 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 transition tap-target" onclick="openUncatModal()">
-                <div class="flex items-center gap-2 text-red-600 dark:text-red-400 justify-center lg:justify-start">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    <span class="text-sm font-medium hidden lg:inline"><span id="uncatCountDesktop">0</span> to fix</span>
-                </div>
-            </div>
-            
-            <div class="flex items-center justify-between">
-                <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition tap-target">
-                    <i id="themeIcon" class="fa-solid fa-moon text-gray-500"></i>
-                </button>
-                <button onclick="syncData()" id="syncBtn" class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 flex items-center justify-center transition tap-target">
-                    <i class="fa-solid fa-rotate text-brand-600" id="syncIcon"></i>
-                </button>
-            </div>
-            
-            <div class="text-xs text-gray-400 text-center hidden lg:block" id="lastUpdatedDesktop">Not synced</div>
-        </div>
-    </aside>
-
-    <!-- MOBILE BOTTOM NAV -->
-    <nav class="mobile-only fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border z-40 bottom-nav">
-        <div class="flex items-center justify-around py-2">
-            <button onclick="switchView('dashboard')" id="mob-dashboard" class="mob-nav-btn active flex flex-col items-center gap-1 px-4 py-2 tap-target">
-                <i class="fa-solid fa-chart-pie text-lg"></i>
-                <span class="text-[10px] font-medium">Dashboard</span>
-            </button>
-            <button onclick="switchView('transactions')" id="mob-transactions" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target">
-                <i class="fa-solid fa-list text-lg"></i>
-                <span class="text-[10px] font-medium">History</span>
-            </button>
-            <button onclick="openUncatModal()" id="mob-categorize" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target relative">
-                <i class="fa-solid fa-tags text-lg"></i>
-                <span class="text-[10px] font-medium">Categorize</span>
-                <span id="uncatBadgeMobile" class="hidden absolute -top-1 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
-            </button>
-            <button onclick="openSettingsModal()" class="mob-nav-btn flex flex-col items-center gap-1 px-4 py-2 tap-target">
-                <i class="fa-solid fa-gear text-lg"></i>
-                <span class="text-[10px] font-medium">Settings</span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- MAIN CONTENT -->
-    <main class="md:ml-16 lg:ml-64 pb-24 md:pb-8 min-h-screen">
-        
-        <!-- MOBILE HEADER -->
-        <header class="mobile-only sticky top-0 bg-white/90 dark:bg-dark-card/90 backdrop-blur-lg border-b border-gray-200 dark:border-dark-border z-30 px-4 py-3 flex items-center justify-between" style="padding-top: max(0.75rem, env(safe-area-inset-top))">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center font-bold">Q</div>
-                <span class="font-semibold">Finance Pro</span>
-            </div>
-            <button onclick="openDateModal()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-border rounded-lg text-sm tap-target">
-                <i class="fa-regular fa-calendar text-brand-500"></i>
-                <span id="dateRangeMobile" class="text-xs">This Month</span>
-            </button>
-        </header>
-        
-        <!-- DESKTOP HEADER -->
-        <header class="desktop-only sticky top-0 bg-white/90 dark:bg-dark-card/90 backdrop-blur-lg border-b border-gray-200 dark:border-dark-border z-30 px-6 py-4 flex items-center justify-between">
-            <div>
-                <h1 class="text-xl font-bold" id="viewTitle">Dashboard</h1>
-                <p class="text-sm text-gray-500" id="viewSubtitle">Your financial overview</p>
-            </div>
+        <!-- HEADER -->
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
-                <button onclick="openDateModal()" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg hover:border-brand-500 transition tap-target">
-                    <i class="fa-regular fa-calendar text-brand-500"></i>
-                    <span id="dateRangeDesktop" class="text-sm">This Month</span>
-                    <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
-                </button>
+                <div class="w-10 h-10 bg-fact-ink dark:bg-fact-dark-ink rounded flex items-center justify-center">
+                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">Q</span>
+                </div>
+                <div>
+                    <h1 class="font-display font-bold text-xl tracking-tight">QNB Tracker</h1>
+                    <p class="text-fact-muted dark:text-fact-dark-muted text-xs">Personal Finance · FACT</p>
+                </div>
+            </div>
+            
+            <!-- Period Selector -->
+            <div class="flex items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
+                <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">This Month</button>
+                <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last Month</button>
+                <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90 Days</button>
+                <button onclick="setPeriod('thisYear')" data-period="thisYear" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Year</button>
             </div>
         </header>
-
-        <!-- CONTENT AREA -->
-        <div class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-            
-            <!-- ==================== DASHBOARD VIEW ==================== -->
-            <div id="view-dashboard" class="space-y-4 md:space-y-6">
-                
-                <!-- LOADING SKELETON -->
-                <div id="loadingSkeleton" class="space-y-4">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                        <div class="skeleton h-28 rounded-2xl"></div>
-                        <div class="skeleton h-28 rounded-2xl"></div>
-                        <div class="skeleton h-28 rounded-2xl"></div>
-                        <div class="skeleton h-28 rounded-2xl"></div>
-                    </div>
-                    <div class="skeleton h-64 rounded-2xl"></div>
-                </div>
-                
-                <!-- ACTUAL CONTENT (hidden until loaded) -->
-                <div id="dashboardContent" class="hidden space-y-4 md:space-y-6">
-                    
-                    <!-- QUICK FIX BANNER (if uncategorized) -->
-                    <div id="quickFixBanner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold text-amber-900 dark:text-amber-100 text-sm">Quick Fix Available</div>
-                                <div class="text-xs text-amber-700 dark:text-amber-300 truncate max-w-[180px] md:max-w-none" id="quickFixMerchant">--</div>
-                            </div>
-                        </div>
-                        <button onclick="quickFixTop()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition tap-target flex-shrink-0">
-                            Fix Now
-                        </button>
-                    </div>
-                    
-                    <!-- KEY METRICS ROW -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                        
-                        <!-- Health Score -->
-                        <div class="bg-gradient-to-br from-brand-600 to-purple-700 text-white p-4 rounded-2xl shadow-lg cursor-pointer tap-target" onclick="openHealthModal()">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-[10px] text-brand-200 uppercase tracking-wider font-semibold">Health</div>
-                                    <div class="text-2xl md:text-3xl font-bold mt-1" id="healthScore">--</div>
-                                    <div class="text-xs text-brand-200 mt-1" id="healthLabel">Tap for details</div>
-                                </div>
-                                <div class="relative w-12 h-12 md:w-14 md:h-14">
-                                    <svg class="health-ring w-full h-full" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="10"/>
-                                        <circle id="healthRing" cx="50" cy="50" r="42" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Total Spend -->
-                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Spent</span>
-                                <i class="fa-solid fa-arrow-trend-up text-red-400 text-xs"></i>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold" id="totalSpend">--</div>
-                            <div class="text-[10px] text-gray-400 mt-1" id="spendDelta">--</div>
-                        </div>
-                        
-                        <!-- Money Left / Daily Budget -->
-                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Daily Budget</span>
-                                <i class="fa-solid fa-calendar-day text-brand-400 text-xs"></i>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold" id="dailyBudget">--</div>
-                            <div class="text-[10px] text-gray-400 mt-1" id="daysLeft">-- days left</div>
-                        </div>
-                        
-                        <!-- Savings Rate -->
-                        <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Saved</span>
-                                <i class="fa-solid fa-piggy-bank text-emerald-400 text-xs"></i>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold" id="savingsRate">--%</div>
-                            <div class="text-[10px] mt-1" id="savingsAmount">--</div>
-                        </div>
-                    </div>
-                    
-                    <!-- MAIN GRID -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                        
-                        <!-- SPENDING BY CATEGORY (Chart) -->
-                        <div class="lg:col-span-2 bg-white dark:bg-dark-card p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-semibold">Spending by Category</h3>
-                                <span class="text-xs text-gray-400" id="catCount">-- categories</span>
-                            </div>
-                            <div class="chart-wrap h-48 md:h-64">
-                                <canvas id="categoryChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- CATEGORY DRILL-DOWN -->
-                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 dark:border-dark-border">
-                                <h3 class="font-semibold">Category Details</h3>
-                                <p class="text-xs text-gray-400">Tap to see merchants</p>
-                            </div>
-                            <div id="catDrilldown" class="max-h-64 md:max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-dark-border">
-                                <!-- JS populated -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BOTTOM ROW -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        
-                        <!-- TOP MERCHANTS -->
-                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                                <h3 class="font-semibold">Top Merchants</h3>
-                                <span class="text-xs text-gray-400">By spend</span>
-                            </div>
-                            <div id="topMerchants" class="divide-y divide-gray-50 dark:divide-dark-border max-h-72 overflow-y-auto">
-                                <!-- JS populated -->
-                            </div>
-                        </div>
-                        
-                        <!-- RECURRING PAYMENTS -->
-                        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                                <h3 class="font-semibold">Recurring Payments</h3>
-                                <span class="text-xs text-gray-400">Auto-detected</span>
-                            </div>
-                            <div id="recurring" class="divide-y divide-gray-50 dark:divide-dark-border max-h-72 overflow-y-auto">
-                                <!-- JS populated -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- SPENDING PATTERNS (Collapsible) -->
-                    <details class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border">
-                        <summary class="p-4 cursor-pointer flex items-center justify-between tap-target">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-chart-line text-brand-500"></i>
-                                <span class="font-semibold">Spending Patterns</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-400 text-sm"></i>
-                        </summary>
-                        <div class="p-4 pt-0 border-t border-gray-100 dark:border-dark-border">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-500 mb-3">By Day of Week</h4>
-                                    <div class="chart-wrap h-40">
-                                        <canvas id="dowChart"></canvas>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-500 mb-3">By Hour</h4>
-                                    <div class="chart-wrap h-40">
-                                        <canvas id="hourChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-                </div>
+        
+        <!-- LOADING STATE -->
+        <div id="loadingState" class="space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
             </div>
-            
-            <!-- ==================== TRANSACTIONS VIEW ==================== -->
-            <div id="view-transactions" class="hidden space-y-4">
-                
-                <!-- SEARCH & FILTER -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="relative flex-1">
-                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="txnSearch" placeholder="Search transactions..." 
-                               class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition tap-target">
-                    </div>
-                    <select id="catFilter" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-                
-                <!-- TRANSACTION LIST -->
-                <div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-dark-border overflow-hidden">
-                    
-                    <!-- Desktop Table Header -->
-                    <div class="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-dark-border text-xs text-gray-500 uppercase font-semibold">
-                        <div class="col-span-2">Date</div>
-                        <div class="col-span-4">Merchant</div>
-                        <div class="col-span-3">Category</div>
-                        <div class="col-span-3 text-right">Amount</div>
-                    </div>
-                    
-                    <div id="txnList" class="divide-y divide-gray-100 dark:divide-dark-border max-h-[60vh] overflow-y-auto">
-                        <!-- JS populated -->
-                    </div>
-                    
-                    <div class="p-3 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
-                        <span class="text-sm text-gray-500" id="txnCount">Showing 0</span>
-                        <button onclick="loadMore()" id="loadMoreBtn" class="text-sm text-brand-600 font-medium tap-target">Load More</button>
-                    </div>
-                </div>
-            </div>
+            <div class="skeleton h-64"></div>
         </div>
-    </main>
-
-    <!-- ==================== MODALS ==================== -->
-    
-    <!-- DATE PICKER MODAL -->
-    <div id="dateModal" class="modal">
-        <div class="modal-box">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                <h3 class="font-semibold">Select Date Range</h3>
-                <button onclick="closeDateModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
+        
+        <!-- MAIN CONTENT -->
+        <div id="mainContent" class="hidden space-y-6">
+            
+            <!-- KEY METRICS -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                
+                <!-- Income -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-green"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Income</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricIncome">--</div>
+                </div>
+                
+                <!-- Spent -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-yellow"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Spent</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricSpent">--</div>
+                </div>
+                
+                <!-- Net -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full" id="netDot"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricNet">--</div>
+                </div>
+                
+                <!-- Daily Budget -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-purple"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Daily Budget</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricDaily">--</div>
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1" id="metricDaysLeft">-- days left</div>
+                </div>
             </div>
-            <div class="p-4 space-y-2">
-                <button onclick="setDateRange('thisMonth')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">This Month</button>
-                <button onclick="setDateRange('lastMonth')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last Month</button>
-                <button onclick="setDateRange('last30')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last 30 Days</button>
-                <button onclick="setDateRange('last90')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">Last 90 Days</button>
-                <button onclick="setDateRange('thisYear')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">This Year</button>
-                <button onclick="setDateRange('allTime')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition tap-target">All Time</button>
+            
+            <!-- UNCATEGORIZED ALERT -->
+            <div id="uncatAlert" class="hidden card rounded-xl p-4 border-l-4 border-fact-yellow bg-fact-yellow-t dark:bg-fact-dark-yellow-t cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-fact-yellow flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-display font-semibold text-sm"><span id="uncatCount">0</span> transactions need categorizing</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Tap to fix · <span id="uncatAmount">QAR 0</span> untracked</div>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
             </div>
+            
+            <!-- SPENDING BY CATEGORY -->
+            <div class="card rounded-xl overflow-hidden relative">
+                <div class="corner-mark corner-tl"></div>
+                <div class="corner-mark corner-tr"></div>
+                <div class="corner-mark corner-bl"></div>
+                <div class="corner-mark corner-br"></div>
+                
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                    <h2 class="font-display font-semibold">Spending by Category</h2>
+                    <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="catTotalLabel">13 categories</span>
+                </div>
+                
+                <div id="catList" class="divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
+            </div>
+            
+            <!-- RECURRING -->
+            <details class="card rounded-xl overflow-hidden">
+                <summary class="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50 dark:hover:bg-fact-dark-border transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-fact-purple-t dark:bg-fact-dark-purple-t flex items-center justify-center">
+                            <svg class="w-4 h-4 text-fact-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-display font-semibold text-sm">Recurring Payments</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted"><span id="recurringTotal">QAR 0</span>/month detected</div>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </summary>
+                <div id="recurringList" class="border-t border-fact-border dark:border-fact-dark-border divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
+            </details>
+            
+            <!-- TRANSACTIONS -->
+            <div class="card rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex flex-col sm:flex-row sm:items-center gap-3">
+                    <h2 class="font-display font-semibold flex-shrink-0">Transactions</h2>
+                    <div class="flex-1 flex gap-2">
+                        <div class="relative flex-1">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="txnSearch" placeholder="Search..." class="w-full bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow focus:border-transparent">
+                        </div>
+                        <select id="catFilter" class="bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="txnList" class="max-h-96 overflow-y-auto">
+                    <!-- JS populated -->
+                </div>
+                
+                <div class="p-3 border-t border-fact-border dark:border-fact-dark-border flex items-center justify-between bg-fact-bg dark:bg-fact-dark-bg">
+                    <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">0 transactions</span>
+                    <button onclick="loadMore()" id="loadMoreBtn" class="text-xs font-medium text-fact-purple hover:underline">Load more</button>
+                </div>
+            </div>
+            
+            <!-- FOOTER -->
+            <footer class="text-center py-6">
+                <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Last synced: <span id="lastSync">--</span></p>
+                <button onclick="syncData()" class="mt-2 text-xs font-medium text-fact-ink hover:text-fact-purple transition">
+                    <svg class="w-3 h-3 inline mr-1" id="syncIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+            </footer>
         </div>
     </div>
     
-    <!-- HEALTH SCORE MODAL -->
-    <div id="healthModal" class="modal">
-        <div class="modal-box">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                <h3 class="font-semibold">Health Score Breakdown</h3>
-                <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-4 space-y-4" id="healthBreakdown">
-                <!-- JS populated -->
+    <!-- UNCATEGORIZED MODAL -->
+    <div id="uncatModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeUncatModal()"></div>
+        <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md">
+            <div class="modal-box card rounded-2xl overflow-hidden h-full sm:h-auto sm:max-h-[80vh] flex flex-col">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between flex-shrink-0">
+                    <h3 class="font-display font-semibold">Uncategorized</h3>
+                    <button onclick="closeUncatModal()" class="w-8 h-8 rounded-full hover:bg-fact-bg dark:bg-fact-dark-bg flex items-center justify-center transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="uncatList" class="flex-1 overflow-y-auto divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
             </div>
         </div>
     </div>
     
     <!-- CATEGORIZE MODAL -->
-    <div id="catModal" class="modal">
-        <div class="modal-box">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                <h3 class="font-semibold">Categorize Transaction</h3>
-                <button onclick="closeCatModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-4 space-y-4">
-                <div class="p-3 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div class="text-xs text-gray-400 mb-1">Original Transaction</div>
-                    <div class="font-medium text-sm break-all" id="catModalRaw">--</div>
+    <div id="catModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeCatModal()"></div>
+        <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm flex items-center justify-center">
+            <div class="modal-box card rounded-2xl overflow-hidden w-full">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+                    <h3 class="font-display font-semibold">Categorize Transaction</h3>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1.5">Merchant Name</label>
-                    <input type="text" id="catModalName" class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target" placeholder="e.g., Keeta, Netflix">
+                <div class="p-4 space-y-4">
+                    <div class="p-3 bg-fact-bg dark:bg-fact-dark-bg rounded-lg">
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">Original</div>
+                        <div class="text-sm font-medium break-all" id="catModalRaw">--</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Display Name</label>
+                        <input type="text" id="catModalName" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" placeholder="e.g., Starbucks">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Category</label>
+                        <select id="catModalCat" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                            <!-- JS populated -->
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1.5">Category</label>
-                    <select id="catModalCat" class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none tap-target">
-                        <!-- JS populated -->
-                    </select>
+                <div class="p-4 border-t border-fact-border dark:border-fact-dark-border flex gap-2">
+                    <button onclick="closeCatModal()" class="flex-1 px-4 py-2.5 text-sm font-medium text-fact-muted dark:text-fact-dark-muted hover:bg-fact-bg dark:bg-fact-dark-bg rounded-lg transition">Cancel</button>
+                    <button onclick="saveCategorization()" class="flex-1 px-4 py-2.5 text-sm font-medium bg-fact-ink text-white rounded-lg hover:bg-gray-800 transition">Save</button>
                 </div>
-            </div>
-            <div class="p-4 border-t border-gray-100 dark:border-dark-border flex gap-2">
-                <button onclick="closeCatModal()" class="flex-1 px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-border rounded-lg transition tap-target">Cancel</button>
-                <button onclick="saveCategorization()" class="flex-1 px-4 py-3 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition tap-target">Save</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- UNCATEGORIZED LIST MODAL -->
-    <div id="uncatModal" class="modal">
-        <div class="modal-box" style="max-width: 500px;">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                <div>
-                    <h3 class="font-semibold">Uncategorized Transactions</h3>
-                    <p class="text-xs text-gray-400">Tap to categorize</p>
-                </div>
-                <button onclick="closeUncatModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="uncatList" class="max-h-[50vh] overflow-y-auto divide-y divide-gray-100 dark:divide-dark-border">
-                <!-- JS populated -->
-            </div>
-            <div class="p-3 border-t border-gray-100 dark:border-dark-border flex justify-between items-center">
-                <button onclick="exportMappings()" class="text-sm text-brand-600 tap-target"><i class="fa-solid fa-download mr-1"></i> Export</button>
-                <button onclick="closeUncatModal()" class="px-4 py-2 text-sm text-gray-500 tap-target">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- SETTINGS MODAL (Mobile) -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-box">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                <h3 class="font-semibold">Settings</h3>
-                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 tap-target"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-4 space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="font-medium">Dark Mode</span>
-                    <button onclick="toggleTheme()" class="w-12 h-7 rounded-full bg-gray-200 dark:bg-brand-600 relative transition tap-target">
-                        <div class="w-5 h-5 rounded-full bg-white absolute top-1 left-1 dark:left-6 transition-all shadow"></div>
-                    </button>
-                </div>
-                <button onclick="syncData(); closeSettingsModal();" class="w-full py-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-lg font-medium tap-target">
-                    <i class="fa-solid fa-rotate mr-2"></i> Sync Now
-                </button>
-                <div class="text-center text-xs text-gray-400" id="lastUpdatedMobile">Not synced</div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
         // ============================================
-        // CONFIGURATION
+        // CONFIG
         // ============================================
         const CONFIG = {
             SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
-            STORAGE_VERSION: 2,
+            STORAGE_KEY: 'qnb_tracker_v2',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
         };
 
@@ -562,97 +466,71 @@
             filtered: [],
             merchantMap: [],
             categories: new Set(),
-            catColors: {},
             fxRates: { ...CONFIG.DEFAULT_FX },
             localMappings: {},
+            period: 'thisMonth',
             dateRange: { start: dayjs().startOf('month'), end: dayjs() },
-            dateLabel: 'This Month',
-            view: 'dashboard',
             txnLimit: 30,
-            expandedCats: new Set(),
-            catTarget: null,
-            isLoading: true
+            catTarget: null
         };
 
         // ============================================
-        // COLOR PALETTE (Divergent, WCAG AA)
+        // CATEGORY COLORS
         // ============================================
-        const COLORS = [
-            '#7C3AED', '#F59E0B', '#10B981', '#3B82F6', '#EC4899',
-            '#06B6D4', '#EF4444', '#84CC16', '#8B5CF6', '#F97316',
-            '#14B8A6', '#A855F7', '#0EA5E9', '#F43F5E', '#22C55E'
-        ];
-
-        function assignColors(cats) {
-            const arr = Array.from(cats).filter(c => c !== 'Uncategorized').sort();
-            const colors = {};
-            arr.forEach((c, i) => colors[c] = COLORS[i % COLORS.length]);
-            colors['Uncategorized'] = '#DC2626';
-            return colors;
-        }
+        const CAT_COLORS = {
+            'Groceries': '#75B876',
+            'Delivery': '#F4C44E',
+            'Dining': '#E67E22',
+            'Bars & Hotels': '#9B59B6',
+            'Shopping': '#3498DB',
+            'Hobbies': '#E91E63',
+            'Bills': '#607D8B',
+            'Transport': '#00BCD4',
+            'Travel': '#FF5722',
+            'Health': '#4CAF50',
+            'Family': '#8E44AD',
+            'Transfers': '#95A5A6',
+            'Other': '#BDC3C7',
+            'Uncategorized': '#E74C3C'
+        };
 
         // ============================================
-        // INITIALIZATION
+        // INIT
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
-            initTheme();
             syncData();
             
-            // Event listeners
             document.getElementById('txnSearch').addEventListener('input', debounce(filterTxns, 200));
             document.getElementById('catFilter').addEventListener('change', filterTxns);
+            
+            // Set initial period button
+            updatePeriodButtons();
         });
 
         function loadLocalData() {
             try {
-                const stored = localStorage.getItem('qnb_data');
+                const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
                 if (stored) {
                     const data = JSON.parse(stored);
-                    if (data.version === CONFIG.STORAGE_VERSION) {
-                        STATE.localMappings = data.mappings || {};
-                    }
+                    STATE.localMappings = data.mappings || {};
                 }
-            } catch (e) { console.warn('localStorage parse error', e); }
+            } catch (e) { console.warn('localStorage error', e); }
         }
 
         function saveLocalData() {
-            localStorage.setItem('qnb_data', JSON.stringify({
-                version: CONFIG.STORAGE_VERSION,
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
                 mappings: STATE.localMappings
             }));
-        }
-
-        function initTheme() {
-            if (localStorage.getItem('qnb_theme') === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-            updateThemeIcon();
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('qnb_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            updateThemeIcon();
-            renderCharts();
-        }
-
-        function updateThemeIcon() {
-            const icon = document.getElementById('themeIcon');
-            if (icon) {
-                icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-gray-500';
-            }
         }
 
         // ============================================
         // DATA FETCHING
         // ============================================
         async function syncData() {
-            STATE.isLoading = true;
             showLoading(true);
-            
             const icon = document.getElementById('syncIcon');
-            if (icon) icon.classList.add('fa-spin');
+            if (icon) icon.classList.add('animate-spin');
 
             const url = (sheet) => `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
 
@@ -667,23 +545,17 @@
                 processMerchantMap(map);
                 processTxns(ledger);
 
-                const now = dayjs().format('HH:mm');
-                ['lastUpdatedDesktop', 'lastUpdatedMobile'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = `Synced ${now}`;
-                });
-
-                STATE.isLoading = false;
+                document.getElementById('lastSync').textContent = dayjs().format('HH:mm');
+                
                 showLoading(false);
                 filterData();
 
             } catch (err) {
                 console.error('Sync error:', err);
-                STATE.isLoading = false;
                 showLoading(false);
-                showError('Sync failed. Check your connection and try again.');
+                alert('Sync failed. Check connection and try again.');
             } finally {
-                if (icon) icon.classList.remove('fa-spin');
+                if (icon) icon.classList.remove('animate-spin');
             }
         }
 
@@ -700,14 +572,8 @@
         }
 
         function showLoading(show) {
-            const skeleton = document.getElementById('loadingSkeleton');
-            const content = document.getElementById('dashboardContent');
-            if (skeleton) skeleton.classList.toggle('hidden', !show);
-            if (content) content.classList.toggle('hidden', show);
-        }
-
-        function showError(msg) {
-            alert(msg); // Simple for now - could enhance with toast
+            document.getElementById('loadingState').classList.toggle('hidden', !show);
+            document.getElementById('mainContent').classList.toggle('hidden', show);
         }
 
         // ============================================
@@ -722,7 +588,6 @@
         }
 
         function processMerchantMap(rows) {
-            // Skip header
             if (rows.length && rows[0][0]?.toLowerCase().includes('pattern')) rows.shift();
 
             STATE.merchantMap = [];
@@ -741,7 +606,6 @@
             });
 
             STATE.categories.add('Uncategorized');
-            STATE.catColors = assignColors(STATE.categories);
             updateCatDropdowns();
         }
 
@@ -773,12 +637,10 @@
         function categorize(raw) {
             const lower = raw.toLowerCase();
 
-            // Local mappings first
             if (STATE.localMappings[lower]) {
                 return STATE.localMappings[lower];
             }
 
-            // MerchantMap
             const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
             if (match) {
                 return { display: match.display, consolidated: match.consolidated, category: match.category };
@@ -816,304 +678,77 @@
         // UI UPDATES
         // ============================================
         function updateAll() {
-            updateDashboard();
-            updateTxnView();
-            updateUncatAlerts();
+            updateMetrics();
+            updateCategories();
+            updateRecurring();
+            updateTxnList();
+            updateUncatAlert();
         }
 
-        function updateDashboard() {
+        function updateMetrics() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
             const inc = STATE.filtered.filter(t => t.direction === 'IN');
 
             const totalSpend = out.reduce((s, t) => s + t.amount, 0);
             const totalIncome = inc.reduce((s, t) => s + t.amount, 0);
-            const saved = totalIncome - totalSpend;
-            const savingsRate = totalIncome > 0 ? (saved / totalIncome) * 100 : 0;
+            const net = totalIncome - totalSpend;
 
-            // Days left in period
+            // Days calculation
             const daysTotal = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
             const daysPassed = dayjs().diff(STATE.dateRange.start, 'day') + 1;
             const daysLeft = Math.max(0, daysTotal - daysPassed);
+            const dailyBudget = daysLeft > 0 ? Math.max(0, net) / daysLeft : 0;
 
-            // Daily budget (remaining / days left)
-            const remaining = totalIncome - totalSpend;
-            const dailyBudget = daysLeft > 0 ? remaining / daysLeft : remaining;
-
-            // Health Score
-            const uncatCount = out.filter(t => t.category === 'Uncategorized').length;
-            const uncatRatio = out.length > 0 ? uncatCount / out.length : 0;
-            const healthData = calculateHealth(savingsRate, uncatRatio);
-
-            // Week over week comparison
-            const thisWeekSpend = out.filter(t => t.date.isAfter(dayjs().subtract(7, 'day'))).reduce((s, t) => s + t.amount, 0);
-            const lastWeekSpend = out.filter(t => t.date.isBetween(dayjs().subtract(14, 'day'), dayjs().subtract(7, 'day'), 'day', '[]')).reduce((s, t) => s + t.amount, 0);
-            const weekDelta = lastWeekSpend > 0 ? ((thisWeekSpend - lastWeekSpend) / lastWeekSpend * 100) : 0;
-
-            // Update DOM
-            document.getElementById('healthScore').textContent = healthData.score;
-            document.getElementById('healthLabel').textContent = healthData.label;
-            const ring = document.getElementById('healthRing');
-            ring.style.strokeDashoffset = 264 - (healthData.score / 100) * 264;
-
-            document.getElementById('totalSpend').textContent = formatNum(totalSpend);
-            document.getElementById('spendDelta').textContent = weekDelta >= 0 ? `+${Math.round(weekDelta)}% vs last week` : `${Math.round(weekDelta)}% vs last week`;
-            document.getElementById('spendDelta').className = `text-[10px] mt-1 ${weekDelta >= 0 ? 'text-red-500' : 'text-emerald-500'}`;
-
-            document.getElementById('dailyBudget').textContent = formatNum(Math.max(0, dailyBudget));
-            document.getElementById('daysLeft').textContent = `${daysLeft} days left`;
-
-            document.getElementById('savingsRate').textContent = `${Math.round(savingsRate)}%`;
-            document.getElementById('savingsAmount').textContent = saved >= 0 ? `+${formatNum(saved)} saved` : `${formatNum(saved)} deficit`;
-            document.getElementById('savingsAmount').className = `text-[10px] mt-1 ${saved >= 0 ? 'text-emerald-500' : 'text-red-500'}`;
-
-            // Category breakdown
-            const catSpend = {};
-            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
-            const sortedCats = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
-
-            document.getElementById('catCount').textContent = `${sortedCats.length} categories`;
-            renderCategoryChart(sortedCats);
-            renderCatDrilldown(sortedCats, out);
-
-            // Top merchants
-            const merchSpend = {};
-            out.forEach(t => {
-                const key = t.consolidated;
-                if (!merchSpend[key]) merchSpend[key] = { sum: 0, count: 0, cat: t.category };
-                merchSpend[key].sum += t.amount;
-                merchSpend[key].count++;
-            });
-            renderTopMerchants(Object.entries(merchSpend).sort((a, b) => b[1].sum - a[1].sum).slice(0, 8));
-
-            // Recurring
-            detectRecurring(out);
-
-            // Patterns
-            renderPatterns(out);
-
-            // Quick fix banner
-            const topUncat = out.find(t => t.category === 'Uncategorized');
-            const banner = document.getElementById('quickFixBanner');
-            if (topUncat) {
-                banner.classList.remove('hidden');
-                document.getElementById('quickFixMerchant').textContent = topUncat.raw;
-            } else {
-                banner.classList.add('hidden');
-            }
-
-            // Store health breakdown for modal
-            STATE.healthBreakdown = healthData.breakdown;
+            document.getElementById('metricIncome').textContent = formatNum(totalIncome);
+            document.getElementById('metricSpent').textContent = formatNum(totalSpend);
+            document.getElementById('metricNet').textContent = (net >= 0 ? '+' : '') + formatNum(net);
+            document.getElementById('metricNet').className = `font-display font-bold text-2xl ${net >= 0 ? 'text-fact-green' : 'text-red-500'}`;
+            document.getElementById('netDot').className = `w-2 h-2 rounded-full ${net >= 0 ? 'bg-fact-green' : 'bg-red-500'}`;
+            document.getElementById('metricDaily').textContent = formatNum(dailyBudget);
+            document.getElementById('metricDaysLeft').textContent = `${daysLeft} days left`;
         }
 
-        function calculateHealth(savingsRate, uncatRatio) {
-            const breakdown = [];
-            let score = 0;
-
-            // Savings (40 pts)
-            let savingsPts = 0;
-            if (savingsRate >= 30) savingsPts = 40;
-            else if (savingsRate >= 20) savingsPts = 30;
-            else if (savingsRate >= 10) savingsPts = 20;
-            else if (savingsRate >= 0) savingsPts = 10;
-            score += savingsPts;
-            breakdown.push({ label: 'Savings Rate', pts: savingsPts, max: 40, detail: `${Math.round(savingsRate)}% saved` });
-
-            // Categorization (30 pts)
-            let catPts = 0;
-            if (uncatRatio < 0.05) catPts = 30;
-            else if (uncatRatio < 0.15) catPts = 20;
-            else if (uncatRatio < 0.30) catPts = 10;
-            else catPts = 5;
-            score += catPts;
-            breakdown.push({ label: 'Categorization', pts: catPts, max: 30, detail: `${Math.round(uncatRatio * 100)}% uncategorized` });
-
-            // Data completeness (20 pts) - placeholder
-            score += 20;
-            breakdown.push({ label: 'Data Completeness', pts: 20, max: 20, detail: 'All transactions tracked' });
-
-            // Consistency (10 pts) - placeholder
-            score += 10;
-            breakdown.push({ label: 'Tracking Consistency', pts: 10, max: 10, detail: 'Regular tracking' });
-
-            let label = 'Excellent';
-            if (score < 40) label = 'Needs Work';
-            else if (score < 60) label = 'Fair';
-            else if (score < 80) label = 'Good';
-
-            return { score, label, breakdown };
-        }
-
-        // ============================================
-        // CHART RENDERING
-        // ============================================
-        const charts = {};
-
-        function renderCategoryChart(sortedCats) {
-            const ctx = document.getElementById('categoryChart');
-            if (!ctx) return;
-            if (charts.category) charts.category.destroy();
-
-            const labels = sortedCats.slice(0, 8).map(c => c[0]);
-            const data = sortedCats.slice(0, 8).map(c => c[1]);
-            const colors = labels.map(l => STATE.catColors[l] || '#94A3B8');
-
-            const isDark = document.documentElement.classList.contains('dark');
-            const gridColor = isDark ? '#334155' : '#f1f5f9';
-            const textColor = isDark ? '#94a3b8' : '#64748b';
-
-            charts.category = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{ data, backgroundColor: colors, borderRadius: 6, barThickness: window.innerWidth < 768 ? 20 : 32 }]
-                },
-                options: {
-                    indexAxis: window.innerWidth < 768 ? 'y' : 'x',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: window.innerWidth >= 768, color: gridColor }, ticks: { color: textColor, maxRotation: 0 } },
-                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { color: textColor } }
-                    }
-                }
-            });
-        }
-
-        function renderPatterns(txns) {
-            // Day of week
-            const dow = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
-            txns.forEach(t => dow[t.date.format('ddd')] += t.amount);
-            renderSmallChart('dowChart', Object.keys(dow), Object.values(dow), '#8B5CF6');
-
-            // Hour
-            const hours = Array(24).fill(0);
-            txns.forEach(t => hours[t.date.hour()] += t.amount);
-            renderSmallChart('hourChart', hours.map((_, i) => `${i}h`), hours, '#F59E0B');
-        }
-
-        function renderSmallChart(id, labels, data, color) {
-            const ctx = document.getElementById(id);
-            if (!ctx) return;
-            if (charts[id]) charts[id].destroy();
-
-            const isDark = document.documentElement.classList.contains('dark');
-            const gridColor = isDark ? '#334155' : '#f1f5f9';
-            const textColor = isDark ? '#94a3b8' : '#64748b';
-
-            charts[id] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{ data, backgroundColor: color, borderRadius: 3, barThickness: 12 }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 }, maxRotation: 0 } },
-                        y: { grid: { color: gridColor }, beginAtZero: true, ticks: { color: textColor, font: { size: 9 } } }
-                    }
-                }
-            });
-        }
-
-        function renderCharts() {
-            // Re-render after theme change
+        function updateCategories() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
             const catSpend = {};
             out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
-            renderCategoryChart(Object.entries(catSpend).sort((a, b) => b[1] - a[1]));
-            renderPatterns(out);
-        }
+            
+            const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
+            const total = sorted.reduce((s, c) => s + c[1], 0);
 
-        // ============================================
-        // COMPONENT RENDERING
-        // ============================================
-        function renderCatDrilldown(sortedCats, txns) {
-            const container = document.getElementById('catDrilldown');
-            if (!container) return;
+            document.getElementById('catTotalLabel').textContent = `${sorted.length} categories · QAR ${formatNum(total)}`;
 
-            container.innerHTML = sortedCats.map(([cat, sum]) => {
-                const catTxns = txns.filter(t => t.category === cat);
-                const merchants = {};
-                catTxns.forEach(t => {
-                    if (!merchants[t.consolidated]) merchants[t.consolidated] = { sum: 0, count: 0 };
-                    merchants[t.consolidated].sum += t.amount;
-                    merchants[t.consolidated].count++;
-                });
-                const sorted = Object.entries(merchants).sort((a, b) => b[1].sum - a[1].sum).slice(0, 6);
-                const open = STATE.expandedCats.has(cat);
-                const color = STATE.catColors[cat] || '#94A3B8';
+            const container = document.getElementById('catList');
+            container.innerHTML = sorted.map(([cat, amount]) => {
+                const pct = total > 0 ? (amount / total * 100) : 0;
+                const color = CAT_COLORS[cat] || '#BDC3C7';
+                const count = out.filter(t => t.category === cat).length;
 
                 return `
-                    <div>
-                        <div class="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-hover tap-target" onclick="toggleCat('${cat}')">
+                    <div class="cat-row p-4 hover:bg-gray-50 dark:hover:bg-fact-dark-border transition cursor-pointer" onclick="filterByCategory('${cat}')">
+                        <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 rounded" style="background:${color}"></div>
                                 <span class="font-medium text-sm">${cat}</span>
-                                <span class="text-xs text-gray-400">(${catTxns.length})</span>
+                                <span class="text-xs text-fact-muted dark:text-fact-dark-muted">(${count})</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-semibold text-sm">${formatNum(sum)}</span>
-                                <i class="fa-solid fa-chevron-${open ? 'up' : 'down'} text-gray-400 text-xs"></i>
+                            <div class="text-right">
+                                <span class="font-display font-semibold">${formatNum(amount)}</span>
+                                <span class="text-xs text-fact-muted dark:text-fact-dark-muted ml-1">${pct.toFixed(0)}%</span>
                             </div>
                         </div>
-                        <div class="cat-details ${open ? 'open' : ''} bg-gray-50 dark:bg-dark-bg">
-                            <div class="px-4 pb-3 space-y-1">
-                                ${sorted.map(([name, d]) => `
-                                    <div class="flex justify-between text-xs py-1">
-                                        <span class="text-gray-600 dark:text-gray-400">${name} <span class="text-gray-400">(${d.count}x)</span></span>
-                                        <span class="font-medium">${formatNum(d.sum)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
+                        <div class="w-full bg-fact-bg dark:bg-fact-dark-bg rounded-full overflow-hidden">
+                            <div class="cat-bar" style="width:${pct}%;background:${color}"></div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function toggleCat(cat) {
-            if (STATE.expandedCats.has(cat)) STATE.expandedCats.delete(cat);
-            else STATE.expandedCats.add(cat);
-            
-            const out = STATE.filtered.filter(t => t.direction === 'OUT');
-            const catSpend = {};
-            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
-            renderCatDrilldown(Object.entries(catSpend).sort((a, b) => b[1] - a[1]), out);
-        }
-
-        function renderTopMerchants(merchants) {
-            const container = document.getElementById('topMerchants');
-            if (!container) return;
-
-            if (!merchants.length) {
-                container.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">No spending data</div>';
-                return;
-            }
-
-            container.innerHTML = merchants.map(([name, d], i) => `
-                <div class="p-3 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-full bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-xs font-bold text-brand-600">${i + 1}</div>
-                        <div>
-                            <div class="font-medium text-sm">${name}</div>
-                            <div class="text-xs text-gray-400">${d.cat} · ${d.count}x</div>
-                        </div>
-                    </div>
-                    <div class="font-semibold">${formatNum(d.sum)}</div>
-                </div>
-            `).join('');
-        }
-
-        function detectRecurring(txns) {
-            const container = document.getElementById('recurring');
-            if (!container) return;
-
+        function updateRecurring() {
+            const out = STATE.allTxns.filter(t => t.direction === 'OUT'); // Use all time for recurring detection
             const byMerch = {};
-            txns.forEach(t => {
+            out.forEach(t => {
                 if (!byMerch[t.consolidated]) byMerch[t.consolidated] = [];
                 byMerch[t.consolidated].push(t);
             });
@@ -1128,55 +763,61 @@
                 }
                 const avg = intervals.reduce((s, i) => s + i, 0) / intervals.length;
                 if (avg >= 25 && avg <= 35) {
-                    subs.push({ name, amount: arr.reduce((s, t) => s + t.amount, 0) / arr.length, freq: Math.round(avg), count: arr.length });
+                    const avgAmount = arr.reduce((s, t) => s + t.amount, 0) / arr.length;
+                    subs.push({ name, amount: avgAmount, count: arr.length, cat: arr[0].category });
                 }
             });
 
+            const monthlyTotal = subs.reduce((s, sub) => s + sub.amount, 0);
+            document.getElementById('recurringTotal').textContent = `QAR ${formatNum(monthlyTotal)}`;
+
+            const container = document.getElementById('recurringList');
             if (!subs.length) {
-                container.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">No recurring detected</div>';
+                container.innerHTML = '<div class="p-4 text-sm text-fact-muted dark:text-fact-dark-muted text-center">No recurring payments detected</div>';
                 return;
             }
 
-            container.innerHTML = subs.sort((a, b) => b.amount - a.amount).map(s => `
-                <div class="p-3 flex items-center justify-between">
-                    <div>
-                        <div class="font-medium text-sm">${s.name}</div>
-                        <div class="text-xs text-gray-400">~${s.freq} days · ${s.count} payments</div>
+            container.innerHTML = subs.sort((a, b) => b.amount - a.amount).map(s => {
+                const color = CAT_COLORS[s.cat] || '#BDC3C7';
+                return `
+                    <div class="p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
+                            <div>
+                                <div class="font-medium text-sm">${s.name}</div>
+                                <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${s.cat} · ${s.count} payments</div>
+                            </div>
+                        </div>
+                        <div class="font-display font-semibold">${formatNum(s.amount)}</div>
                     </div>
-                    <div class="font-semibold">${formatNum(s.amount)}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        // ============================================
-        // TRANSACTION VIEW
-        // ============================================
-        function updateTxnView() {
+        function updateTxnList() {
             renderTxnList(STATE.filtered);
         }
 
         function renderTxnList(txns) {
-            const container = document.getElementById('txnList');
-            if (!container) return;
-
             const show = txns.slice(0, STATE.txnLimit);
-            document.getElementById('txnCount').textContent = `Showing ${show.length} of ${txns.length}`;
+            document.getElementById('txnCountLabel').textContent = `${show.length} of ${txns.length} transactions`;
             document.getElementById('loadMoreBtn').style.display = show.length < txns.length ? 'block' : 'none';
 
+            const container = document.getElementById('txnList');
             container.innerHTML = show.map(t => {
                 const isOut = t.direction === 'OUT';
                 const isUncat = t.category === 'Uncategorized';
-                const color = STATE.catColors[t.category] || '#94A3B8';
+                const color = CAT_COLORS[t.category] || '#BDC3C7';
 
                 return `
-                    <div class="${isUncat ? 'bg-red-50 dark:bg-red-900/10' : ''} p-3 md:grid md:grid-cols-12 md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-hover transition tap-target" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
-                        <div class="md:col-span-2 text-xs text-gray-500 mb-1 md:mb-0">${t.date.format('MMM D, HH:mm')}</div>
-                        <div class="md:col-span-4 font-medium text-sm mb-1 md:mb-0">${t.display}</div>
-                        <div class="md:col-span-3 mb-1 md:mb-0">
-                            <span class="text-xs px-2 py-1 rounded" style="background:${color}20;color:${color}">${t.category}</span>
+                    <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center gap-3 cursor-pointer" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div class="w-1 h-8 rounded-full flex-shrink-0" style="background:${color}"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${t.display}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')} · ${t.category}</div>
                         </div>
-                        <div class="md:col-span-3 text-right font-semibold ${isOut ? '' : 'text-emerald-600'}">
-                            ${isOut ? '' : '+'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">
+                            ${isOut ? '-' : '+'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
                     </div>
                 `;
@@ -1188,64 +829,88 @@
             filterTxns();
         }
 
-        // ============================================
-        // UNCATEGORIZED
-        // ============================================
-        function updateUncatAlerts() {
+        function updateUncatAlert() {
             const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
-            const count = uncat.length;
-
-            // Desktop
-            const alertD = document.getElementById('uncatAlertDesktop');
-            const countD = document.getElementById('uncatCountDesktop');
-            if (alertD) alertD.classList.toggle('hidden', count === 0);
-            if (countD) countD.textContent = count;
-
-            // Mobile
-            const badge = document.getElementById('uncatBadgeMobile');
-            if (badge) {
-                badge.classList.toggle('hidden', count === 0);
-                badge.textContent = count > 9 ? '9+' : count;
-            }
-        }
-
-        function openUncatModal() {
-            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
-            const container = document.getElementById('uncatList');
-
-            if (!uncat.length) {
-                container.innerHTML = '<div class="p-6 text-center text-gray-400"><i class="fa-solid fa-check-circle text-emerald-500 text-2xl mb-2"></i><br>All categorized!</div>';
+            const alert = document.getElementById('uncatAlert');
+            
+            if (uncat.length > 0) {
+                alert.classList.remove('hidden');
+                document.getElementById('uncatCount').textContent = uncat.length;
+                document.getElementById('uncatAmount').textContent = `QAR ${formatNum(uncat.reduce((s, t) => s + t.amount, 0))}`;
             } else {
-                container.innerHTML = uncat.slice(0, 20).map(t => `
-                    <div class="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-hover cursor-pointer tap-target" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
-                        <div>
-                            <div class="font-medium text-sm">${t.raw}</div>
-                            <div class="text-xs text-gray-400">${t.date.format('MMM D')}</div>
-                        </div>
-                        <div class="font-semibold">${formatNum(t.amount)}</div>
-                    </div>
-                `).join('');
+                alert.classList.add('hidden');
             }
-
-            document.getElementById('uncatModal').classList.add('show');
         }
 
-        function closeUncatModal() {
-            document.getElementById('uncatModal').classList.remove('show');
+        // ============================================
+        // PERIOD
+        // ============================================
+        function setPeriod(period) {
+            STATE.period = period;
+            const now = dayjs();
+
+            switch (period) {
+                case 'thisMonth':
+                    STATE.dateRange = { start: now.startOf('month'), end: now };
+                    break;
+                case 'lastMonth':
+                    STATE.dateRange = { start: now.subtract(1, 'month').startOf('month'), end: now.subtract(1, 'month').endOf('month') };
+                    break;
+                case 'last90':
+                    STATE.dateRange = { start: now.subtract(90, 'day'), end: now };
+                    break;
+                case 'thisYear':
+                    STATE.dateRange = { start: now.startOf('year'), end: now };
+                    break;
+            }
+
+            updatePeriodButtons();
+            filterData();
+        }
+
+        function updatePeriodButtons() {
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === STATE.period);
+            });
         }
 
         // ============================================
         // CATEGORIZATION
         // ============================================
+        function openUncatModal() {
+            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const container = document.getElementById('uncatList');
+
+            if (!uncat.length) {
+                container.innerHTML = '<div class="p-8 text-center"><div class="text-fact-green text-3xl mb-2">✓</div><div class="font-medium">All categorized!</div></div>';
+            } else {
+                container.innerHTML = uncat.slice(0, 30).map(t => `
+                    <div class="p-4 flex items-center justify-between hover:bg-fact-bg dark:hover:bg-fact-dark-border cursor-pointer transition" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${t.raw}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')}</div>
+                        </div>
+                        <div class="font-display font-semibold ml-3">${formatNum(t.amount)}</div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('uncatModal').classList.remove('hidden');
+        }
+
+        function closeUncatModal() {
+            document.getElementById('uncatModal').classList.add('hidden');
+        }
+
         function openCatModal(raw) {
             STATE.catTarget = raw;
             document.getElementById('catModalRaw').textContent = raw;
             document.getElementById('catModalName').value = '';
-            document.getElementById('catModal').classList.add('show');
+            document.getElementById('catModal').classList.remove('hidden');
         }
 
         function closeCatModal() {
-            document.getElementById('catModal').classList.remove('show');
+            document.getElementById('catModal').classList.add('hidden');
         }
 
         function saveCategorization() {
@@ -1261,7 +926,7 @@
             STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
             saveLocalData();
 
-            // Re-categorize
+            // Re-categorize all matching transactions
             STATE.allTxns.forEach(t => {
                 if (t.raw.toLowerCase() === raw.toLowerCase()) {
                     t.display = name;
@@ -1274,142 +939,23 @@
             filterData();
         }
 
-        function quickFixTop() {
-            const top = STATE.filtered.find(t => t.category === 'Uncategorized' && t.direction === 'OUT');
-            if (top) openCatModal(top.raw);
-        }
-
         function updateCatDropdowns() {
             const cats = Array.from(STATE.categories).filter(c => c !== 'Uncategorized').sort();
             
-            // Modal
-            const modal = document.getElementById('catModalCat');
-            if (modal) modal.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-
-            // Filter
-            const filter = document.getElementById('catFilter');
-            if (filter) filter.innerHTML = '<option value="">All Categories</option>' + Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('catModalCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('catFilter').innerHTML = '<option value="">All</option>' + Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
-        function exportMappings() {
-            const rows = ['Pattern,Display Name,Consolidated Name,Category'];
-            Object.entries(STATE.localMappings).forEach(([p, d]) => {
-                rows.push(`"${p}","${d.display}","${d.consolidated}","${d.category}"`);
-            });
-            download('qnb_mappings.csv', rows.join('\n'));
+        function filterByCategory(cat) {
+            document.getElementById('catFilter').value = cat;
+            filterTxns();
+            
+            // Scroll to transactions
+            document.getElementById('txnList').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // ============================================
-        // DATE RANGE
-        // ============================================
-        function openDateModal() {
-            document.getElementById('dateModal').classList.add('show');
-        }
-
-        function closeDateModal() {
-            document.getElementById('dateModal').classList.remove('show');
-        }
-
-        function setDateRange(preset) {
-            const now = dayjs();
-            let start, end, label;
-
-            switch (preset) {
-                case 'thisMonth':
-                    start = now.startOf('month'); end = now; label = 'This Month'; break;
-                case 'lastMonth':
-                    start = now.subtract(1, 'month').startOf('month'); end = now.subtract(1, 'month').endOf('month'); label = 'Last Month'; break;
-                case 'last30':
-                    start = now.subtract(30, 'day'); end = now; label = 'Last 30 Days'; break;
-                case 'last90':
-                    start = now.subtract(90, 'day'); end = now; label = 'Last 90 Days'; break;
-                case 'thisYear':
-                    start = now.startOf('year'); end = now; label = 'This Year'; break;
-                case 'allTime':
-                    start = dayjs('2020-01-01'); end = now; label = 'All Time'; break;
-            }
-
-            STATE.dateRange = { start, end };
-            STATE.dateLabel = label;
-
-            document.getElementById('dateRangeMobile').textContent = label;
-            document.getElementById('dateRangeDesktop').textContent = label;
-
-            closeDateModal();
-            filterData();
-        }
-
-        // ============================================
-        // HEALTH MODAL
-        // ============================================
-        function openHealthModal() {
-            const container = document.getElementById('healthBreakdown');
-            if (!container || !STATE.healthBreakdown) return;
-
-            container.innerHTML = STATE.healthBreakdown.map(b => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-border rounded-lg">
-                    <div>
-                        <div class="font-medium">${b.label}</div>
-                        <div class="text-xs text-gray-400">${b.detail}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-brand-600">${b.pts}/${b.max}</div>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('healthModal').classList.add('show');
-        }
-
-        function closeHealthModal() {
-            document.getElementById('healthModal').classList.remove('show');
-        }
-
-        // ============================================
-        // SETTINGS MODAL
-        // ============================================
-        function openSettingsModal() {
-            document.getElementById('settingsModal').classList.add('show');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('show');
-        }
-
-        // ============================================
-        // NAVIGATION
-        // ============================================
-        function switchView(view) {
-            STATE.view = view;
-
-            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-
-            // Desktop nav
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600'));
-            const deskBtn = document.getElementById(`nav-${view}`);
-            if (deskBtn) {
-                deskBtn.classList.add('active', 'bg-brand-50', 'dark:bg-brand-900/20', 'text-brand-600');
-            }
-
-            // Mobile nav
-            document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active', 'text-brand-600'));
-            const mobBtn = document.getElementById(`mob-${view}`);
-            if (mobBtn) {
-                mobBtn.classList.add('active', 'text-brand-600');
-            }
-
-            // Header text
-            const titles = { dashboard: ['Dashboard', 'Your financial overview'], transactions: ['Transactions', 'Full transaction history'] };
-            document.getElementById('viewTitle').textContent = titles[view]?.[0] || 'Finance Pro';
-            document.getElementById('viewSubtitle').textContent = titles[view]?.[1] || '';
-
-            // Re-render if needed
-            if (view === 'transactions') filterTxns();
-        }
-
-        // ============================================
-        // UTILITIES
+        // UTILS
         // ============================================
         function formatNum(n) {
             return Math.round(n).toLocaleString();
@@ -1418,15 +964,6 @@
         function debounce(fn, wait) {
             let t;
             return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
-        }
-
-        function download(filename, content) {
-            const blob = new Blob([content], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
         }
     </script>
 </body>
