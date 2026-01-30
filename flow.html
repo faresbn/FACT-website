@@ -697,9 +697,118 @@
         }
         body.dark-mode .generosity-amount { color: #C4B5FD; }
 
-        /* Focus Mode Indicator */
+        /* Focus Mode - ADHD-friendly simplified view */
         .focus-mode .hide-in-focus { display: none !important; }
         .focus-mode .main-metric { font-size: 3rem !important; }
+        .focus-mode #mainContent { max-width: 480px; margin: 0 auto; }
+        .focus-mode .card { border-radius: 16px; }
+
+        /* Focus mode hero - simplified single metric */
+        .focus-hero {
+            text-align: center;
+            padding: 32px 20px;
+            background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%);
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+        .focus-hero-number {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .focus-hero-number.positive { color: #75B876; }
+        .focus-hero-number.warning { color: #F4C44E; }
+        .focus-hero-number.danger { color: #E57373; }
+        .focus-hero-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .focus-hero { background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%); }
+            .focus-hero-label { color: #888; }
+        }
+        body.dark-mode .focus-hero { background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%); }
+        body.dark-mode .focus-hero-label { color: #888; }
+
+        /* Focus mode toggle button */
+        .focus-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #F3F3F3;
+            border: 1px solid #E5E5E5;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .focus-toggle:hover { background: #E5E5E5; }
+        .focus-toggle.active {
+            background: #F4C44E;
+            border-color: #F4C44E;
+            color: #111;
+        }
+        @media (prefers-color-scheme: dark) {
+            .focus-toggle { background: #2A2A2A; border-color: #3A3A3A; color: #AAA; }
+            .focus-toggle:hover { background: #3A3A3A; }
+            .focus-toggle.active { background: #F4C44E; color: #111; }
+        }
+        body.dark-mode .focus-toggle { background: #2A2A2A; border-color: #3A3A3A; color: #AAA; }
+        body.dark-mode .focus-toggle:hover { background: #3A3A3A; }
+        body.dark-mode .focus-toggle.active { background: #F4C44E; color: #111; }
+
+        /* Quick insight cards - one action item */
+        .quick-insight {
+            background: #FFF9E6;
+            border: 1px solid #F4C44E40;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+        }
+        .quick-insight-icon { font-size: 20px; margin-right: 10px; }
+        @media (prefers-color-scheme: dark) {
+            .quick-insight { background: #2A2415; border-color: #4A3D2A; }
+        }
+        body.dark-mode .quick-insight { background: #2A2415; border-color: #4A3D2A; }
+
+        /* Collapsible sections for progressive disclosure */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 8px 0;
+            user-select: none;
+        }
+        .collapsible-header:hover { opacity: 0.8; }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 2000px;
+        }
+        .collapsible-chevron {
+            transition: transform 0.2s;
+        }
+        .collapsible-chevron.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Breathing animation for calm feel */
+        .breathe {
+            animation: breathe 4s ease-in-out infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
 
         /* Achievement Celebration */
         .celebration-overlay {
@@ -890,8 +999,16 @@
             <!-- Period Selector + Controls -->
             <div class="flex flex-col items-end gap-2">
                 <div class="flex items-center gap-2">
+                    <!-- Focus Mode Toggle -->
+                    <button id="focusToggle" onclick="toggleFocusMode()" title="Focus Mode - simplified view" class="focus-toggle">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span>Focus</span>
+                    </button>
                     <!-- Export Button -->
-                    <button onclick="exportCSV()" title="Export CSV" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <button onclick="exportCSV()" title="Export CSV" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition hide-in-focus">
                         <svg id="exportIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
@@ -933,8 +1050,42 @@
         <!-- MAIN CONTENT -->
         <div id="mainContent" class="hidden space-y-4">
 
-            <!-- BUDGET HERO - Consolidated overview -->
-            <div class="card rounded-xl p-4">
+            <!-- FOCUS MODE HERO - Shows only in focus mode -->
+            <div id="focusHero" class="focus-hero hidden">
+                <div class="text-sm text-fact-muted dark:text-fact-dark-muted mb-2">
+                    You can spend today
+                </div>
+                <div id="focusHeroNumber" class="focus-hero-number positive breathe">
+                    QAR 150
+                </div>
+                <div class="focus-hero-label">remaining today</div>
+                <div class="mt-4 flex items-center justify-center gap-4 text-sm">
+                    <div class="text-center">
+                        <div id="focusDaysToSalary" class="font-display font-bold text-fact-purple">--</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">days to salary</div>
+                    </div>
+                    <div class="w-px h-8 bg-fact-border dark:bg-fact-dark-border"></div>
+                    <div class="text-center">
+                        <div id="focusStreak" class="font-display font-bold text-fact-yellow">--</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">day streak</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK INSIGHT - One actionable item (shows in focus mode) -->
+            <div id="quickInsight" class="quick-insight hidden">
+                <div class="flex items-center">
+                    <span class="quick-insight-icon">💡</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium" id="quickInsightText">You're doing great today!</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="quickInsightSubtext">Tap for more details</div>
+                    </div>
+                    <button onclick="toggleFocusMode()" class="text-xs text-fact-yellow hover:underline">See all →</button>
+                </div>
+            </div>
+
+            <!-- BUDGET HERO - Consolidated overview (hidden in focus mode) -->
+            <div class="card rounded-xl p-4 hide-in-focus">
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center">
                     <!-- Days until salary -->
                     <div class="flex items-center gap-3">
@@ -1112,8 +1263,8 @@
                 </div>
             </div>
 
-            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4" style="min-height: 500px;">
+            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) - Hidden in focus mode -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 hide-in-focus" style="min-height: 500px;">
 
                 <!-- SPENDING BREAKDOWN (Full left - 2 cols) -->
                 <div class="lg:col-span-2 card rounded-xl p-4 relative flex flex-col">
@@ -2726,6 +2877,12 @@
             // Update generosity budget (if enabled)
             if (typeof renderGenerosityBudget === 'function') {
                 renderGenerosityBudget();
+            }
+
+            // Update focus mode hero if active
+            if (isFocusMode && typeof updateFocusHero === 'function') {
+                updateFocusHero();
+                updateQuickInsight();
             }
         }
 
@@ -4644,6 +4801,7 @@
             { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
             { id: 'achievements', icon: '🏆', label: 'Achievements', shortcut: 'W', action: () => { closeCmdPalette(); openAchievements(); } },
             { id: 'generosity', icon: '💜', label: 'Generosity Budget', shortcut: 'Y', action: () => { closeCmdPalette(); openGenerositySettings(); } },
+            { id: 'focus', icon: '👁️', label: 'Toggle Focus Mode', shortcut: 'F', action: () => { closeCmdPalette(); toggleFocusMode(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -5209,7 +5367,8 @@
             'export-data': { icon: '📊', name: 'Data Analyst', desc: 'Exported your data to CSV', check: () => localStorage.getItem('fact_exported') === 'true' },
             'under-budget-day': { icon: '✅', name: 'Budget Boss', desc: 'Stayed under daily budget', check: () => checkDailyBudget().status === 'safe' },
             'heatmap-view': { icon: '🗓️', name: 'Pattern Seeker', desc: 'Viewed the spending heatmap', check: () => localStorage.getItem('fact_viewed_heatmap') === 'true' },
-            'generosity-set': { icon: '💜', name: 'Generous Heart', desc: 'Set a generosity budget', check: () => localStorage.getItem(`fact_generosity_${STATE.currentUser}`) !== null }
+            'generosity-set': { icon: '💜', name: 'Generous Heart', desc: 'Set a generosity budget', check: () => localStorage.getItem(`fact_generosity_${STATE.currentUser}`) !== null },
+            'focus-mode': { icon: '👁️', name: 'Zen Master', desc: 'Used Focus Mode for simplified view', check: () => localStorage.getItem('fact_focus_mode') === 'true' }
         };
 
         function getUnlockedAchievements() {
@@ -5758,11 +5917,115 @@
             // We'll add generosity as a command in the existing handler
         }
 
+        // ============== FOCUS MODE - ADHD-FRIENDLY UI ==============
+
+        let isFocusMode = false;
+
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            localStorage.setItem(`fact_focus_mode_${STATE.currentUser}`, isFocusMode);
+
+            applyFocusMode();
+
+            if (isFocusMode) {
+                showToast('Focus Mode enabled - simplified view', 'info');
+                trackAchievement('fact_focus_mode');
+            } else {
+                showToast('Full view restored', 'info');
+            }
+        }
+
+        function applyFocusMode() {
+            const body = document.body;
+            const toggle = document.getElementById('focusToggle');
+            const focusHero = document.getElementById('focusHero');
+            const quickInsight = document.getElementById('quickInsight');
+
+            if (isFocusMode) {
+                body.classList.add('focus-mode');
+                toggle?.classList.add('active');
+                focusHero?.classList.remove('hidden');
+                quickInsight?.classList.remove('hidden');
+                updateFocusHero();
+                updateQuickInsight();
+            } else {
+                body.classList.remove('focus-mode');
+                toggle?.classList.remove('active');
+                focusHero?.classList.add('hidden');
+                quickInsight?.classList.add('hidden');
+            }
+        }
+
+        function updateFocusHero() {
+            const budget = checkDailyBudget();
+            const focusNumber = document.getElementById('focusHeroNumber');
+            const focusDays = document.getElementById('focusDaysToSalary');
+            const focusStreak = document.getElementById('focusStreak');
+
+            if (!focusNumber) return;
+
+            // Update the main number
+            const remaining = Math.max(0, budget.remaining);
+            focusNumber.textContent = `QAR ${formatNum(remaining)}`;
+
+            // Set color based on status
+            focusNumber.className = 'focus-hero-number breathe';
+            if (budget.status === 'danger') {
+                focusNumber.classList.add('danger');
+            } else if (budget.status === 'warning') {
+                focusNumber.classList.add('warning');
+            } else {
+                focusNumber.classList.add('positive');
+            }
+
+            // Update days to salary
+            const daysUntil = document.getElementById('daysUntilSalary')?.textContent || '--';
+            if (focusDays) focusDays.textContent = daysUntil;
+
+            // Update streak
+            const streak = getStreakData();
+            if (focusStreak) focusStreak.textContent = streak.currentStreak || '0';
+        }
+
+        function updateQuickInsight() {
+            const insightText = document.getElementById('quickInsightText');
+            const insightSubtext = document.getElementById('quickInsightSubtext');
+            if (!insightText || !insightSubtext) return;
+
+            const budget = checkDailyBudget();
+            const streak = getStreakData();
+
+            // Generate contextual insight
+            if (budget.status === 'danger') {
+                insightText.textContent = "Budget alert! Consider pausing spending.";
+                insightSubtext.textContent = `You've spent ${Math.round((budget.spent / budget.budget) * 100)}% of today's budget`;
+            } else if (budget.status === 'warning') {
+                insightText.textContent = "Halfway through your daily budget";
+                insightSubtext.textContent = `QAR ${formatNum(budget.remaining)} left - spend wisely!`;
+            } else if (streak.currentStreak >= 3) {
+                insightText.textContent = `🔥 ${streak.currentStreak}-day streak! You're crushing it!`;
+                insightSubtext.textContent = "Keep the momentum going";
+            } else {
+                insightText.textContent = "You're doing great today!";
+                insightSubtext.textContent = `QAR ${formatNum(budget.remaining)} left to spend`;
+            }
+        }
+
+        function initFocusMode() {
+            // Load saved preference
+            const saved = localStorage.getItem(`fact_focus_mode_${STATE.currentUser}`);
+            if (saved === 'true') {
+                isFocusMode = true;
+                applyFocusMode();
+            }
+        }
+
         // ============== INIT ENHANCEMENTS ==============
 
         // Initialize all enhancements on load
         document.addEventListener('DOMContentLoaded', () => {
             initVoiceRecognition();
+            initFocusMode();
             initDarkMode();
         });
     </script>
