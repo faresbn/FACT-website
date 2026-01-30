@@ -4959,6 +4959,7 @@
             { id: 'focus', icon: '👁️', label: 'Toggle Focus Mode', shortcut: 'F', action: () => { closeCmdPalette(); toggleFocusMode(); } },
             { id: 'health', icon: '❤️', label: 'Financial Health Score', shortcut: 'L', action: () => { closeCmdPalette(); openHealthScore(); } },
             { id: 'patterns', icon: '🔍', label: 'Spending Patterns', shortcut: 'P', action: () => { closeCmdPalette(); openPatternAnalysis(); } },
+            { id: 'future', icon: '🔮', label: 'Future Projection', shortcut: 'Z', action: () => { closeCmdPalette(); openFutureProjection(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -5527,7 +5528,8 @@
             'generosity-set': { icon: '💜', name: 'Generous Heart', desc: 'Set a generosity budget', check: () => localStorage.getItem(`fact_generosity_${STATE.currentUser}`) !== null },
             'focus-mode': { icon: '👁️', name: 'Zen Master', desc: 'Used Focus Mode for simplified view', check: () => localStorage.getItem('fact_focus_mode') === 'true' },
             'health-check': { icon: '❤️', name: 'Health Conscious', desc: 'Checked your financial health score', check: () => localStorage.getItem('fact_health_score') === 'true' },
-            'pattern-watcher': { icon: '🔍', name: 'Pattern Detective', desc: 'Analyzed your spending patterns', check: () => localStorage.getItem('fact_viewed_patterns') === 'true' }
+            'pattern-watcher': { icon: '🔍', name: 'Pattern Detective', desc: 'Analyzed your spending patterns', check: () => localStorage.getItem('fact_viewed_patterns') === 'true' },
+            'future-self': { icon: '🔮', name: 'Time Traveler', desc: 'Viewed your future spending projection', check: () => localStorage.getItem('fact_viewed_future') === 'true' }
         };
 
         function getUnlockedAchievements() {
@@ -6632,6 +6634,157 @@
             }
 
             trackAchievement('fact_viewed_patterns');
+        }
+
+        // ============== FUTURE SELF PROJECTIONS ==============
+
+        function calculateFutureProjection() {
+            const now = dayjs();
+            const daysInMonth = now.daysInMonth();
+            const currentDay = now.date();
+            const daysRemaining = daysInMonth - currentDay;
+
+            // Get current month's data
+            const monthStart = now.startOf('month');
+            const monthEnd = now.endOf('month');
+
+            const monthTxns = STATE.allTxns.filter(t =>
+                t.date.isBetween(monthStart, monthEnd, 'day', '[]')
+            );
+
+            const totalIn = monthTxns.filter(t => t.direction === 'IN').reduce((s, t) => s + t.qar, 0);
+            const totalOut = monthTxns.filter(t => t.direction === 'OUT').reduce((s, t) => s + Math.abs(t.qar), 0);
+
+            // Calculate daily spending rate
+            const dailySpendRate = currentDay > 0 ? totalOut / currentDay : 0;
+
+            // Project to month end
+            const projectedTotalSpend = totalOut + (dailySpendRate * daysRemaining);
+            const projectedSavings = totalIn - projectedTotalSpend;
+
+            // Calculate ideal scenario (if stayed under budget daily)
+            const dailyBudget = checkDailyBudget().budget;
+            const idealTotalSpend = dailyBudget * daysInMonth;
+            const idealSavings = totalIn - idealTotalSpend;
+
+            // Calculate if changed behavior today
+            const newDailyRate = dailyBudget * 0.8; // 80% of budget = saving mode
+            const projectedWithChange = totalOut + (newDailyRate * daysRemaining);
+            const savingsWithChange = totalIn - projectedWithChange;
+
+            return {
+                currentDay,
+                daysRemaining,
+                daysInMonth,
+                income: totalIn,
+                spent: totalOut,
+                dailyRate: dailySpendRate,
+                projection: {
+                    current: {
+                        spending: projectedTotalSpend,
+                        savings: projectedSavings,
+                        label: 'If you continue at this pace'
+                    },
+                    ideal: {
+                        spending: idealTotalSpend,
+                        savings: idealSavings,
+                        label: 'Ideal scenario (budget every day)'
+                    },
+                    changed: {
+                        spending: projectedWithChange,
+                        savings: savingsWithChange,
+                        label: 'If you save harder starting today'
+                    }
+                },
+                isOnTrack: projectedSavings >= 0,
+                savingsGap: idealSavings - projectedSavings
+            };
+        }
+
+        function openFutureProjection() {
+            const proj = calculateFutureProjection();
+
+            // Format savings display
+            const formatSavings = (amount) => {
+                if (amount >= 0) return `<span class="text-fact-green">+QAR ${formatNum(amount)}</span>`;
+                return `<span class="text-fact-red">-QAR ${formatNum(Math.abs(amount))}</span>`;
+            };
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="text-center p-4 rounded-lg bg-gradient-to-r from-fact-purple/10 to-fact-green/10">
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted mb-1">Day ${proj.currentDay} of ${proj.daysInMonth}</div>
+                        <div class="text-sm">${proj.daysRemaining} days until month end</div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted">SCENARIOS</div>
+
+                        <!-- Current trajectory -->
+                        <div class="p-3 rounded-lg ${proj.projection.current.savings >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>${proj.projection.current.savings >= 0 ? '📈' : '📉'}</span>
+                                <span>${proj.projection.current.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.current.spending)} • Savings: ${formatSavings(proj.projection.current.savings)}
+                            </div>
+                        </div>
+
+                        <!-- Changed behavior -->
+                        <div class="p-3 rounded-lg bg-fact-yellow/10">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>💪</span>
+                                <span>${proj.projection.changed.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.changed.spending)} • Savings: ${formatSavings(proj.projection.changed.savings)}
+                            </div>
+                        </div>
+
+                        <!-- Ideal scenario -->
+                        <div class="p-3 rounded-lg bg-fact-green/10">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>⭐</span>
+                                <span>${proj.projection.ideal.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.ideal.spending)} • Savings: ${formatSavings(proj.projection.ideal.savings)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-fact-ink/5 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs font-medium mb-2">💡 Your daily spending rate</div>
+                        <div class="text-lg font-display font-bold">QAR ${formatNum(proj.dailyRate)}/day</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted mt-1">
+                            ${proj.isOnTrack ? 'You\'re on track!' : `You need to reduce by QAR ${formatNum(proj.savingsGap / Math.max(1, proj.daysRemaining))}/day to meet budget`}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Use confirm overlay to show
+            const overlay = document.querySelector('.confirm-overlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="confirm-box" style="max-width: 400px;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-semibold text-lg">🔮 Future You</h3>
+                            <button onclick="document.querySelector('.confirm-overlay').classList.add('hidden')"
+                                class="text-fact-muted hover:text-fact-ink">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+                overlay.classList.remove('hidden');
+            }
+
+            trackAchievement('fact_viewed_future');
         }
 
         // ============== INIT ENHANCEMENTS ==============
