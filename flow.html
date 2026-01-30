@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>FACT/Flow</title>
+    <meta name="description" content="FACT/Flow - Personal Finance Intelligence for ADHD-friendly budgeting and spending control">
+    <title>FACT/Flow - Personal Finance Intelligence</title>
 
     <!-- PWA & Favicons -->
     <link rel="manifest" href="manifest.json">
@@ -551,6 +552,55 @@
             @page { margin: 1cm; }
         }
 
+        /* Accessibility - Focus indicators */
+        *:focus-visible {
+            outline: 3px solid #F4C44E;
+            outline-offset: 2px;
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 3px solid #F4C44E;
+            outline-offset: 2px;
+        }
+
+        /* Accessibility - Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .breathe { animation: none !important; }
+            .heart-pulse { animation: none !important; }
+        }
+
+        /* Skip to content link for screen readers */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #F4C44E;
+            color: #111;
+            padding: 8px 16px;
+            z-index: 1000;
+            transition: top 0.3s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid currentColor !important;
+            }
+            button {
+                border: 2px solid currentColor !important;
+            }
+            .budget-meter-fill, .generosity-meter-fill, .health-factor-fill {
+                border: 1px solid currentColor;
+            }
+        }
+
         /* Confirmation Modal */
         .confirm-overlay {
             position: fixed;
@@ -998,8 +1048,11 @@
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
+    <!-- Skip to main content for accessibility -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Confirmation Modal (dynamic) -->
     <div id="confirmModal" class="hidden">
@@ -1012,11 +1065,11 @@
     </div>
 
     <!-- ACHIEVEMENTS MODAL -->
-    <div id="achievementsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div id="achievementsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
         <div class="modal-box card rounded-2xl w-full max-w-lg overflow-hidden">
             <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                 <div>
-                    <h3 class="font-display font-semibold">Achievements</h3>
+                    <h3 id="achievementsTitle" class="font-display font-semibold">Achievements</h3>
                     <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="achievementProgress">0 of 0 unlocked</p>
                 </div>
                 <button onclick="closeAchievements()" class="text-fact-muted hover:text-fact-ink">
@@ -1198,7 +1251,7 @@
         </div>
         
         <!-- MAIN CONTENT -->
-        <div id="mainContent" class="hidden space-y-4">
+        <main id="mainContent" class="hidden space-y-4" role="main" aria-label="Financial dashboard">
 
             <!-- FOCUS MODE HERO - Shows only in focus mode -->
             <div id="focusHero" class="focus-hero hidden">
@@ -1558,7 +1611,7 @@
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
             </footer>
-        </div>
+        </main>
     </div>
     </div> <!-- Close mainApp -->
 
