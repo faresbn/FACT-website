@@ -335,17 +335,23 @@ function handleAIQueryPost_(payload) {
     const userContext = getUserContext_(session.sheetId);
     const contextPrompt = formatContextForPrompt_(userContext);
 
-    const basePrompt = `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
+    const basePrompt = `You are a personal finance analyst for this specific user. Answer their questions about spending data.
 Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
-Identify patterns, anomalies, and actionable insights.
 
-The data includes dimensions:
+${contextPrompt ? `CRITICAL - USER'S PERSONAL CONTEXT (ALWAYS USE THIS):
+${contextPrompt}
+
+You MUST apply this context to your analysis. For example:
+- Use the correct salary date from their income schedule
+- Recognize known payees and their purposes
+- Apply corrections they've taught you (e.g., if they said Ooredoo is telecom, don't call it a splurge)
+---
+
+` : ''}The transaction data includes dimensions:
 - merchantType: what was purchased (Groceries, Dining, Bars & Nightlife, Coffee, Shopping, etc.)
 - dims.when: time context (Work Hours, Evening, Late Night, Weekend)
 - dims.size: amount tier (Micro, Small, Medium, Large, Major)
-- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)
-
-${contextPrompt ? '--- USER CONTEXT ---\n' + contextPrompt + '\n--- END CONTEXT ---\n' : ''}`;
+- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)`;
 
     const deepPrompt = isDeepAnalysis
       ? `\n\nDEEP ANALYSIS MODE: Provide thorough, detailed analysis. Consider:
@@ -392,10 +398,19 @@ ${contextPrompt ? '--- USER CONTEXT ---\n' + contextPrompt + '\n--- END CONTEXT 
       return json_({ error: result.error.message });
     }
 
+    // Include context stats so frontend can verify it's loaded
+    const contextStats = {
+      income: userContext.income.length,
+      payees: userContext.payees.length,
+      corrections: userContext.corrections.length,
+      preferences: userContext.preferences.length
+    };
+
     return json_({
       answer: result.choices[0].message.content,
       model: selectedModel,
-      mode: isDeepAnalysis ? 'deep' : 'standard'
+      mode: isDeepAnalysis ? 'deep' : 'standard',
+      contextLoaded: contextStats
     });
 
   } catch (err) {
@@ -623,7 +638,7 @@ function getUserContext_(sheetId) {
       }
     }
   } catch (err) {
-    // Return empty context on error
+    Logger.log('Error loading UserContext: ' + err.message);
   }
 
   return context;
