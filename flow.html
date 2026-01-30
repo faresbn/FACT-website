@@ -981,52 +981,51 @@
         }
 
         async function attemptLogin() {
-            console.log('attemptLogin called');
-            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
-            const password = document.getElementById('loginPassword').value;
+            console.log("attemptLogin called");
+            var username = document.getElementById("loginUsername").value.trim().toLowerCase();
+            var password = document.getElementById("loginPassword").value;
 
             if (!username || !password) {
-                showLoginError('Please enter username and password');
+                showLoginError("Please enter username and password");
                 return;
             }
 
-            const btn = document.getElementById('loginBtn');
-            btn.textContent = 'Signing in...';
+            var btn = document.getElementById("loginBtn");
+            btn.textContent = "Signing in...";
             btn.disabled = true;
 
             try {
-                // Secure POST-based authentication
-                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    redirect: 'follow',
+                var response = await fetch(CONFIG.GAS_URL, {
+                    method: "POST",
+                    headers: {"Content-Type": "text/plain"},
+                    redirect: "follow",
                     body: JSON.stringify({
-                        action: 'auth',
+                        action: "auth",
                         user: username,
                         pass: password
                     })
                 });
 
                 if (!response.ok) {
-                    console.error('Auth response not ok:', response.status, response.statusText);
-                    showLoginError('Server error: ' + response.status);
+                    console.error("Auth response not ok:", response.status);
+                    showLoginError("Server error: " + response.status);
                     return;
                 }
 
-                const data = await response.json();
-                console.log('Auth response:', data);
+                var data = await response.json();
+                console.log("Auth response:", data);
 
                 if (data.success && data.token) {
                     saveSession(data.user, data.token, data.expiry);
-                    showApp({ user: data.user, token: data.token });
+                    showApp({user: data.user, token: data.token});
                 } else {
-                    showLoginError(data.error || 'Invalid credentials');
+                    showLoginError(data.error || "Invalid credentials");
                 }
             } catch (err) {
-                console.error('Login error:', err);
-                showLoginError('Connection error: ' + err.message);
+                console.error("Login error:", err);
+                showLoginError("Connection error: " + err.message);
             } finally {
-                btn.textContent = 'Sign In';
+                btn.textContent = "Sign In";
                 btn.disabled = false;
             }
         }
