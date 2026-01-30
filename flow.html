@@ -550,12 +550,115 @@
             #mainApp { display: block !important; }
             @page { margin: 1cm; }
         }
+
+        /* Confirmation Modal */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 250;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.15s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .confirm-box {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+            animation: scaleIn 0.2s ease-out;
+        }
+        @media (prefers-color-scheme: dark) {
+            .confirm-box { background: #1A1A1A; }
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Impulse Warning */
+        .impulse-banner {
+            background: linear-gradient(135deg, #E57373 0%, #EF5350 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+            animation: shakeIn 0.5s ease-out;
+        }
+        @keyframes shakeIn {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Daily Budget Meter */
+        .budget-meter {
+            height: 8px;
+            background: #E5E5E5;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        @media (prefers-color-scheme: dark) {
+            .budget-meter { background: #2A2A2A; }
+        }
+        .budget-meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-out, background 0.3s;
+        }
+        .budget-meter-fill.safe { background: #75B876; }
+        .budget-meter-fill.warning { background: #F4C44E; }
+        .budget-meter-fill.danger { background: #E57373; }
+
+        /* Pause Modal (for large purchases) */
+        .pause-modal {
+            text-align: center;
+        }
+        .pause-countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: #F4C44E;
+            margin: 16px 0;
+        }
+
+        /* Streak Badge */
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #F4C44E 0%, #FFD700 100%);
+            color: #111;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(244, 196, 78, 0.3);
+        }
+
+        /* Focus Mode Indicator */
+        .focus-mode .hide-in-focus { display: none !important; }
+        .focus-mode .main-metric { font-size: 3rem !important; }
     </style>
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Confirmation Modal (dynamic) -->
+    <div id="confirmModal" class="hidden">
+        <!-- Rendered dynamically by showConfirm() -->
+    </div>
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
@@ -704,6 +807,48 @@
                         <div class="font-display font-bold text-lg text-fact-purple mt-1" id="suggestedDaily">--/day</div>
                         <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">avg: <span id="avgDailySpend">--</span>/day</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- TODAY'S FOCUS - Simple daily view for ADHD -->
+            <div class="card rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <h2 class="font-display font-semibold text-sm">Today</h2>
+                        <div id="streakContainer">
+                            <!-- Streak badge rendered by JS -->
+                        </div>
+                    </div>
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="todayDate">--</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-fact-muted dark:text-fact-dark-muted">Spent today</span>
+                        <span class="font-display font-bold" id="todaySpent">--</span>
+                    </div>
+                    <div id="dailyBudgetMeter" class="budget-meter">
+                        <div class="budget-meter-fill safe" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="dailyBudgetLabel">-- left today</span>
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">Budget: <span id="todayBudget">--</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMPULSE WARNING BANNER (shown when burst detected) -->
+            <div id="impulseBanner" class="impulse-banner">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">⚡</span>
+                        <div>
+                            <div class="font-semibold text-sm">Impulse Alert</div>
+                            <div class="text-xs opacity-80" id="impulseMessage">Multiple purchases detected</div>
+                        </div>
+                    </div>
+                    <button onclick="dismissImpulseBanner()" class="text-white/80 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
             </div>
 
@@ -2303,6 +2448,49 @@
             renderRecentTxns();
             renderUncatAlert();
             renderQuickInsights();
+            renderTodaySection();
+            checkForImpulseBursts();
+        }
+
+        // Render Today section with daily budget meter
+        function renderTodaySection() {
+            // Update date
+            document.getElementById('todayDate').textContent = dayjs().format('dddd, MMM D');
+
+            // Calculate today's spending
+            const status = checkDailyBudget();
+            document.getElementById('todaySpent').textContent = `QAR ${formatNum(status.spent)}`;
+            document.getElementById('todayBudget').textContent = `QAR ${formatNum(status.budget)}`;
+
+            // Update meter
+            updateDailyBudgetMeter();
+
+            // Update streak
+            updateStreak();
+            renderStreakBadge();
+        }
+
+        // Check for impulse bursts and show warning
+        function checkForImpulseBursts() {
+            const today = dayjs().startOf('day');
+            const todayTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.isAfter(today.subtract(1, 'day'))
+            );
+
+            const bursts = detectImpulseBurst(todayTxns);
+
+            if (bursts.length > 0 && !STATE.impulseBannerDismissed) {
+                const latest = bursts[bursts.length - 1];
+                document.getElementById('impulseMessage').textContent =
+                    `${latest.count} purchases (QAR ${formatNum(latest.total)}) in 30 minutes`;
+                document.getElementById('impulseBanner').style.display = 'block';
+            }
+        }
+
+        function dismissImpulseBanner() {
+            document.getElementById('impulseBanner').style.display = 'none';
+            STATE.impulseBannerDismissed = true;
         }
 
         // Category breakdown for left panel
@@ -4405,11 +4593,24 @@
             renderGoalsList();
         }
 
-        function deleteGoal(index) {
+        async function deleteGoal(index) {
             const goals = getGoals();
-            goals.splice(index, 1);
-            saveGoals(goals);
-            renderGoalsList();
+            const goal = goals[index];
+
+            const confirmed = await showConfirm({
+                title: 'Delete Budget Goal',
+                message: `Remove the ${goal.category} budget of QAR ${formatNum(goal.amount)}?`,
+                confirmText: 'Delete',
+                cancelText: 'Keep',
+                type: 'danger'
+            });
+
+            if (confirmed) {
+                goals.splice(index, 1);
+                saveGoals(goals);
+                renderGoalsList();
+                showToast(`Removed ${goal.category} goal`, 'info');
+            }
         }
 
         // ============== TIMELINE HEATMAP ==============
@@ -4723,6 +4924,256 @@
                 openShortcuts();
             }
         });
+
+        // ============== CONFIRMATION DIALOG ==============
+
+        function showConfirm(options) {
+            return new Promise((resolve) => {
+                const { title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning' } = options;
+                const modal = document.getElementById('confirmModal');
+
+                const colors = {
+                    warning: { bg: 'bg-fact-yellow', icon: '⚠️' },
+                    danger: { bg: 'bg-fact-red', icon: '🗑️' },
+                    info: { bg: 'bg-fact-purple', icon: 'ℹ️' }
+                };
+                const color = colors[type] || colors.warning;
+
+                modal.innerHTML = `
+                    <div class="confirm-overlay" onclick="event.target === this && confirmResolve(false)">
+                        <div class="confirm-box">
+                            <div class="text-4xl mb-4">${color.icon}</div>
+                            <h3 class="font-display font-semibold text-lg mb-2">${escapeHtml(title)}</h3>
+                            <p class="text-sm text-fact-muted dark:text-fact-dark-muted mb-6">${escapeHtml(message)}</p>
+                            <div class="flex gap-3">
+                                <button onclick="confirmResolve(false)" class="flex-1 px-4 py-2 text-sm rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800">${cancelText}</button>
+                                <button onclick="confirmResolve(true)" class="flex-1 px-4 py-2 text-sm rounded-lg ${color.bg} text-white font-medium">${confirmText}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+
+                window.confirmResolve = (result) => {
+                    modal.classList.add('hidden');
+                    modal.innerHTML = '';
+                    resolve(result);
+                };
+            });
+        }
+
+        // ============== IMPULSE CONTROL ==============
+
+        // Detect impulse burst (multiple transactions in short time)
+        function detectImpulseBurst(transactions) {
+            const bursts = [];
+            const sorted = [...transactions].sort((a, b) => a.date.unix() - b.date.unix());
+
+            for (let i = 0; i < sorted.length; i++) {
+                const windowStart = sorted[i].date;
+                const windowTxns = [sorted[i]];
+
+                for (let j = i + 1; j < sorted.length; j++) {
+                    const diff = sorted[j].date.diff(windowStart, 'minute');
+                    if (diff <= 30) { // 30 minute window
+                        windowTxns.push(sorted[j]);
+                    } else {
+                        break;
+                    }
+                }
+
+                if (windowTxns.length >= 3) {
+                    bursts.push({
+                        time: windowStart,
+                        count: windowTxns.length,
+                        total: windowTxns.reduce((s, t) => s + t.amount, 0),
+                        transactions: windowTxns
+                    });
+                    i += windowTxns.length - 1; // Skip processed transactions
+                }
+            }
+
+            return bursts;
+        }
+
+        // Check if user is over daily budget
+        function checkDailyBudget() {
+            const today = dayjs().startOf('day');
+            const todayTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.isAfter(today) &&
+                t.date.isBefore(today.add(1, 'day'))
+            );
+            const todaySpent = todayTxns.reduce((s, t) => s + t.amount, 0);
+
+            const proj = calculateBudgetProjection();
+            const dailyBudget = proj.recommended || 300; // Default 300 QAR
+
+            const percentage = (todaySpent / dailyBudget) * 100;
+
+            return {
+                spent: todaySpent,
+                budget: dailyBudget,
+                remaining: Math.max(0, dailyBudget - todaySpent),
+                percentage,
+                status: percentage < 50 ? 'safe' : percentage < 80 ? 'warning' : 'danger'
+            };
+        }
+
+        // Show pause modal for large purchases
+        function showPauseModal(amount, merchant, callback) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                let countdown = 5;
+
+                modal.innerHTML = `
+                    <div class="confirm-overlay">
+                        <div class="confirm-box pause-modal">
+                            <div class="text-4xl mb-2">⏸️</div>
+                            <h3 class="font-display font-semibold text-lg mb-2">Large Purchase</h3>
+                            <p class="text-sm text-fact-muted dark:text-fact-dark-muted">
+                                ${escapeHtml(merchant)}: <strong>QAR ${formatNum(amount)}</strong>
+                            </p>
+                            <div class="pause-countdown" id="pauseCountdown">${countdown}</div>
+                            <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-4">
+                                Take a breath. Do you really need this?
+                            </p>
+                            <div class="flex gap-3">
+                                <button onclick="pauseResolve(false)" class="flex-1 px-4 py-2 text-sm rounded-lg bg-fact-green text-white font-medium">Skip (I needed it)</button>
+                                <button id="pauseConfirmBtn" disabled class="flex-1 px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 text-fact-muted font-medium">Wait ${countdown}s</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+
+                const interval = setInterval(() => {
+                    countdown--;
+                    const countEl = document.getElementById('pauseCountdown');
+                    const btnEl = document.getElementById('pauseConfirmBtn');
+                    if (countEl) countEl.textContent = countdown;
+
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                        if (btnEl) {
+                            btnEl.disabled = false;
+                            btnEl.className = 'flex-1 px-4 py-2 text-sm rounded-lg bg-fact-yellow text-fact-ink font-medium';
+                            btnEl.textContent = 'Categorize anyway';
+                            btnEl.onclick = () => pauseResolve(true);
+                        }
+                    } else if (btnEl) {
+                        btnEl.textContent = `Wait ${countdown}s`;
+                    }
+                }, 1000);
+
+                window.pauseResolve = (result) => {
+                    clearInterval(interval);
+                    modal.classList.add('hidden');
+                    modal.innerHTML = '';
+                    resolve(result);
+                };
+            });
+        }
+
+        // Check for large purchase before categorizing
+        async function checkLargePurchase(amount, merchant) {
+            const LARGE_THRESHOLD = 500; // QAR
+            if (amount >= LARGE_THRESHOLD) {
+                const proceed = await showPauseModal(amount, merchant);
+                return proceed;
+            }
+            return true;
+        }
+
+        // Track and warn about daily budget
+        function updateDailyBudgetMeter() {
+            const status = checkDailyBudget();
+            const meterEl = document.getElementById('dailyBudgetMeter');
+            if (!meterEl) return;
+
+            const fillEl = meterEl.querySelector('.budget-meter-fill');
+            if (fillEl) {
+                fillEl.style.width = `${Math.min(100, status.percentage)}%`;
+                fillEl.className = `budget-meter-fill ${status.status}`;
+            }
+
+            const labelEl = document.getElementById('dailyBudgetLabel');
+            if (labelEl) {
+                labelEl.textContent = `${formatNum(status.remaining)} left today`;
+                labelEl.className = status.status === 'danger' ? 'text-fact-red' : 'text-fact-muted dark:text-fact-dark-muted';
+            }
+
+            // Show warning toast if over 80%
+            if (status.percentage >= 80 && status.percentage < 100 && !STATE.dailyWarningShown) {
+                showToast(`⚠️ You've used ${status.percentage.toFixed(0)}% of today's budget`, 'info');
+                STATE.dailyWarningShown = true;
+            } else if (status.percentage >= 100 && !STATE.dailyOverShown) {
+                showToast(`🚨 Over budget today! Spent ${formatNum(status.spent)} of ${formatNum(status.budget)}`, 'error');
+                STATE.dailyOverShown = true;
+            }
+        }
+
+        // ============== STREAK TRACKING ==============
+
+        function getStreakData() {
+            try {
+                return JSON.parse(localStorage.getItem(`fact_streak_${STATE.currentUser}`)) || {
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    lastGoodDay: null
+                };
+            } catch (e) {
+                return { currentStreak: 0, longestStreak: 0, lastGoodDay: null };
+            }
+        }
+
+        function saveStreakData(data) {
+            localStorage.setItem(`fact_streak_${STATE.currentUser}`, JSON.stringify(data));
+        }
+
+        function updateStreak() {
+            const status = checkDailyBudget();
+            const streak = getStreakData();
+            const today = dayjs().format('YYYY-MM-DD');
+            const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+
+            // Only update at end of day or when checking previous days
+            if (status.status !== 'danger') {
+                if (streak.lastGoodDay === yesterday) {
+                    streak.currentStreak++;
+                } else if (streak.lastGoodDay !== today) {
+                    streak.currentStreak = 1;
+                }
+                streak.lastGoodDay = today;
+                streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+            } else if (streak.lastGoodDay !== today && streak.lastGoodDay !== yesterday) {
+                streak.currentStreak = 0;
+            }
+
+            saveStreakData(streak);
+            return streak;
+        }
+
+        function renderStreakBadge() {
+            const streak = getStreakData();
+            const container = document.getElementById('streakContainer');
+            if (!container) return;
+
+            if (streak.currentStreak > 0) {
+                container.innerHTML = `
+                    <div class="streak-badge">
+                        <span>🔥</span>
+                        <span>${streak.currentStreak} day${streak.currentStreak > 1 ? 's' : ''}</span>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                        Stay under budget to start a streak!
+                    </div>
+                `;
+            }
+        }
 
         // ============== INIT ENHANCEMENTS ==============
 
