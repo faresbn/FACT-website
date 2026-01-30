@@ -256,263 +256,153 @@
         </div>
         
         <!-- MAIN CONTENT -->
-        <div id="mainContent" class="hidden space-y-6">
-            
-            <!-- ROW 1: OVERVIEW -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                
-                <!-- DONUT CHART -->
-                <div class="card rounded-xl p-5 relative">
+        <div id="mainContent" class="hidden space-y-4">
+
+            <!-- BUDGET HERO - Consolidated overview -->
+            <div class="card rounded-xl p-4">
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center">
+                    <!-- Days until salary -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-full bg-fact-purple/20 flex items-center justify-center">
+                            <span class="font-display font-bold text-xl text-fact-purple" id="daysUntilSalary">--</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium">days to salary</div>
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="nextSalaryDate">~--</div>
+                        </div>
+                    </div>
+
+                    <!-- In / Out / Net -->
+                    <div class="col-span-2 lg:col-span-3 flex items-center justify-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <div class="text-center">
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">IN</div>
+                            <div class="font-display font-bold text-lg text-fact-green" id="projIncome">--</div>
+                        </div>
+                        <div class="text-xl text-fact-muted">−</div>
+                        <div class="text-center">
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">OUT</div>
+                            <div class="font-display font-bold text-lg text-fact-yellow" id="projExpense">--</div>
+                        </div>
+                        <div class="text-xl text-fact-muted">=</div>
+                        <div class="text-center">
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">NET</div>
+                            <div class="font-display font-bold text-lg" id="projNet">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Daily budget -->
+                    <div class="text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <span id="budgetStatus" class="text-[10px] px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium">On Track</span>
+                        </div>
+                        <div class="font-display font-bold text-lg text-fact-purple mt-1" id="suggestedDaily">--/day</div>
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">avg: <span id="avgDailySpend">--</span>/day</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN GRID: Donut + AI Chat -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                <!-- DONUT + FILTERS -->
+                <div class="card rounded-xl p-4 relative">
                     <div class="corner-mark corner-tl"></div>
                     <div class="corner-mark corner-tr"></div>
                     <div class="corner-mark corner-bl"></div>
                     <div class="corner-mark corner-br"></div>
-                    
-                    <h2 class="font-display font-semibold text-sm mb-4">Spending by Category</h2>
-                    <div class="relative h-52 flex items-center justify-center">
+
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="font-display font-semibold text-sm">Spending Breakdown</h2>
+                        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+                            <button onclick="setViewMode('parent')" id="viewParent" class="px-2 py-1 text-[10px] font-medium rounded-md bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg">Groups</button>
+                            <button onclick="setViewMode('subcat')" id="viewSubcat" class="px-2 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted">Details</button>
+                        </div>
+                    </div>
+
+                    <div class="relative h-44 flex items-center justify-center">
                         <canvas id="donutChart"></canvas>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="text-center">
-                                <div class="font-display font-bold text-2xl" id="donutTotal">--</div>
-                                <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Total Spent</div>
+                                <div class="font-display font-bold text-xl" id="donutTotal">--</div>
+                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Total</div>
                             </div>
                         </div>
                     </div>
-                    <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted text-center mt-2">Click a segment for details</p>
-                </div>
-                
-                <!-- KEY METRICS + INCOME VS EXPENSE -->
-                <div class="lg:col-span-2 space-y-4">
-                    
-                    <!-- METRICS ROW -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="card rounded-xl p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-fact-green"></div>
-                                <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Income</span>
-                            </div>
-                            <div class="font-display font-bold text-xl" id="metricIncome">--</div>
-                        </div>
-                        
-                        <div class="card rounded-xl p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-fact-yellow"></div>
-                                <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Spent</span>
-                            </div>
-                            <div class="font-display font-bold text-xl" id="metricSpent">--</div>
-                        </div>
-                        
-                        <div class="card rounded-xl p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-2 h-2 rounded-full" id="netDot"></div>
-                                <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</span>
-                            </div>
-                            <div class="font-display font-bold text-xl" id="metricNet">--</div>
-                        </div>
-                        
-                        <div class="card rounded-xl p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-2 h-2 rounded-full bg-fact-purple"></div>
-                                <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Daily Budget</span>
-                            </div>
-                            <div class="font-display font-bold text-xl" id="metricDaily">--</div>
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="metricDaysLeft">-- days left</div>
-                        </div>
+
+                    <!-- Insights + Quick filters -->
+                    <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
+                        <div id="quickInsightsCompact" class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2"></div>
                     </div>
-                    
-                    <!-- BUDGET PROJECTION -->
-                    <div class="card rounded-xl p-5">
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="font-display font-semibold text-sm">Budget Projection</h2>
-                            <span id="budgetStatus" class="text-xs px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium">On Track</span>
-                        </div>
-
-                        <!-- Days until salary -->
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-12 h-12 rounded-full bg-fact-purple/20 flex items-center justify-center">
-                                <span class="font-display font-bold text-lg text-fact-purple" id="daysUntilSalary">--</span>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium">days until next salary</div>
-                                <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="nextSalaryDate">~Next: --</div>
-                            </div>
-                        </div>
-
-                        <!-- IN - OUT = NET visual -->
-                        <div class="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                            <div class="text-center flex-1">
-                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">In</div>
-                                <div class="font-display font-bold text-fact-green" id="projIncome">--</div>
-                            </div>
-                            <div class="text-fact-muted dark:text-fact-dark-muted font-bold">-</div>
-                            <div class="text-center flex-1">
-                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Out</div>
-                                <div class="font-display font-bold text-fact-yellow" id="projExpense">--</div>
-                            </div>
-                            <div class="text-fact-muted dark:text-fact-dark-muted font-bold">=</div>
-                            <div class="text-center flex-1">
-                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</div>
-                                <div class="font-display font-bold" id="projNet">--</div>
-                            </div>
-                        </div>
-
-                        <!-- Daily budget suggestion -->
-                        <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="text-fact-muted dark:text-fact-dark-muted">Suggested daily budget:</span>
-                                <span class="font-display font-bold text-fact-purple" id="suggestedDaily">QAR --/day</span>
-                            </div>
-                            <div class="flex justify-between items-center text-xs mt-1">
-                                <span class="text-fact-muted dark:text-fact-dark-muted">Your avg daily spend:</span>
-                                <span class="font-medium" id="avgDailySpend">QAR --/day</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 2: AI INSIGHTS & QUICK FILTERS -->
-            <div class="card rounded-xl p-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <div id="quickInsightsCompact" class="text-sm">
-                            <span class="text-fact-muted dark:text-fact-dark-muted">Loading insights...</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex flex-wrap gap-1.5">
                         <button onclick="filterByDimension('workHours')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💼 Work</button>
                         <button onclick="filterByDimension('lateNight')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🌙 Night</button>
                         <button onclick="filterByDimension('nightOut')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🎉 Out</button>
                         <button onclick="filterByDimension('splurge')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💸 Splurge</button>
-                        <button onclick="filterByDimension('clear')" class="dim-filter px-2 py-1 text-[10px] rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">✕</button>
-                        <button onclick="openAIQuery()" class="px-3 py-1 text-[10px] font-medium rounded-full bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Ask AI</button>
+                        <button onclick="filterByDimension('clear')" class="dim-filter px-2 py-1 text-[10px] rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">✕ Clear</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- ROW 3: SPENDING TRENDS -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- AI CHAT PANEL -->
+                <div class="card rounded-xl overflow-hidden flex flex-col" style="max-height: 400px;">
+                    <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                        <h2 class="font-display font-semibold text-sm">Ask AI</h2>
+                        <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
+                    </div>
 
-                <!-- DAILY SPENDING TREND -->
-                <div class="card rounded-xl p-5">
-                    <h2 class="font-display font-semibold text-sm mb-1">Daily Spending</h2>
-                    <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-4">Track your spending pattern over time</p>
-                    <div class="h-48">
-                        <canvas id="dailyChart"></canvas>
+                    <!-- Chat messages -->
+                    <div id="aiChatMessages" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
+                        <div class="text-fact-muted dark:text-fact-dark-muted text-xs">Ask me anything about your spending...</div>
                     </div>
-                </div>
-                
-                <!-- CUMULATIVE SPENDING -->
-                <div class="card rounded-xl p-5">
-                    <h2 class="font-display font-semibold text-sm mb-1">Cumulative Spending</h2>
-                    <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-4">Running total through the period</p>
-                    <div class="h-48">
-                        <canvas id="cumulativeChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ROW 3: MONTH COMPARISON -->
-            <div class="card rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="font-display font-semibold text-sm">This Month vs Last Month</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Category-by-category comparison</p>
-                    </div>
-                    <div class="flex items-center gap-4 text-xs">
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-3 h-3 rounded bg-fact-yellow"></div>
-                            <span class="text-fact-muted dark:text-fact-dark-muted">This Month</span>
+
+                    <!-- Quick questions -->
+                    <div class="px-3 py-2 border-t border-fact-border dark:border-fact-dark-border">
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <button onclick="askAIChat('What are my biggest spending categories?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Top categories</button>
+                            <button onclick="askAIChat('Are there any unusual transactions?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Unusual?</button>
+                            <button onclick="askAIChat('How can I save money this month?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Save tips</button>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-3 h-3 rounded bg-gray-300 dark:bg-gray-600"></div>
-                            <span class="text-fact-muted dark:text-fact-dark-muted">Last Month</span>
+                    </div>
+
+                    <!-- Input -->
+                    <div class="p-3 border-t border-fact-border dark:border-fact-dark-border">
+                        <div class="flex gap-2">
+                            <input type="text" id="aiChatInput" placeholder="Ask about your spending..."
+                                class="flex-1 px-3 py-2 text-sm border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
+                                onkeypress="if(event.key==='Enter')askAIChat()">
+                            <button onclick="askAIChat()" class="px-4 py-2 text-sm font-medium rounded-lg bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Send</button>
                         </div>
                     </div>
                 </div>
-                <div class="h-56">
-                    <canvas id="comparisonChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- ROW 4: CATEGORIES LIST (Hierarchical) -->
-            <div class="card rounded-xl overflow-hidden">
-                <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                    <div>
-                        <h2 class="font-display font-semibold text-sm">Spending by Category</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Organized by priority</p>
-                    </div>
-                    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
-                        <button onclick="setViewMode('parent')" id="viewParent" class="px-2 py-1 text-[10px] font-medium rounded-md bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg">Groups</button>
-                        <button onclick="setViewMode('subcat')" id="viewSubcat" class="px-2 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted">Details</button>
-                    </div>
-                </div>
-                <div id="categoryList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-96 overflow-y-auto">
-                    <!-- Populated by JS -->
-                </div>
             </div>
 
-            <!-- ROW 4.5: TOP MERCHANTS -->
-            <div class="card rounded-xl overflow-hidden">
-                <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                    <div>
-                        <h2 class="font-display font-semibold text-sm">Top Merchants</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Transaction count & total value</p>
-                    </div>
-                    <button onclick="openMerchantModal()" class="text-xs font-medium text-fact-yellow hover:underline">View All</button>
-                </div>
-                <div id="merchantList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-72 overflow-y-auto">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-            
-            <!-- ROW 5: UNCATEGORIZED ALERT -->
-            <div id="uncatAlert" class="hidden card rounded-xl p-4 border-l-4 border-fact-yellow bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
+            <!-- UNCATEGORIZED ALERT -->
+            <div id="uncatAlert" class="hidden card rounded-xl p-3 border-l-4 border-fact-yellow bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-fact-yellow flex items-center justify-center">
-                            <svg class="w-4 h-4 text-fact-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="font-medium text-sm"><span id="uncatCount">0</span> uncategorized transactions</div>
-                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">QAR <span id="uncatAmount">0</span> needs categorizing</div>
-                        </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">⚠️</span>
+                        <span class="text-sm"><span id="uncatCount">0</span> uncategorized (QAR <span id="uncatAmount">0</span>)</span>
                     </div>
-                    <span class="text-xs font-medium text-fact-yellow">Fix Now →</span>
+                    <span class="text-xs font-medium text-fact-yellow">Fix →</span>
                 </div>
             </div>
-            
-            <!-- ROW 6: RECURRING & TRANSACTIONS -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                
-                <!-- RECURRING -->
-                <div class="card rounded-xl overflow-hidden">
-                    <div class="p-5 border-b border-fact-border dark:border-fact-dark-border">
-                        <h2 class="font-display font-semibold text-sm">Recurring Payments</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Auto-detected subscriptions</p>
+
+            <!-- TRANSACTIONS -->
+            <div class="card rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                    <div>
+                        <h2 class="font-display font-semibold text-sm">Transactions</h2>
+                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">-- transactions</p>
                     </div>
-                    <div id="recurringList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-64 overflow-y-auto">
-                        <!-- Populated by JS -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="openMerchantModal()" class="text-xs text-fact-muted hover:text-fact-yellow">Merchants</button>
+                        <button onclick="openTxnModal()" class="text-xs font-medium text-fact-yellow">View All</button>
                     </div>
                 </div>
-                
-                <!-- TRANSACTIONS PREVIEW -->
-                <div class="card rounded-xl overflow-hidden">
-                    <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                        <div>
-                            <h2 class="font-display font-semibold text-sm">Recent Transactions</h2>
-                            <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">-- transactions</p>
-                        </div>
-                        <button onclick="openTxnModal()" class="text-xs font-medium text-fact-yellow hover:underline">View All</button>
-                    </div>
-                    <div id="recentTxns" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-64 overflow-y-auto">
-                        <!-- Populated by JS -->
-                    </div>
+                <div id="recentTxns" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-80 overflow-y-auto">
+                    <!-- Populated by JS -->
                 </div>
             </div>
-            
+
             <!-- FOOTER -->
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
@@ -1259,38 +1149,27 @@
             });
         }
 
-        // SALARY DETECTION - Find recurring large income transactions
+        // SALARY DETECTION - Find transactions with SALARY keyword
         function detectSalary() {
-            const income = STATE.allTxns.filter(t => t.direction === 'IN' && t.amount >= 5000);
-            if (income.length < 2) return { salaries: [], avgInterval: 30 };
+            // Look for transactions with "SALARY" in the raw description
+            const salaries = STATE.allTxns.filter(t =>
+                t.direction === 'IN' &&
+                t.raw.toLowerCase().includes('salary')
+            ).sort((a, b) => b.date - a.date);
 
-            // Group by similar amounts (within 10% variance) to find salary pattern
-            income.sort((a, b) => b.date - a.date);
-
-            // Find the most common large income amount (likely salary)
-            const amountBuckets = {};
-            income.forEach(t => {
-                const bucket = Math.round(t.amount / 500) * 500; // Round to nearest 500
-                if (!amountBuckets[bucket]) amountBuckets[bucket] = [];
-                amountBuckets[bucket].push(t);
-            });
-
-            // Get the bucket with most transactions (likely salary)
-            const salaryBucket = Object.entries(amountBuckets)
-                .sort((a, b) => b[1].length - a[1].length)[0];
-
-            if (!salaryBucket || salaryBucket[1].length < 2) {
-                return { salaries: income.slice(0, 2), avgInterval: 30 };
+            if (salaries.length === 0) {
+                return { salaries: [], avgInterval: 30 };
             }
-
-            const salaries = salaryBucket[1].sort((a, b) => b.date - a.date);
 
             // Calculate average interval between salaries
-            let totalInterval = 0;
-            for (let i = 1; i < Math.min(salaries.length, 6); i++) {
-                totalInterval += salaries[i-1].date.diff(salaries[i].date, 'day');
+            let avgInterval = 30;
+            if (salaries.length >= 2) {
+                let totalInterval = 0;
+                for (let i = 1; i < Math.min(salaries.length, 6); i++) {
+                    totalInterval += salaries[i-1].date.diff(salaries[i].date, 'day');
+                }
+                avgInterval = Math.round(totalInterval / (Math.min(salaries.length, 6) - 1));
             }
-            const avgInterval = salaries.length > 1 ? Math.round(totalInterval / (Math.min(salaries.length, 6) - 1)) : 30;
 
             // Mark these as salary transactions
             salaries.forEach(t => t.isSalary = true);
@@ -1440,15 +1319,8 @@
             const { start, end } = STATE.dateRange;
             STATE.filtered = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
 
-            renderMetrics();
-            renderDonutChart();
             renderBudgetProjection();
-            renderDailyChart();
-            renderCumulativeChart();
-            renderComparisonChart();
-            renderCategories();
-            renderMerchants();
-            renderRecurring();
+            renderDonutChart();
             renderRecentTxns();
             renderUncatAlert();
             renderQuickInsights();
@@ -1583,20 +1455,20 @@
             document.getElementById('projExpense').textContent = formatNum(proj.expenses);
             const netEl = document.getElementById('projNet');
             netEl.textContent = formatNum(proj.net);
-            netEl.className = `font-display font-bold ${proj.net >= 0 ? 'text-fact-green' : 'text-fact-red'}`;
+            netEl.className = `font-display font-bold text-lg ${proj.net >= 0 ? 'text-fact-green' : 'text-fact-red'}`;
 
-            // Daily budget
-            document.getElementById('suggestedDaily').textContent = `QAR ${formatNum(proj.dailyBudget)}/day`;
-            document.getElementById('avgDailySpend').textContent = `QAR ${formatNum(proj.avgDailySpend)}/day`;
+            // Daily budget (compact format)
+            document.getElementById('suggestedDaily').textContent = `${formatNum(proj.dailyBudget)}/day`;
+            document.getElementById('avgDailySpend').textContent = formatNum(proj.avgDailySpend);
 
             // Budget status
             const statusEl = document.getElementById('budgetStatus');
             if (proj.onTrack) {
                 statusEl.textContent = 'On Track';
-                statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium';
+                statusEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium';
             } else {
                 statusEl.textContent = 'Over Budget';
-                statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-fact-red/20 text-fact-red font-medium';
+                statusEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-fact-red/20 text-fact-red font-medium';
             }
         }
 
@@ -2496,11 +2368,14 @@
         // ============== FRONTEND AI INTEGRATION (via GAS proxy) ==============
 
         function openAIQuery() {
-            document.getElementById('aiModal').classList.remove('hidden');
+            // Scroll to and focus the AI chat input
+            const chatInput = document.getElementById('aiChatInput');
+            chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => chatInput.focus(), 300);
         }
 
         function closeAIQuery() {
-            document.getElementById('aiModal').classList.add('hidden');
+            // No-op - kept for backwards compatibility
         }
 
         async function askAI(question) {
@@ -2538,6 +2413,99 @@
             }
 
             document.getElementById('aiQueryInput').value = '';
+        }
+
+        // Conversational AI Chat
+        const aiChatHistory = [];
+
+        async function askAIChat(question) {
+            const query = question || document.getElementById('aiChatInput').value.trim();
+            if (!query) return;
+
+            const messagesDiv = document.getElementById('aiChatMessages');
+            const inputEl = document.getElementById('aiChatInput');
+            inputEl.value = '';
+
+            // Add user message to chat
+            messagesDiv.innerHTML += `
+                <div class="flex justify-end">
+                    <div class="bg-fact-yellow/20 rounded-lg px-3 py-2 max-w-[85%]">
+                        <p class="text-sm">${escapeHtml(query)}</p>
+                    </div>
+                </div>
+            `;
+
+            // Add to history
+            aiChatHistory.push({ role: 'user', content: query });
+
+            // Show loading
+            const loadingId = 'loading-' + Date.now();
+            messagesDiv.innerHTML += `
+                <div id="${loadingId}" class="flex justify-start">
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                        <p class="text-sm text-fact-muted animate-pulse">Thinking...</p>
+                    </div>
+                </div>
+            `;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+                document.getElementById(loadingId).innerHTML = `
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                        <p class="text-sm text-fact-red">Please set CONFIG.GAS_URL</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // Prepare context with transaction data + conversation history
+                const txnSummary = prepareTransactionSummary();
+                const historyContext = aiChatHistory.slice(-6).map(m =>
+                    `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+                ).join('\n');
+
+                const fullContext = `Transaction Data:\n${txnSummary}\n\nConversation:\n${historyContext}`;
+                const encodedData = btoa(unescape(encodeURIComponent(fullContext)));
+
+                const url = `${CONFIG.GAS_URL}?action=ai&q=${encodeURIComponent(query)}&data=${encodeURIComponent(encodedData)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const answer = data.answer;
+                aiChatHistory.push({ role: 'assistant', content: answer });
+
+                // Replace loading with answer
+                document.getElementById(loadingId).innerHTML = `
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 max-w-[85%]">
+                        <div class="text-sm prose prose-sm dark:prose-invert">${marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+
+            } catch (err) {
+                document.getElementById(loadingId).innerHTML = `
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                        <p class="text-sm text-fact-red">Error: ${err.message}</p>
+                    </div>
+                `;
+            }
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function clearAIChat() {
+            aiChatHistory.length = 0;
+            document.getElementById('aiChatMessages').innerHTML = `
+                <div class="text-fact-muted dark:text-fact-dark-muted text-xs">Ask me anything about your spending...</div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function prepareTransactionSummary() {
