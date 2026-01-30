@@ -3142,16 +3142,25 @@
                 if (data.model) {
                     const modelEl = document.getElementById('aiModelName');
                     const modeIndicator = data.mode === 'deep' ? ' <span class="text-fact-green">●</span>' : '';
-                    modelEl.innerHTML = escapeHtml(data.model) + modeIndicator;
+                    // Show context indicator if context is loaded
+                    const ctx = data.contextLoaded;
+                    const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences > 0);
+                    const ctxIndicator = hasContext ? ' <span class="text-fact-purple" title="Using your context">◆</span>' : '';
+                    modelEl.innerHTML = escapeHtml(data.model) + modeIndicator + ctxIndicator;
                 }
 
                 // Replace loading with answer (with mode badge for deep analysis)
+                const ctx = data.contextLoaded;
+                const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences > 0);
                 const modeBadge = data.mode === 'deep'
                     ? '<div class="text-[9px] text-fact-green font-medium mb-1">✦ DEEP ANALYSIS</div>'
                     : '';
+                const ctxBadge = hasContext
+                    ? `<div class="text-[9px] text-fact-purple font-medium mb-1">◆ Using ${ctx.income} income, ${ctx.payees} payees, ${ctx.corrections} corrections</div>`
+                    : '';
                 document.getElementById(loadingId).innerHTML = `
                     <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 max-w-[85%]">
-                        ${modeBadge}
+                        ${modeBadge}${ctxBadge}
                         <div class="text-sm prose prose-sm dark:prose-invert">${sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'))}</div>
                     </div>
                 `;
