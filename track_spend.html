@@ -236,10 +236,10 @@
             
             <!-- Period Selector -->
             <div class="flex flex-wrap items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
+                <button onclick="setSalaryPeriod()" data-period="salary" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Salary Cycle</button>
                 <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">This Month</button>
                 <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last Month</button>
                 <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90 Days</button>
-                <button onclick="setPeriod('thisYear')" data-period="thisYear" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Year</button>
                 <button onclick="openDatePicker()" data-period="custom" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Custom</button>
             </div>
         </header>
@@ -320,36 +320,79 @@
                         </div>
                     </div>
                     
-                    <!-- INCOME VS EXPENSE BAR -->
+                    <!-- BUDGET PROJECTION -->
                     <div class="card rounded-xl p-5">
-                        <h2 class="font-display font-semibold text-sm mb-3">Income vs Expense</h2>
-                        <div class="space-y-3">
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-fact-muted dark:text-fact-dark-muted">Income</span>
-                                    <span class="font-medium" id="incomeBarLabel">--</span>
-                                </div>
-                                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                    <div id="incomeBar" class="h-full bg-fact-green rounded-full transition-all duration-500" style="width: 0%"></div>
-                                </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="font-display font-semibold text-sm">Budget Projection</h2>
+                            <span id="budgetStatus" class="text-xs px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium">On Track</span>
+                        </div>
+
+                        <!-- Days until salary -->
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-fact-purple/20 flex items-center justify-center">
+                                <span class="font-display font-bold text-lg text-fact-purple" id="daysUntilSalary">--</span>
                             </div>
                             <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-fact-muted dark:text-fact-dark-muted">Expenses</span>
-                                    <span class="font-medium" id="expenseBarLabel">--</span>
-                                </div>
-                                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                    <div id="expenseBar" class="h-full bg-fact-yellow rounded-full transition-all duration-500" style="width: 0%"></div>
-                                </div>
+                                <div class="text-sm font-medium">days until next salary</div>
+                                <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="nextSalaryDate">~Next: --</div>
+                            </div>
+                        </div>
+
+                        <!-- IN - OUT = NET visual -->
+                        <div class="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <div class="text-center flex-1">
+                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">In</div>
+                                <div class="font-display font-bold text-fact-green" id="projIncome">--</div>
+                            </div>
+                            <div class="text-fact-muted dark:text-fact-dark-muted font-bold">-</div>
+                            <div class="text-center flex-1">
+                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Out</div>
+                                <div class="font-display font-bold text-fact-yellow" id="projExpense">--</div>
+                            </div>
+                            <div class="text-fact-muted dark:text-fact-dark-muted font-bold">=</div>
+                            <div class="text-center flex-1">
+                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</div>
+                                <div class="font-display font-bold" id="projNet">--</div>
+                            </div>
+                        </div>
+
+                        <!-- Daily budget suggestion -->
+                        <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-fact-muted dark:text-fact-dark-muted">Suggested daily budget:</span>
+                                <span class="font-display font-bold text-fact-purple" id="suggestedDaily">QAR --/day</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mt-1">
+                                <span class="text-fact-muted dark:text-fact-dark-muted">Your avg daily spend:</span>
+                                <span class="font-medium" id="avgDailySpend">QAR --/day</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- ROW 2: SPENDING TRENDS -->
+
+            <!-- ROW 2: AI INSIGHTS & QUICK FILTERS -->
+            <div class="card rounded-xl p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div id="quickInsightsCompact" class="text-sm">
+                            <span class="text-fact-muted dark:text-fact-dark-muted">Loading insights...</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="filterByDimension('workHours')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💼 Work</button>
+                        <button onclick="filterByDimension('lateNight')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🌙 Night</button>
+                        <button onclick="filterByDimension('nightOut')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🎉 Out</button>
+                        <button onclick="filterByDimension('splurge')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💸 Splurge</button>
+                        <button onclick="filterByDimension('clear')" class="dim-filter px-2 py-1 text-[10px] rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">✕</button>
+                        <button onclick="openAIQuery()" class="px-3 py-1 text-[10px] font-medium rounded-full bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Ask AI</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 3: SPENDING TRENDS -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                
+
                 <!-- DAILY SPENDING TREND -->
                 <div class="card rounded-xl p-5">
                     <h2 class="font-display font-semibold text-sm mb-1">Daily Spending</h2>
@@ -470,50 +513,6 @@
                 </div>
             </div>
             
-            <!-- ROW 7: AI INSIGHTS -->
-            <div class="card rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="font-display font-semibold text-sm">AI Insights</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Pattern analysis & anomalies</p>
-                    </div>
-                    <button onclick="openAIQuery()" class="text-xs font-medium text-fact-yellow hover:underline">Ask AI</button>
-                </div>
-
-                <!-- Quick Insights -->
-                <div id="quickInsights" class="space-y-3">
-                    <div class="text-sm text-fact-muted dark:text-fact-dark-muted">Loading insights...</div>
-                </div>
-
-                <!-- Dimension Filters -->
-                <div class="mt-4 pt-4 border-t border-fact-border dark:border-fact-dark-border">
-                    <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-2">Quick Filters</p>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="filterByDimension('workHours')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            💼 Work Hours
-                        </button>
-                        <button onclick="filterByDimension('lateNight')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            🌙 Late Night
-                        </button>
-                        <button onclick="filterByDimension('nightOut')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            🎉 Night Out
-                        </button>
-                        <button onclick="filterByDimension('splurge')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            💸 Splurges
-                        </button>
-                        <button onclick="filterByDimension('large')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            •••• Large
-                        </button>
-                        <button onclick="filterByDimension('subscription')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
-                            📅 Subscriptions
-                        </button>
-                        <button onclick="filterByDimension('clear')" class="dim-filter px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                            ✕ Clear
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- FOOTER -->
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
@@ -944,11 +943,12 @@
             categories: new Set(),
             fxRates: { ...CONFIG.DEFAULT_FX },
             localMappings: {},
-            period: 'thisMonth',
-            dateRange: { start: dayjs().startOf('month'), end: dayjs() },
+            period: 'salary',
+            dateRange: { start: dayjs().subtract(60, 'day'), end: dayjs() },
             catTarget: null,
             currentUser: getCurrentUser(),
-            viewMode: 'parent' // 'parent' or 'subcat'
+            viewMode: 'parent', // 'parent' or 'subcat'
+            hasLoaded: false
         };
 
         // CHARTS
@@ -1010,11 +1010,17 @@
                 processTxns(ledger);
 
                 document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
-                
+
                 document.getElementById('loadingState').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
-                
-                setPeriod(STATE.period);
+
+                // Default to salary period on first load, otherwise use current period
+                if (STATE.period === 'salary' || !STATE.hasLoaded) {
+                    STATE.hasLoaded = true;
+                    setSalaryPeriod();
+                } else {
+                    setPeriod(STATE.period);
+                }
 
             } catch (err) {
                 console.error('Sync error:', err);
@@ -1253,6 +1259,121 @@
             });
         }
 
+        // SALARY DETECTION - Find recurring large income transactions
+        function detectSalary() {
+            const income = STATE.allTxns.filter(t => t.direction === 'IN' && t.amount >= 5000);
+            if (income.length < 2) return { salaries: [], avgInterval: 30 };
+
+            // Group by similar amounts (within 10% variance) to find salary pattern
+            income.sort((a, b) => b.date - a.date);
+
+            // Find the most common large income amount (likely salary)
+            const amountBuckets = {};
+            income.forEach(t => {
+                const bucket = Math.round(t.amount / 500) * 500; // Round to nearest 500
+                if (!amountBuckets[bucket]) amountBuckets[bucket] = [];
+                amountBuckets[bucket].push(t);
+            });
+
+            // Get the bucket with most transactions (likely salary)
+            const salaryBucket = Object.entries(amountBuckets)
+                .sort((a, b) => b[1].length - a[1].length)[0];
+
+            if (!salaryBucket || salaryBucket[1].length < 2) {
+                return { salaries: income.slice(0, 2), avgInterval: 30 };
+            }
+
+            const salaries = salaryBucket[1].sort((a, b) => b.date - a.date);
+
+            // Calculate average interval between salaries
+            let totalInterval = 0;
+            for (let i = 1; i < Math.min(salaries.length, 6); i++) {
+                totalInterval += salaries[i-1].date.diff(salaries[i].date, 'day');
+            }
+            const avgInterval = salaries.length > 1 ? Math.round(totalInterval / (Math.min(salaries.length, 6) - 1)) : 30;
+
+            // Mark these as salary transactions
+            salaries.forEach(t => t.isSalary = true);
+
+            return { salaries, avgInterval };
+        }
+
+        // Get projected next salary date
+        function getNextSalaryDate() {
+            const { salaries, avgInterval } = detectSalary();
+            if (salaries.length === 0) return dayjs().add(30, 'day');
+
+            const lastSalary = salaries[0].date;
+            return lastSalary.add(avgInterval, 'day');
+        }
+
+        // Set period to include last 2 salaries
+        function setSalaryPeriod() {
+            const { salaries, avgInterval } = detectSalary();
+
+            if (salaries.length >= 2) {
+                // Start from the day after the 2nd-to-last salary
+                STATE.dateRange = {
+                    start: salaries[1].date,
+                    end: dayjs()
+                };
+                STATE.period = 'salary';
+            } else if (salaries.length === 1) {
+                // One salary found - show from that date
+                STATE.dateRange = {
+                    start: salaries[0].date,
+                    end: dayjs()
+                };
+                STATE.period = 'salary';
+            } else {
+                // No salary detected - fall back to last 60 days
+                STATE.dateRange = {
+                    start: dayjs().subtract(60, 'day'),
+                    end: dayjs()
+                };
+                STATE.period = 'last90';
+            }
+
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === STATE.period);
+            });
+
+            filterAndRender();
+        }
+
+        // Calculate budget projection
+        function calculateBudgetProjection() {
+            const { salaries, avgInterval } = detectSalary();
+            const nextSalary = getNextSalaryDate();
+            const daysUntilSalary = Math.max(0, nextSalary.diff(dayjs(), 'day'));
+
+            const income = STATE.filtered.filter(t => t.direction === 'IN').reduce((s, t) => s + t.amount, 0);
+            const expenses = STATE.filtered.filter(t => t.direction === 'OUT').reduce((s, t) => s + t.amount, 0);
+            const net = income - expenses;
+
+            // Daily budget = remaining funds / days until next salary
+            const dailyBudget = daysUntilSalary > 0 ? Math.max(0, net / daysUntilSalary) : 0;
+
+            // Calculate average daily spending from filtered period
+            const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
+            const avgDailySpend = periodDays > 0 ? expenses / periodDays : 0;
+
+            // Budget status: are we on track?
+            const onTrack = dailyBudget >= avgDailySpend;
+
+            return {
+                income,
+                expenses,
+                net,
+                daysUntilSalary,
+                nextSalaryDate: nextSalary,
+                dailyBudget,
+                avgDailySpend,
+                onTrack,
+                lastSalaryAmount: salaries.length > 0 ? salaries[0].amount : 0
+            };
+        }
+
         function clean(str) {
             return str ? str.toString().replace(/^"|"$/g, '').trim() : '';
         }
@@ -1321,7 +1442,7 @@
 
             renderMetrics();
             renderDonutChart();
-            renderIncomeExpenseBar();
+            renderBudgetProjection();
             renderDailyChart();
             renderCumulativeChart();
             renderComparisonChart();
@@ -1391,7 +1512,7 @@
                 // Group by summary group (dimension-based)
                 const parentSpend = {};
                 out.forEach(t => {
-                    const parent = getSummaryGroup(t.category);
+                    const parent = t.summaryGroup;
                     parentSpend[parent] = (parentSpend[parent] || 0) + t.amount;
                 });
 
@@ -1403,7 +1524,7 @@
             } else {
                 // Original subcategory view
                 const catSpend = {};
-                out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+                out.forEach(t => catSpend[t.merchantType] = (catSpend[t.merchantType] || 0) + t.amount);
 
                 const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
                 labels = sorted.map(c => c[0]);
@@ -1450,18 +1571,33 @@
         }
 
         // INCOME VS EXPENSE BAR
-        function renderIncomeExpenseBar() {
-            const out = STATE.filtered.filter(t => t.direction === 'OUT');
-            const inc = STATE.filtered.filter(t => t.direction === 'IN');
+        function renderBudgetProjection() {
+            const proj = calculateBudgetProjection();
 
-            const totalSpend = out.reduce((s, t) => s + t.amount, 0);
-            const totalIncome = inc.reduce((s, t) => s + t.amount, 0);
-            const max = Math.max(totalIncome, totalSpend) || 1;
+            // Days until salary
+            document.getElementById('daysUntilSalary').textContent = proj.daysUntilSalary;
+            document.getElementById('nextSalaryDate').textContent = `~${proj.nextSalaryDate.format('MMM D')}`;
 
-            document.getElementById('incomeBarLabel').textContent = formatNum(totalIncome);
-            document.getElementById('expenseBarLabel').textContent = formatNum(totalSpend);
-            document.getElementById('incomeBar').style.width = `${(totalIncome / max) * 100}%`;
-            document.getElementById('expenseBar').style.width = `${(totalSpend / max) * 100}%`;
+            // IN - OUT = NET
+            document.getElementById('projIncome').textContent = formatNum(proj.income);
+            document.getElementById('projExpense').textContent = formatNum(proj.expenses);
+            const netEl = document.getElementById('projNet');
+            netEl.textContent = formatNum(proj.net);
+            netEl.className = `font-display font-bold ${proj.net >= 0 ? 'text-fact-green' : 'text-fact-red'}`;
+
+            // Daily budget
+            document.getElementById('suggestedDaily').textContent = `QAR ${formatNum(proj.dailyBudget)}/day`;
+            document.getElementById('avgDailySpend').textContent = `QAR ${formatNum(proj.avgDailySpend)}/day`;
+
+            // Budget status
+            const statusEl = document.getElementById('budgetStatus');
+            if (proj.onTrack) {
+                statusEl.textContent = 'On Track';
+                statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium';
+            } else {
+                statusEl.textContent = 'Over Budget';
+                statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-fact-red/20 text-fact-red font-medium';
+            }
         }
 
         // DAILY CHART
@@ -1606,8 +1742,8 @@
             const thisMonthSpend = {};
             const lastMonthSpend = {};
 
-            thisMonthTxns.forEach(t => thisMonthSpend[t.category] = (thisMonthSpend[t.category] || 0) + t.amount);
-            lastMonthTxns.forEach(t => lastMonthSpend[t.category] = (lastMonthSpend[t.category] || 0) + t.amount);
+            thisMonthTxns.forEach(t => thisMonthSpend[t.merchantType] = (thisMonthSpend[t.merchantType] || 0) + t.amount);
+            lastMonthTxns.forEach(t => lastMonthSpend[t.merchantType] = (lastMonthSpend[t.merchantType] || 0) + t.amount);
 
             const allCats = [...new Set([...Object.keys(thisMonthSpend), ...Object.keys(lastMonthSpend)])];
             const sortedCats = allCats.sort((a, b) => (thisMonthSpend[b] || 0) - (thisMonthSpend[a] || 0)).slice(0, 8);
@@ -1877,8 +2013,8 @@
 
         function renderTxnRow(t) {
             const isOut = t.direction === 'OUT';
-            const isUncat = t.category === 'Uncategorized';
-            const color = CAT_COLORS[t.category] || '#999';
+            const isUncat = t.merchantType === 'Uncategorized';
+            const color = CAT_COLORS[t.merchantType] || '#999';
 
             return `
                 <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center justify-between cursor-pointer" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
@@ -1896,7 +2032,7 @@
 
         // UNCATEGORIZED ALERT
         function renderUncatAlert() {
-            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const uncat = STATE.filtered.filter(t => t.merchantType === 'Uncategorized' && t.direction === 'OUT');
             const count = uncat.length;
             const amount = uncat.reduce((s, t) => s + t.amount, 0);
 
@@ -1908,14 +2044,14 @@
 
         // DRILLDOWN MODAL
         function openDrilldown(category) {
-            const out = STATE.filtered.filter(t => t.direction === 'OUT' && t.category === category);
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && t.merchantType === category);
             const total = out.reduce((s, t) => s + t.amount, 0);
 
             // Calculate delta vs previous period
             const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day');
             const prevStart = STATE.dateRange.start.subtract(periodDays + 1, 'day');
             const prevEnd = STATE.dateRange.start.subtract(1, 'day');
-            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && t.category === category && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
+            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && t.merchantType === category && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
             const prevTotal = prevTxns.reduce((s, t) => s + t.amount, 0);
             const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100) : 0;
 
@@ -2015,14 +2151,14 @@
         // PARENT CATEGORY DRILLDOWN
         function openParentDrilldown(parentCategory) {
             const subcats = CATEGORY_HIERARCHY[parentCategory]?.subcategories || [];
-            const out = STATE.filtered.filter(t => t.direction === 'OUT' && subcats.includes(t.category));
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && subcats.includes(t.merchantType));
             const total = out.reduce((s, t) => s + t.amount, 0);
 
             // Calculate delta vs previous period
             const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day');
             const prevStart = STATE.dateRange.start.subtract(periodDays + 1, 'day');
             const prevEnd = STATE.dateRange.start.subtract(1, 'day');
-            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && subcats.includes(t.category) && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
+            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && subcats.includes(t.merchantType) && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
             const prevTotal = prevTxns.reduce((s, t) => s + t.amount, 0);
             const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100) : 0;
 
@@ -2076,7 +2212,7 @@
             // Subcategory breakdown (instead of merchants)
             const subcatSpend = {};
             out.forEach(t => {
-                subcatSpend[t.category] = (subcatSpend[t.category] || 0) + t.amount;
+                subcatSpend[t.merchantType] = (subcatSpend[t.merchantType] || 0) + t.amount;
             });
             const sortedSubs = Object.entries(subcatSpend).sort((a, b) => b[1] - a[1]);
             const maxSub = sortedSubs[0]?.[1] || 1;
@@ -2201,7 +2337,7 @@
 
             out.forEach(t => {
                 if (!merchants[t.consolidated]) {
-                    merchants[t.consolidated] = { count: 0, total: 0, category: t.category };
+                    merchants[t.consolidated] = { count: 0, total: 0, category: t.merchantType };
                 }
                 merchants[t.consolidated].count++;
                 merchants[t.consolidated].total += t.amount;
@@ -2264,7 +2400,7 @@
 
         // UNCATEGORIZED MODAL
         function openUncatModal() {
-            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const uncat = STATE.filtered.filter(t => t.merchantType === 'Uncategorized' && t.direction === 'OUT');
 
             document.getElementById('uncatList').innerHTML = uncat.map(t => `
                 <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
@@ -2312,7 +2448,7 @@
                 if (t.raw.toLowerCase() === raw.toLowerCase()) {
                     t.display = name;
                     t.consolidated = name;
-                    t.category = cat;
+                    t.merchantType = cat;
                 }
             });
 
@@ -2347,7 +2483,7 @@
 
             let txns = STATE.filtered;
             if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search));
-            if (cat) txns = txns.filter(t => t.category === cat);
+            if (cat) txns = txns.filter(t => t.merchantType === cat);
 
             document.getElementById('txnModalCount').textContent = `${txns.length} transactions`;
             renderTxnModal(txns);
@@ -2506,19 +2642,17 @@
                 });
             }
 
-            const container = document.getElementById('quickInsights');
+            // Update compact insights in header
+            const compactContainer = document.getElementById('quickInsightsCompact');
             if (insights.length === 0) {
-                container.innerHTML = '<div class="text-sm text-fact-muted dark:text-fact-dark-muted">No notable patterns detected in this period.</div>';
-                return;
+                compactContainer.innerHTML = '<span class="text-fact-muted dark:text-fact-dark-muted">No patterns detected</span>';
+            } else {
+                // Show top 2 insights compactly
+                const topInsights = insights.slice(0, 2);
+                compactContainer.innerHTML = topInsights.map(i =>
+                    `<span class="inline-flex items-center gap-1 cursor-pointer hover:text-fact-yellow transition" onclick="filterByDimension('${i.filter}')">${i.icon} ${i.text}</span>`
+                ).join('<span class="mx-2 text-fact-muted">·</span>');
             }
-
-            container.innerHTML = insights.map(i => `
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="filterByDimension('${i.filter}')">
-                    <span class="text-lg">${i.icon}</span>
-                    <span class="text-sm">${i.text}</span>
-                    <span class="text-xs text-fact-yellow ml-auto">View →</span>
-                </div>
-            `).join('');
         }
 
         // ============== DIMENSION FILTERING ==============
