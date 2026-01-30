@@ -17,7 +17,7 @@ const CONFIG = {
   // Model selection - upgrade as needed
   // Options: 'gpt-4.1-nano' (fast), 'gpt-4.1-mini' (balanced), 'gpt-4.1' (best), 'gpt-5.1' (cutting edge)
   AI_MODEL: 'gpt-4.1',
-  AI_MODEL_FRONTEND: 'gpt-4.1-mini', // Faster model for frontend queries
+  AI_MODEL_FRONTEND: 'gpt-5', // GPT-5 for frontend AI chat
 
   // Multi-user sheet mapping
   USER_SHEETS: {
@@ -49,11 +49,16 @@ const ALL_CATEGORIES = Object.values(CONFIG.CATEGORIES).flat();
 // ============== GET ENDPOINT - AI QUERY PROXY ==============
 
 /**
- * Frontend AI query proxy - called via GET request
+ * Frontend endpoint - handles auth and AI queries
+ * URL: YOUR_GAS_URL?action=auth&user=X&pass=Y
  * URL: YOUR_GAS_URL?action=ai&q=YOUR_QUESTION&data=ENCODED_TXN_SUMMARY
  */
 function doGet(e) {
   const action = e.parameter.action;
+
+  if (action === 'auth') {
+    return handleAuth(e);
+  }
 
   if (action === 'ai') {
     return handleAIQuery(e);
@@ -61,8 +66,54 @@ function doGet(e) {
 
   // Default: return simple status
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'QNB Tracker GAS v5' }))
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'Pulse GAS v5' }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Simple authentication handler
+ * Validates user/pass against Script Properties
+ * Returns sheetId on success
+ */
+function handleAuth(e) {
+  const username = (e.parameter.user || '').toLowerCase().trim();
+  const password = e.parameter.pass || '';
+
+  if (!username || !password) {
+    return json_({ success: false, error: 'Missing credentials' });
+  }
+
+  // Get users from Script Properties
+  // Format: PULSE_USERS = {"fares": {"pass": "xxx", "sheetId": "yyy"}, ...}
+  const props = PropertiesService.getScriptProperties();
+  let users = {};
+
+  try {
+    const usersJson = props.getProperty('PULSE_USERS');
+    if (usersJson) {
+      users = JSON.parse(usersJson);
+    }
+  } catch (err) {
+    return json_({ success: false, error: 'Auth config error' });
+  }
+
+  // Check credentials
+  const userConfig = users[username];
+  if (!userConfig) {
+    return json_({ success: false, error: 'User not found' });
+  }
+
+  if (userConfig.pass !== password) {
+    return json_({ success: false, error: 'Invalid password' });
+  }
+
+  // Success - return sheetId
+  return json_({
+    success: true,
+    user: username,
+    sheetId: userConfig.sheetId,
+    model: CONFIG.AI_MODEL_FRONTEND
+  });
 }
 
 function handleAIQuery(e) {
@@ -128,7 +179,7 @@ The data includes dimensions:
     }
 
     const answer = result.choices[0].message.content;
-    return json_({ answer: answer });
+    return json_({ answer: answer, model: CONFIG.AI_MODEL_FRONTEND });
 
   } catch (err) {
     return json_({ error: err.message });

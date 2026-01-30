@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>QNB Tracker — FACT</title>
+    <title>Pulse — FACT</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -217,30 +217,70 @@
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
-    
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="card rounded-2xl p-8 w-full max-w-sm">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-fact-ink dark:bg-fact-dark-ink rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-2xl">P</span>
+                </div>
+                <h1 class="font-display font-bold text-2xl">Pulse</h1>
+                <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Tracker</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username"
+                        class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
+                        onkeypress="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password"
+                        class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
+                        onkeypress="if(event.key==='Enter')attemptLogin()">
+                </div>
+                <button onclick="attemptLogin()" id="loginBtn"
+                    class="w-full py-3 bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg rounded-lg font-medium hover:opacity-90 transition">
+                    Sign In
+                </button>
+                <p id="loginError" class="text-center text-sm text-fact-red hidden">Invalid credentials</p>
+            </div>
+
+            <p class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted mt-6">FACT · Secure Login</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden until logged in) -->
+    <div id="mainApp" class="hidden">
     <div class="max-w-5xl mx-auto px-4 py-6 md:py-10">
-        
+
         <!-- HEADER -->
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-fact-ink dark:bg-fact-dark-ink rounded flex items-center justify-center">
-                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">Q</span>
+                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">P</span>
                 </div>
                 <div>
-                    <h1 class="font-display font-bold text-xl tracking-tight">QNB Tracker</h1>
+                    <h1 class="font-display font-bold text-xl tracking-tight">Pulse</h1>
                     <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
-                        <span id="currentUserDisplay">Personal Finance</span> · FACT
+                        <span id="currentUserDisplay">Personal Finance</span> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
                     </p>
                 </div>
             </div>
-            
-            <!-- Period Selector -->
-            <div class="flex flex-wrap items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
-                <button onclick="setSalaryPeriod()" data-period="salary" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Salary Cycle</button>
-                <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">This Month</button>
-                <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last Month</button>
-                <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90 Days</button>
-                <button onclick="openDatePicker()" data-period="custom" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Custom</button>
+
+            <!-- Period Selector + Date Range -->
+            <div class="flex flex-col items-end gap-1">
+                <div class="flex flex-wrap items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
+                    <button onclick="setSalaryPeriod()" data-period="salary" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Salary</button>
+                    <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Month</button>
+                    <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last</button>
+                    <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90d</button>
+                    <button onclick="openDatePicker()" data-period="custom" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Custom</button>
+                </div>
+                <span id="dateRangeDisplay" class="text-[10px] text-fact-muted dark:text-fact-dark-muted">--</span>
             </div>
         </header>
         
@@ -301,11 +341,22 @@
                 </div>
             </div>
 
-            <!-- MAIN GRID: Donut + AI Chat -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- UNCATEGORIZED ALERT -->
+            <div id="uncatAlert" class="hidden card rounded-xl p-3 border-l-4 border-fact-yellow bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">⚠️</span>
+                        <span class="text-sm"><span id="uncatCount">0</span> uncategorized (QAR <span id="uncatAmount">0</span>)</span>
+                    </div>
+                    <span class="text-xs font-medium text-fact-yellow">Fix →</span>
+                </div>
+            </div>
 
-                <!-- DONUT + FILTERS -->
-                <div class="card rounded-xl p-4 relative">
+            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4" style="min-height: 500px;">
+
+                <!-- SPENDING BREAKDOWN (Full left - 2 cols) -->
+                <div class="lg:col-span-2 card rounded-xl p-4 relative flex flex-col">
                     <div class="corner-mark corner-tl"></div>
                     <div class="corner-mark corner-tr"></div>
                     <div class="corner-mark corner-bl"></div>
@@ -319,87 +370,99 @@
                         </div>
                     </div>
 
-                    <div class="relative h-44 flex items-center justify-center">
+                    <!-- Donut Chart -->
+                    <div class="relative h-48 flex items-center justify-center">
                         <canvas id="donutChart"></canvas>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="text-center">
-                                <div class="font-display font-bold text-xl" id="donutTotal">--</div>
-                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Total</div>
+                                <div class="font-display font-bold text-2xl" id="donutTotal">--</div>
+                                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Total Spent</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Insights + Quick filters -->
+                    <!-- Category List (expanded breakdown) -->
+                    <div class="flex-1 mt-4 pt-4 border-t border-fact-border dark:border-fact-dark-border overflow-y-auto">
+                        <div id="categoryBreakdown" class="space-y-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Quick filters -->
                     <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
                         <div id="quickInsightsCompact" class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2"></div>
-                    </div>
-                    <div class="flex flex-wrap gap-1.5">
-                        <button onclick="filterByDimension('workHours')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💼 Work</button>
-                        <button onclick="filterByDimension('lateNight')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🌙 Night</button>
-                        <button onclick="filterByDimension('nightOut')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🎉 Out</button>
-                        <button onclick="filterByDimension('splurge')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💸 Splurge</button>
-                        <button onclick="filterByDimension('clear')" class="dim-filter px-2 py-1 text-[10px] rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">✕ Clear</button>
-                    </div>
-                </div>
-
-                <!-- AI CHAT PANEL -->
-                <div class="card rounded-xl overflow-hidden flex flex-col" style="max-height: 400px;">
-                    <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                        <h2 class="font-display font-semibold text-sm">Ask AI</h2>
-                        <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
-                    </div>
-
-                    <!-- Chat messages -->
-                    <div id="aiChatMessages" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
-                        <div class="text-fact-muted dark:text-fact-dark-muted text-xs">Ask me anything about your spending...</div>
-                    </div>
-
-                    <!-- Quick questions -->
-                    <div class="px-3 py-2 border-t border-fact-border dark:border-fact-dark-border">
-                        <div class="flex flex-wrap gap-1.5 mb-2">
-                            <button onclick="askAIChat('What are my biggest spending categories?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Top categories</button>
-                            <button onclick="askAIChat('Are there any unusual transactions?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Unusual?</button>
-                            <button onclick="askAIChat('How can I save money this month?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Save tips</button>
-                        </div>
-                    </div>
-
-                    <!-- Input -->
-                    <div class="p-3 border-t border-fact-border dark:border-fact-dark-border">
-                        <div class="flex gap-2">
-                            <input type="text" id="aiChatInput" placeholder="Ask about your spending..."
-                                class="flex-1 px-3 py-2 text-sm border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
-                                onkeypress="if(event.key==='Enter')askAIChat()">
-                            <button onclick="askAIChat()" class="px-4 py-2 text-sm font-medium rounded-lg bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Send</button>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="filterByDimension('workHours')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💼 Work</button>
+                            <button onclick="filterByDimension('lateNight')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🌙 Night</button>
+                            <button onclick="filterByDimension('nightOut')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🎉 Out</button>
+                            <button onclick="filterByDimension('splurge')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💸 Splurge</button>
+                            <button onclick="filterByDimension('clear')" class="dim-filter px-2 py-1 text-[10px] rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">✕</button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- UNCATEGORIZED ALERT -->
-            <div id="uncatAlert" class="hidden card rounded-xl p-3 border-l-4 border-fact-yellow bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="text-lg">⚠️</span>
-                        <span class="text-sm"><span id="uncatCount">0</span> uncategorized (QAR <span id="uncatAmount">0</span>)</span>
-                    </div>
-                    <span class="text-xs font-medium text-fact-yellow">Fix →</span>
-                </div>
-            </div>
+                <!-- RIGHT COLUMN: AI Chat (top 2/3) + Transactions (bottom 1/3) -->
+                <div class="lg:col-span-3 flex flex-col gap-4">
 
-            <!-- TRANSACTIONS -->
-            <div class="card rounded-xl overflow-hidden">
-                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                    <div>
-                        <h2 class="font-display font-semibold text-sm">Transactions</h2>
-                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">-- transactions</p>
+                    <!-- AI CHAT PANEL -->
+                    <div class="card rounded-xl overflow-hidden flex flex-col flex-[2]" style="min-height: 300px;">
+                        <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                            <div>
+                                <h2 class="font-display font-semibold text-sm">Ask AI</h2>
+                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-4.1-mini</span></p>
+                            </div>
+                            <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
+                        </div>
+
+                        <!-- Chat messages -->
+                        <div id="aiChatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+                            <div class="text-fact-muted dark:text-fact-dark-muted text-xs">Ask me anything about your spending...</div>
+                        </div>
+
+                        <!-- Quick questions -->
+                        <div class="px-4 py-2 border-t border-fact-border dark:border-fact-dark-border">
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="askAIChat('What are my biggest spending categories?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Top categories</button>
+                                <button onclick="askAIChat('Are there any unusual transactions?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Unusual?</button>
+                                <button onclick="askAIChat('How can I save money?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Save tips</button>
+                                <button onclick="askAIChat('What are my salary payments?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Salary info</button>
+                            </div>
+                        </div>
+
+                        <!-- Input -->
+                        <div class="p-3 border-t border-fact-border dark:border-fact-dark-border">
+                            <div class="flex gap-2">
+                                <input type="text" id="aiChatInput" placeholder="Ask about your spending..."
+                                    class="flex-1 px-3 py-2 text-sm border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
+                                    onkeypress="if(event.key==='Enter')askAIChat()">
+                                <button onclick="askAIChat()" class="px-4 py-2 text-sm font-medium rounded-lg bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Send</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="openMerchantModal()" class="text-xs text-fact-muted hover:text-fact-yellow">Merchants</button>
-                        <button onclick="openTxnModal()" class="text-xs font-medium text-fact-yellow">View All</button>
+
+                    <!-- TRANSACTIONS (bottom 1/3) -->
+                    <div class="card rounded-xl overflow-hidden flex flex-col flex-1" style="min-height: 180px;">
+                        <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                            <div>
+                                <h2 class="font-display font-semibold text-sm">Transactions</h2>
+                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">--</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="txnSortSelect" onchange="sortTransactions(this.value)" class="text-[10px] px-2 py-1 border border-fact-border dark:border-fact-dark-border rounded bg-white dark:bg-fact-dark-card">
+                                    <option value="date-desc">Newest</option>
+                                    <option value="date-asc">Oldest</option>
+                                    <option value="amount-desc">Highest</option>
+                                    <option value="amount-asc">Lowest</option>
+                                </select>
+                                <input type="text" id="txnFilterInput" placeholder="Filter..." oninput="filterTransactions(this.value)"
+                                    class="text-[10px] w-20 px-2 py-1 border border-fact-border dark:border-fact-dark-border rounded bg-white dark:bg-fact-dark-card">
+                                <button onclick="openTxnModal()" class="text-xs font-medium text-fact-yellow">All</button>
+                            </div>
+                        </div>
+                        <div id="recentTxns" class="flex-1 divide-y divide-fact-border dark:divide-fact-dark-border overflow-y-auto">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
-                </div>
-                <div id="recentTxns" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-80 overflow-y-auto">
-                    <!-- Populated by JS -->
                 </div>
             </div>
 
@@ -409,7 +472,8 @@
             </footer>
         </div>
     </div>
-    
+    </div> <!-- Close mainApp -->
+
     <!-- MODALS -->
     
     <!-- DATE PICKER MODAL -->
@@ -682,6 +746,10 @@
         }
 
         function getSheetId() {
+            // First try session (from GAS auth)
+            if (STATE.sheetId) return STATE.sheetId;
+
+            // Fallback to URL param / config
             const user = getCurrentUser();
             return CONFIG.USER_SHEETS[user] || CONFIG.DEFAULT_SHEET_ID;
         }
@@ -844,21 +912,104 @@
         // CHARTS
         const charts = {};
 
-        // INIT
+        // AUTH & INIT
         document.addEventListener('DOMContentLoaded', () => {
-            // Display current user
-            const user = getCurrentUser();
-            const userDisplay = document.getElementById('currentUserDisplay');
-            if (user && user !== 'default') {
-                userDisplay.textContent = user.charAt(0).toUpperCase() + user.slice(1);
+            // Check if already logged in
+            const session = getSession();
+            if (session && session.user && session.sheetId) {
+                showApp(session);
+            } else {
+                // Show login screen
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+        });
+
+        function getSession() {
+            try {
+                const stored = localStorage.getItem('pulse_session');
+                return stored ? JSON.parse(stored) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveSession(user, sheetId) {
+            localStorage.setItem('pulse_session', JSON.stringify({ user, sheetId, ts: Date.now() }));
+        }
+
+        function clearSession() {
+            localStorage.removeItem('pulse_session');
+        }
+
+        async function attemptLogin() {
+            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showLoginError('Please enter username and password');
+                return;
             }
 
+            const btn = document.getElementById('loginBtn');
+            btn.textContent = 'Signing in...';
+            btn.disabled = true;
+
+            try {
+                // Call GAS auth endpoint
+                const url = `${CONFIG.GAS_URL}?action=auth&user=${encodeURIComponent(username)}&pass=${encodeURIComponent(password)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success && data.sheetId) {
+                    saveSession(username, data.sheetId);
+                    showApp({ user: username, sheetId: data.sheetId });
+                } else {
+                    showLoginError(data.error || 'Invalid credentials');
+                }
+            } catch (err) {
+                showLoginError('Connection error. Check GAS URL.');
+            } finally {
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+            }
+        }
+
+        function showLoginError(msg) {
+            const el = document.getElementById('loginError');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+
+        function showApp(session) {
+            // Hide login, show app
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            // Set user context
+            STATE.currentUser = session.user;
+            STATE.sheetId = session.sheetId;
+
+            // Update display
+            const userDisplay = document.getElementById('currentUserDisplay');
+            userDisplay.textContent = session.user.charAt(0).toUpperCase() + session.user.slice(1);
+
+            // Init app
             loadLocal();
             syncData();
 
-            document.getElementById('txnSearch').addEventListener('input', debounce(filterTxnModal, 200));
-            document.getElementById('txnFilter').addEventListener('change', filterTxnModal);
-        });
+            // Event listeners
+            const txnSearch = document.getElementById('txnSearch');
+            const txnFilter = document.getElementById('txnFilter');
+            if (txnSearch) txnSearch.addEventListener('input', debounce(filterTxnModal, 200));
+            if (txnFilter) txnFilter.addEventListener('change', filterTxnModal);
+        }
+
+        function logout() {
+            clearSession();
+            location.reload();
+        }
 
         function getStorageKey() {
             return `${CONFIG.STORAGE_KEY}_${STATE.currentUser}`;
@@ -970,6 +1121,8 @@
 
             STATE.allTxns = data.map(r => {
                 const raw = clean(r[3]);
+                const counterparty = clean(r[4]) || '';
+                const card = clean(r[7]) || '';
                 const currency = clean(r[2]) || 'QAR';
                 const amount = parseFloat(r[1]);
                 const rate = STATE.fxRates[currency] || 1;
@@ -994,6 +1147,10 @@
                 // Get merchant type and display info
                 const meta = categorize(raw, aiMerchantType);
 
+                // Check if this is a salary transaction (check multiple fields)
+                const allText = `${raw} ${counterparty} ${card}`.toLowerCase();
+                const isSalary = allText.includes('salary');
+
                 // COMPUTE DIMENSIONS
                 const dims = {
                     what: meta.merchantType,
@@ -1007,6 +1164,8 @@
                     amount: amtQAR,
                     currency,
                     raw,
+                    counterparty,
+                    card,
                     display: meta.display,
                     consolidated: meta.consolidated,
                     merchantType: meta.merchantType,
@@ -1015,6 +1174,7 @@
                     txnType: clean(r[6]),
                     confidence,
                     aiContext,
+                    isSalary,
                     // Dimensions
                     dims,
                     // Computed flags for quick filtering
@@ -1151,10 +1311,9 @@
 
         // SALARY DETECTION - Find transactions with SALARY keyword
         function detectSalary() {
-            // Look for transactions with "SALARY" in the raw description
+            // Find transactions flagged as salary (checked in processTxns)
             const salaries = STATE.allTxns.filter(t =>
-                t.direction === 'IN' &&
-                t.raw.toLowerCase().includes('salary')
+                t.direction === 'IN' && t.isSalary
             ).sort((a, b) => b.date - a.date);
 
             if (salaries.length === 0) {
@@ -1170,9 +1329,6 @@
                 }
                 avgInterval = Math.round(totalInterval / (Math.min(salaries.length, 6) - 1));
             }
-
-            // Mark these as salary transactions
-            salaries.forEach(t => t.isSalary = true);
 
             return { salaries, avgInterval };
         }
@@ -1217,6 +1373,7 @@
                 btn.classList.toggle('active', btn.dataset.period === STATE.period);
             });
 
+            updateDateRangeDisplay();
             filterAndRender();
         }
 
@@ -1282,7 +1439,16 @@
                 btn.classList.toggle('active', btn.dataset.period === period);
             });
 
+            updateDateRangeDisplay();
             filterAndRender();
+        }
+
+        function updateDateRangeDisplay() {
+            const { start, end } = STATE.dateRange;
+            const sameYear = start.year() === end.year();
+            const format = sameYear ? 'MMM D' : 'MMM D, YY';
+            document.getElementById('dateRangeDisplay').textContent =
+                `${start.format(format)} → ${end.format('MMM D, YYYY')}`;
         }
 
         function openDatePicker() {
@@ -1318,12 +1484,107 @@
         function filterAndRender() {
             const { start, end } = STATE.dateRange;
             STATE.filtered = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
+            STATE.txnSort = STATE.txnSort || 'date-desc';
+            STATE.txnFilter = STATE.txnFilter || '';
 
             renderBudgetProjection();
             renderDonutChart();
+            renderCategoryBreakdown();
             renderRecentTxns();
             renderUncatAlert();
             renderQuickInsights();
+        }
+
+        // Category breakdown for left panel
+        function renderCategoryBreakdown() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const container = document.getElementById('categoryBreakdown');
+
+            if (STATE.viewMode === 'parent') {
+                // Group by summary group
+                const byGroup = {};
+                out.forEach(t => {
+                    if (!byGroup[t.summaryGroup]) byGroup[t.summaryGroup] = { total: 0, count: 0 };
+                    byGroup[t.summaryGroup].total += t.amount;
+                    byGroup[t.summaryGroup].count++;
+                });
+
+                const total = out.reduce((s, t) => s + t.amount, 0);
+                const sorted = Object.entries(byGroup).sort((a, b) => b[1].total - a[1].total);
+
+                container.innerHTML = sorted.map(([group, data]) => {
+                    const pct = total > 0 ? (data.total / total * 100).toFixed(0) : 0;
+                    const color = SUMMARY_GROUPS[group]?.color || '#999';
+                    const icon = SUMMARY_GROUPS[group]?.icon || '📋';
+                    return `
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openParentDrilldown('${group}')">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: ${color}20">
+                                <span>${icon}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium truncate">${group}</span>
+                                    <span class="text-sm font-bold">${formatNum(data.total)}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full" style="width: ${pct}%; background: ${color}"></div>
+                                    </div>
+                                    <span class="text-[10px] text-fact-muted">${pct}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // Group by merchant type
+                const byType = {};
+                out.forEach(t => {
+                    if (!byType[t.merchantType]) byType[t.merchantType] = { total: 0, count: 0 };
+                    byType[t.merchantType].total += t.amount;
+                    byType[t.merchantType].count++;
+                });
+
+                const total = out.reduce((s, t) => s + t.amount, 0);
+                const sorted = Object.entries(byType).sort((a, b) => b[1].total - a[1].total);
+
+                container.innerHTML = sorted.slice(0, 10).map(([type, data]) => {
+                    const pct = total > 0 ? (data.total / total * 100).toFixed(0) : 0;
+                    const color = MERCHANT_TYPES[type]?.color || '#999';
+                    const icon = MERCHANT_TYPES[type]?.icon || '📋';
+                    return `
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openDrilldown('${type}')">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs" style="background: ${color}20">
+                                ${icon}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-medium truncate">${type}</span>
+                                    <span class="text-xs font-bold">${formatNum(data.total)}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <div class="flex-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full" style="width: ${pct}%; background: ${color}"></div>
+                                    </div>
+                                    <span class="text-[9px] text-fact-muted">${data.count}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Transaction sorting
+        function sortTransactions(sortBy) {
+            STATE.txnSort = sortBy;
+            renderRecentTxns();
+        }
+
+        // Transaction filtering
+        function filterTransactions(query) {
+            STATE.txnFilter = query.toLowerCase();
+            renderRecentTxns();
         }
 
         // VIEW MODE TOGGLE
@@ -1345,7 +1606,7 @@
                 parentBtn.classList.add('text-fact-muted', 'dark:text-fact-dark-muted');
             }
 
-            renderCategories();
+            renderCategoryBreakdown();
             renderDonutChart();
         }
 
@@ -1876,8 +2137,34 @@
 
         // RECENT TRANSACTIONS
         function renderRecentTxns() {
-            const recent = STATE.filtered.slice(0, 8);
-            document.getElementById('txnCountLabel').textContent = `${STATE.filtered.length} transactions`;
+            let txns = [...STATE.filtered];
+
+            // Apply filter
+            if (STATE.txnFilter) {
+                txns = txns.filter(t =>
+                    t.display.toLowerCase().includes(STATE.txnFilter) ||
+                    t.merchantType.toLowerCase().includes(STATE.txnFilter) ||
+                    t.raw.toLowerCase().includes(STATE.txnFilter)
+                );
+            }
+
+            // Apply sort
+            switch (STATE.txnSort) {
+                case 'date-asc':
+                    txns.sort((a, b) => a.date - b.date);
+                    break;
+                case 'amount-desc':
+                    txns.sort((a, b) => b.amount - a.amount);
+                    break;
+                case 'amount-asc':
+                    txns.sort((a, b) => a.amount - b.amount);
+                    break;
+                default: // date-desc
+                    txns.sort((a, b) => b.date - a.date);
+            }
+
+            const recent = txns.slice(0, 15);
+            document.getElementById('txnCountLabel').textContent = `${txns.length} of ${STATE.filtered.length}`;
 
             const container = document.getElementById('recentTxns');
             container.innerHTML = recent.map(t => renderTxnRow(t)).join('');
@@ -2476,6 +2763,11 @@
 
                 const answer = data.answer;
                 aiChatHistory.push({ role: 'assistant', content: answer });
+
+                // Update model name if provided
+                if (data.model) {
+                    document.getElementById('aiModelName').textContent = data.model;
+                }
 
                 // Replace loading with answer
                 document.getElementById(loadingId).innerHTML = `
