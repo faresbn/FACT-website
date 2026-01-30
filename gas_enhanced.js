@@ -70,6 +70,48 @@ const CONFIG = {
 // Flatten categories for validation
 const ALL_CATEGORIES = Object.values(CONFIG.CATEGORIES).flat();
 
+// ============== EXECUTION LOGGING ==============
+
+/**
+ * Centralized logging helper for all functions
+ * Logs to Apps Script Logger with timestamp and structured data
+ */
+function log_(functionName, message, data = null) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    ts: timestamp,
+    fn: functionName,
+    msg: message,
+    data: data
+  };
+  Logger.log(JSON.stringify(logEntry));
+}
+
+/**
+ * Log function entry with parameters
+ */
+function logEntry_(functionName, params = {}) {
+  log_(functionName, 'ENTRY', params);
+}
+
+/**
+ * Log function exit with result summary
+ */
+function logExit_(functionName, result = {}) {
+  log_(functionName, 'EXIT', result);
+}
+
+/**
+ * Log error with details
+ */
+function logError_(functionName, error, context = {}) {
+  log_(functionName, 'ERROR', {
+    error: error.message || String(error),
+    stack: error.stack || null,
+    context: context
+  });
+}
+
 // ============== SESSION TOKEN MANAGEMENT ==============
 
 const TOKEN_EXPIRY_HOURS = 24; // Tokens valid for 24 hours
@@ -123,9 +165,11 @@ function validateToken_(token) {
 // ============== GET ENDPOINT (Status only) ==============
 
 function doGet(e) {
-  // GET only for status check - all sensitive operations use POST
+  logEntry_('doGet', { params: e?.parameter });
+  const response = { status: 'ok', message: 'FACT Finance API v7' };
+  logExit_('doGet', { status: 'ok' });
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'FACT Finance API v6' }))
+    .createTextOutput(JSON.stringify(response))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -133,13 +177,16 @@ function doGet(e) {
 
 /**
  * Secure POST endpoint for all sensitive operations
- * Actions: auth, ai, data, learn
+ * Actions: auth, ai, data, learn, remember, context, changePassword
  */
 function doPost(e) {
-  // Handle SMS ingestion (legacy format - no JSON body)
+  logEntry_('doPost', { hasBody: !!e?.postData?.contents });
+
   if (e?.postData?.contents) {
     try {
       const payload = JSON.parse(e.postData.contents);
+      const action = payload.action || 'sms_ingestion';
+      log_('doPost', 'Routing action', { action: action, user: payload.user || payload.token?.substring(0, 8) });
 
       // Route based on action
       if (payload.action === 'auth') {
@@ -186,10 +233,14 @@ function doPost(e) {
  * Returns short-lived token instead of sheetId
  */
 function handleAuthPost_(payload) {
+  logEntry_('handleAuthPost_', { user: payload.user });
+
   const username = (payload.user || '').toLowerCase().trim();
   const password = payload.pass || '';
 
   if (!username || !password) {
+    log_('handleAuthPost_', 'Missing credentials', { username: !!username, password: !!password });
+    logExit_('handleAuthPost_', { success: false, error: 'Missing credentials' });
     return json_({ success: false, error: 'Missing credentials' });
   }
 
@@ -202,21 +253,29 @@ function handleAuthPost_(payload) {
       users = JSON.parse(usersJson);
     }
   } catch (err) {
+    logError_('handleAuthPost_', err, { stage: 'parsing users' });
+    logExit_('handleAuthPost_', { success: false, error: 'Auth config error' });
     return json_({ success: false, error: 'Auth config error' });
   }
 
   const userConfig = users[username];
   if (!userConfig) {
+    log_('handleAuthPost_', 'User not found', { username });
+    logExit_('handleAuthPost_', { success: false, error: 'User not found' });
     return json_({ success: false, error: 'User not found' });
   }
 
   if (userConfig.pass !== password) {
+    log_('handleAuthPost_', 'Invalid password', { username });
+    logExit_('handleAuthPost_', { success: false, error: 'Invalid password' });
     return json_({ success: false, error: 'Invalid password' });
   }
 
   // Generate session token
   const { token, expiry } = storeSession_(username, userConfig.sheetId);
+  log_('handleAuthPost_', 'Session created', { username, expiry, tokenPrefix: token.substring(0, 8) });
 
+  logExit_('handleAuthPost_', { success: true, user: username });
   return json_({
     success: true,
     user: username,
@@ -231,6 +290,8 @@ function handleAuthPost_(payload) {
  * Change password for authenticated user
  */
 function handleChangePassword_(payload) {
+  logEntry_('handleChangePassword_', { tokenPrefix: payload.token?.substring(0, 8) });
+
   const token = payload.token;
   const currentPass = payload.currentPass;
   const newPass = payload.newPass;
@@ -238,14 +299,20 @@ function handleChangePassword_(payload) {
   // Validate token
   const session = validateToken_(token);
   if (!session) {
+    log_('handleChangePassword_', 'Invalid session');
+    logExit_('handleChangePassword_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
   if (!currentPass || !newPass) {
+    log_('handleChangePassword_', 'Missing password fields', { user: session.user });
+    logExit_('handleChangePassword_', { success: false, error: 'Missing fields' });
     return json_({ error: 'Missing password fields' });
   }
 
   if (newPass.length < 6) {
+    log_('handleChangePassword_', 'Password too short', { user: session.user });
+    logExit_('handleChangePassword_', { success: false, error: 'Password too short' });
     return json_({ error: 'Password must be at least 6 characters' });
   }
 
@@ -253,6 +320,7 @@ function handleChangePassword_(payload) {
     const props = PropertiesService.getScriptProperties();
     const usersJson = props.getProperty('PULSE_USERS');
     if (!usersJson) {
+      logExit_('handleChangePassword_', { success: false, error: 'No user config' });
       return json_({ error: 'User config not found' });
     }
 
@@ -261,11 +329,14 @@ function handleChangePassword_(payload) {
     const userConfig = users[username];
 
     if (!userConfig) {
+      logExit_('handleChangePassword_', { success: false, error: 'User not found' });
       return json_({ error: 'User not found' });
     }
 
     // Verify current password
     if (userConfig.pass !== currentPass) {
+      log_('handleChangePassword_', 'Incorrect current password', { user: username });
+      logExit_('handleChangePassword_', { success: false, error: 'Wrong password' });
       return json_({ error: 'Current password is incorrect' });
     }
 
@@ -276,9 +347,13 @@ function handleChangePassword_(payload) {
     // Save back to properties
     props.setProperty('PULSE_USERS', JSON.stringify(users));
 
+    log_('handleChangePassword_', 'Password updated', { user: username });
+    logExit_('handleChangePassword_', { success: true, user: username });
     return json_({ success: true, message: 'Password updated successfully' });
 
   } catch (err) {
+    logError_('handleChangePassword_', err, { user: session.user });
+    logExit_('handleChangePassword_', { success: false, error: err.message });
     return json_({ error: 'Failed to update password: ' + err.message });
   }
 }
@@ -287,6 +362,13 @@ function handleChangePassword_(payload) {
  * Secure AI query via POST
  */
 function handleAIQueryPost_(payload) {
+  logEntry_('handleAIQueryPost_', {
+    tokenPrefix: payload.token?.substring(0, 8),
+    queryLength: payload.q?.length,
+    dataLength: payload.data?.length,
+    userModel: payload.model
+  });
+
   const token = payload.token;
   const query = payload.q || '';
   const txnData = payload.data || '';
@@ -295,15 +377,21 @@ function handleAIQueryPost_(payload) {
   // Validate token
   const session = validateToken_(token);
   if (!session) {
+    log_('handleAIQueryPost_', 'Invalid session');
+    logExit_('handleAIQueryPost_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
+  log_('handleAIQueryPost_', 'Session validated', { user: session.user });
+
   if (!query) {
+    logExit_('handleAIQueryPost_', { success: false, error: 'Missing query' });
     return json_({ error: 'Missing query' });
   }
 
   const apiKey = PropertiesService.getScriptProperties().getProperty("OPENAI_API_KEY");
   if (!apiKey) {
+    logExit_('handleAIQueryPost_', { success: false, error: 'No API key' });
     return json_({ error: 'OpenAI API key not configured' });
   }
 
@@ -320,7 +408,7 @@ function handleAIQueryPost_(payload) {
     for (const pattern of rememberPatterns) {
       const match = query.match(pattern);
       if (match && queryLower.startsWith('remember')) {
-        // Extract and save the context
+        log_('handleAIQueryPost_', 'Detected remember command', { query: query.substring(0, 50) });
         return handleRememberFromQuery_(session.sheetId, query);
       }
     }
@@ -331,9 +419,17 @@ function handleAIQueryPost_(payload) {
       ? CONFIG.AI_MODEL_FRONTEND_DEEP  // Always use gpt-5.1 for deep analysis
       : (userModel || CONFIG.AI_MODEL_FRONTEND);  // User preference or default
 
+    log_('handleAIQueryPost_', 'Model selected', { selectedModel, isDeepAnalysis, userModel });
+
     // Load user context for personalized responses
     const userContext = getUserContext_(session.sheetId);
     const contextPrompt = formatContextForPrompt_(userContext);
+    log_('handleAIQueryPost_', 'Context loaded', {
+      income: userContext.income.length,
+      payees: userContext.payees.length,
+      corrections: userContext.corrections.length,
+      preferences: userContext.preferences.length
+    });
 
     const basePrompt = `You are a personal finance analyst for this specific user. Answer their questions about spending data.
 Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
@@ -382,6 +478,8 @@ You MUST apply this context to your analysis. For example:
       requestPayload.temperature = isDeepAnalysis ? 0.5 : 0.7;
     }
 
+    log_('handleAIQueryPost_', 'Calling OpenAI API', { model: selectedModel, maxTokens: requestPayload.max_completion_tokens });
+
     const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -395,6 +493,8 @@ You MUST apply this context to your analysis. For example:
     const result = JSON.parse(response.getContentText());
 
     if (result.error) {
+      log_('handleAIQueryPost_', 'OpenAI API error', { error: result.error.message });
+      logExit_('handleAIQueryPost_', { success: false, error: result.error.message });
       return json_({ error: result.error.message });
     }
 
@@ -406,6 +506,14 @@ You MUST apply this context to your analysis. For example:
       preferences: userContext.preferences.length
     };
 
+    log_('handleAIQueryPost_', 'OpenAI API success', {
+      model: selectedModel,
+      mode: isDeepAnalysis ? 'deep' : 'standard',
+      answerLength: result.choices[0].message.content.length,
+      contextStats
+    });
+    logExit_('handleAIQueryPost_', { success: true, model: selectedModel });
+
     return json_({
       answer: result.choices[0].message.content,
       model: selectedModel,
@@ -414,6 +522,8 @@ You MUST apply this context to your analysis. For example:
     });
 
   } catch (err) {
+    logError_('handleAIQueryPost_', err, { query: query?.substring(0, 50) });
+    logExit_('handleAIQueryPost_', { success: false, error: err.message });
     return json_({ error: err.message });
   }
 }
@@ -422,29 +532,39 @@ You MUST apply this context to your analysis. For example:
  * Secure data fetch via POST - replaces direct sheet access
  */
 function handleDataFetch_(payload) {
+  logEntry_('handleDataFetch_', { tokenPrefix: payload.token?.substring(0, 8), sheets: payload.sheets });
+
   const token = payload.token;
   const sheets = payload.sheets || ['RawLedger']; // Which sheets to fetch
 
   const session = validateToken_(token);
   if (!session) {
+    log_('handleDataFetch_', 'Invalid session');
+    logExit_('handleDataFetch_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
   try {
     const ss = SpreadsheetApp.openById(session.sheetId);
     const result = {};
+    const rowCounts = {};
 
     for (const sheetName of sheets) {
       const sheet = ss.getSheetByName(sheetName);
       if (sheet) {
         const data = sheet.getDataRange().getValues();
         result[sheetName] = data;
+        rowCounts[sheetName] = data.length;
       }
     }
 
+    log_('handleDataFetch_', 'Data fetched', { user: session.user, rowCounts });
+    logExit_('handleDataFetch_', { success: true, sheets: Object.keys(result) });
     return json_({ success: true, data: result });
 
   } catch (err) {
+    logError_('handleDataFetch_', err, { user: session.user, sheets });
+    logExit_('handleDataFetch_', { success: false, error: err.message });
     return json_({ error: 'Failed to fetch data: ' + err.message });
   }
 }
@@ -453,6 +573,12 @@ function handleDataFetch_(payload) {
  * Learn from user categorization - syncs to MerchantMap
  */
 function handleLearnCategory_(payload) {
+  logEntry_('handleLearnCategory_', {
+    tokenPrefix: payload.token?.substring(0, 8),
+    counterparty: payload.counterparty,
+    merchantType: payload.merchantType
+  });
+
   const token = payload.token;
   const counterparty = payload.counterparty;
   const merchantType = payload.merchantType;
@@ -460,10 +586,13 @@ function handleLearnCategory_(payload) {
 
   const session = validateToken_(token);
   if (!session) {
+    log_('handleLearnCategory_', 'Invalid session');
+    logExit_('handleLearnCategory_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
   if (!counterparty || !merchantType) {
+    logExit_('handleLearnCategory_', { success: false, error: 'Missing fields' });
     return json_({ error: 'Missing counterparty or merchantType' });
   }
 
@@ -472,6 +601,7 @@ function handleLearnCategory_(payload) {
     let mapSheet = ss.getSheetByName("MerchantMap");
 
     if (!mapSheet) {
+      log_('handleLearnCategory_', 'Creating MerchantMap sheet');
       mapSheet = ss.insertSheet("MerchantMap");
       mapSheet.getRange(1, 1, 1, 4).setValues([["Pattern", "DisplayName", "ConsolidatedName", "MerchantType"]]);
     }
@@ -485,15 +615,21 @@ function handleLearnCategory_(payload) {
         // Update existing
         mapSheet.getRange(i + 1, 3).setValue(consolidated);
         mapSheet.getRange(i + 1, 4).setValue(merchantType);
+        log_('handleLearnCategory_', 'Updated existing pattern', { counterparty, merchantType });
+        logExit_('handleLearnCategory_', { success: true, action: 'updated' });
         return json_({ success: true, action: 'updated' });
       }
     }
 
     // Add new pattern
     mapSheet.appendRow([counterpartyLower, counterparty, consolidated, merchantType]);
+    log_('handleLearnCategory_', 'Added new pattern', { counterparty, merchantType });
+    logExit_('handleLearnCategory_', { success: true, action: 'added' });
     return json_({ success: true, action: 'added' });
 
   } catch (err) {
+    logError_('handleLearnCategory_', err, { counterparty, merchantType });
+    logExit_('handleLearnCategory_', { success: false, error: err.message });
     return json_({ error: 'Failed to save: ' + err.message });
   }
 }
@@ -503,16 +639,21 @@ function handleLearnCategory_(payload) {
  * Types: income, payee, correction, preference
  */
 function handleRemember_(payload) {
+  logEntry_('handleRemember_', { tokenPrefix: payload.token?.substring(0, 8), type: payload.type, data: payload.data });
+
   const token = payload.token;
   const type = payload.type;       // 'income', 'payee', 'correction', 'preference'
   const data = payload.data || {};
 
   const session = validateToken_(token);
   if (!session) {
+    log_('handleRemember_', 'Invalid session');
+    logExit_('handleRemember_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
   if (!type || !data) {
+    logExit_('handleRemember_', { success: false, error: 'Missing type or data' });
     return json_({ error: 'Missing type or data' });
   }
 
@@ -522,6 +663,7 @@ function handleRemember_(payload) {
 
     // Create UserContext sheet if it doesn't exist
     if (!ctxSheet) {
+      log_('handleRemember_', 'Creating UserContext sheet');
       ctxSheet = ss.insertSheet("UserContext");
       ctxSheet.getRange(1, 1, 1, 6).setValues([[
         "Type", "Key", "Value", "Details", "DateAdded", "Source"
@@ -534,34 +676,35 @@ function handleRemember_(payload) {
 
     switch (type) {
       case 'income':
-        // data: { type: 'Salary', day: 28, amount: 25000, notes: 'Main job' }
         rowData = ['income', data.type || 'Salary', data.day || '', data.amount || '', timestamp, data.notes || ''];
         break;
 
       case 'payee':
-        // data: { name: 'Aleks', purpose: 'Flight bookings', category: 'Travel', isWorkExpense: true }
         rowData = ['payee', data.name, data.purpose || '', data.category || '', timestamp, data.isWorkExpense ? 'work' : 'personal'];
         break;
 
       case 'correction':
-        // data: { original: 'Ooredoo is a splurge', corrected: 'Ooredoo is a telecom bill', context: 'monthly' }
         rowData = ['correction', data.original || '', data.corrected || '', data.context || '', timestamp, 'user'];
         break;
 
       case 'preference':
-        // data: { key: 'telecom_essential', value: 'true', notes: 'Ooredoo, Vodafone are essential' }
         rowData = ['preference', data.key || '', data.value || '', data.notes || '', timestamp, 'user'];
         break;
 
       default:
+        logExit_('handleRemember_', { success: false, error: 'Unknown type' });
         return json_({ error: 'Unknown type: ' + type });
     }
 
     ctxSheet.appendRow(rowData);
 
+    log_('handleRemember_', 'Context saved', { user: session.user, type, rowData });
+    logExit_('handleRemember_', { success: true, type });
     return json_({ success: true, type: type, message: 'Context saved' });
 
   } catch (err) {
+    logError_('handleRemember_', err, { type, data });
+    logExit_('handleRemember_', { success: false, error: err.message });
     return json_({ error: 'Failed to save context: ' + err.message });
   }
 }
@@ -570,14 +713,27 @@ function handleRemember_(payload) {
  * Get user context for AI prompts
  */
 function handleGetContext_(payload) {
+  logEntry_('handleGetContext_', { tokenPrefix: payload.token?.substring(0, 8) });
+
   const token = payload.token;
 
   const session = validateToken_(token);
   if (!session) {
+    log_('handleGetContext_', 'Invalid session');
+    logExit_('handleGetContext_', { success: false, error: 'AUTH_REQUIRED' });
     return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
   }
 
-  return json_({ success: true, context: getUserContext_(session.sheetId) });
+  const context = getUserContext_(session.sheetId);
+  log_('handleGetContext_', 'Context retrieved', {
+    user: session.user,
+    income: context.income.length,
+    payees: context.payees.length,
+    corrections: context.corrections.length,
+    preferences: context.preferences.length
+  });
+  logExit_('handleGetContext_', { success: true });
+  return json_({ success: true, context: context });
 }
 
 /**
@@ -585,6 +741,8 @@ function handleGetContext_(payload) {
  * Returns structured context for AI prompts
  */
 function getUserContext_(sheetId) {
+  logEntry_('getUserContext_', { sheetId: sheetId?.substring(0, 10) });
+
   const context = {
     income: [],
     payees: [],
@@ -596,7 +754,11 @@ function getUserContext_(sheetId) {
     const ss = SpreadsheetApp.openById(sheetId);
     const ctxSheet = ss.getSheetByName("UserContext");
 
-    if (!ctxSheet) return context;
+    if (!ctxSheet) {
+      log_('getUserContext_', 'UserContext sheet not found');
+      logExit_('getUserContext_', { found: false });
+      return context;
+    }
 
     const data = ctxSheet.getDataRange().getValues();
 
@@ -637,10 +799,21 @@ function getUserContext_(sheetId) {
           break;
       }
     }
+
+    log_('getUserContext_', 'Context loaded', {
+      rows: data.length - 1,
+      income: context.income.length,
+      payees: context.payees.length,
+      corrections: context.corrections.length,
+      preferences: context.preferences.length
+    });
   } catch (err) {
-    Logger.log('Error loading UserContext: ' + err.message);
+    logError_('getUserContext_', err, { sheetId });
   }
 
+  logExit_('getUserContext_', {
+    total: context.income.length + context.payees.length + context.corrections.length + context.preferences.length
+  });
   return context;
 }
 
