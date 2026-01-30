@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0a0a0a"/>
+  <!-- Slash shape with dark stroke, yellow top, dark navy body -->
+  <g transform="translate(140, 56)">
+    <!-- Dark stroke outline -->
+    <path d="M70 400 L160 400 C172 400 182 390 185 378 L230 42 C232 30 224 20 212 20 L122 20 C110 20 100 30 97 42 L52 378 C50 390 58 400 70 400 Z"
+          fill="#2d3748" stroke="#3a4553" stroke-width="6" stroke-linejoin="round"/>
+    <!-- Yellow top portion (approximately top 22%) -->
+    <path d="M122 20 L212 20 C224 20 232 30 230 42 L215 108 C213 120 203 130 191 130 L101 130 C89 130 81 120 83 108 L97 42 C100 30 110 20 122 20 Z"
+          fill="#f4c44e"/>
+  </g>
+</svg>

@@ -14,10 +14,25 @@
 // ============== CONFIGURATION ==============
 
 const CONFIG = {
-  // Model selection - upgrade as needed
-  // Options: 'gpt-4.1-nano' (fast), 'gpt-4.1-mini' (balanced), 'gpt-4.1' (best), 'gpt-5.1' (cutting edge)
-  AI_MODEL: 'gpt-4.1',
-  AI_MODEL_FRONTEND: 'gpt-5', // GPT-5 for frontend AI chat
+  // ============== TIERED AI MODEL STRATEGY ==============
+  // SMS Parsing: gpt-4.1-mini (reliable, cost-effective for high volume)
+  // Retry on low confidence: gpt-5-mini (upgrade when needed)
+  // Ask AI default: gpt-5-mini (strong feel per dollar)
+  // Ask AI deep analysis: gpt-5.1 (for "why", "optimize", "forecast", etc.)
+  // Batch Insights: gpt-5.1 (premium for highest value output)
+
+  AI_MODEL_SMS: 'gpt-4.1-mini',        // SMS → JSON parsing (high volume)
+  AI_MODEL_SMS_RETRY: 'gpt-5-mini',    // Retry when confidence=low or Uncategorized
+  AI_MODEL_FRONTEND: 'gpt-5-mini',     // Ask AI default
+  AI_MODEL_FRONTEND_DEEP: 'gpt-5.1',   // Ask AI for deep analysis queries
+  AI_MODEL_INSIGHTS: 'gpt-5.1',        // Batch insights (best quality)
+
+  // Keywords that trigger deep analysis mode
+  DEEP_ANALYSIS_KEYWORDS: [
+    'why', 'optimize', 'forecast', 'anomaly', 'anomalies', 'plan',
+    'predict', 'trend', 'pattern', 'analyze', 'analysis', 'deep',
+    'detail', 'explain', 'insight', 'recommend', 'suggestion', 'budget'
+  ],
 
   // Multi-user sheet mapping
   USER_SHEETS: {
@@ -46,45 +61,117 @@ const CONFIG = {
 // Flatten categories for validation
 const ALL_CATEGORIES = Object.values(CONFIG.CATEGORIES).flat();
 
-// ============== GET ENDPOINT - AI QUERY PROXY ==============
+// ============== SESSION TOKEN MANAGEMENT ==============
 
-/**
- * Frontend endpoint - handles auth and AI queries
- * URL: YOUR_GAS_URL?action=auth&user=X&pass=Y
- * URL: YOUR_GAS_URL?action=ai&q=YOUR_QUESTION&data=ENCODED_TXN_SUMMARY
- */
+const TOKEN_EXPIRY_HOURS = 24; // Tokens valid for 24 hours
+
+function generateToken_() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 64; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+}
+
+function storeSession_(username, sheetId) {
+  const token = generateToken_();
+  const expiry = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+  const cache = CacheService.getScriptCache();
+
+  // Store token -> session mapping (6 hour cache, refresh on use)
+  cache.put(`session_${token}`, JSON.stringify({
+    user: username,
+    sheetId: sheetId,
+    expiry: expiry
+  }), 21600); // 6 hours in seconds
+
+  return { token, expiry };
+}
+
+function validateToken_(token) {
+  if (!token) return null;
+
+  const cache = CacheService.getScriptCache();
+  const sessionJson = cache.get(`session_${token}`);
+
+  if (!sessionJson) return null;
+
+  try {
+    const session = JSON.parse(sessionJson);
+    if (new Date(session.expiry) < new Date()) {
+      cache.remove(`session_${token}`);
+      return null;
+    }
+    // Refresh cache on successful validation
+    cache.put(`session_${token}`, sessionJson, 21600);
+    return session;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ============== GET ENDPOINT (Status only) ==============
+
 function doGet(e) {
-  const action = e.parameter.action;
-
-  if (action === 'auth') {
-    return handleAuth(e);
-  }
-
-  if (action === 'ai') {
-    return handleAIQuery(e);
-  }
-
-  // Default: return simple status
+  // GET only for status check - all sensitive operations use POST
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'Pulse GAS v5' }))
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'FACT Finance API v6' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// ============== POST ENDPOINT (Auth, AI, Data) ==============
+
 /**
- * Simple authentication handler
- * Validates user/pass against Script Properties
- * Returns sheetId on success
+ * Secure POST endpoint for all sensitive operations
+ * Actions: auth, ai, data, learn
  */
-function handleAuth(e) {
-  const username = (e.parameter.user || '').toLowerCase().trim();
-  const password = e.parameter.pass || '';
+function doPost(e) {
+  // Handle SMS ingestion (legacy format - no JSON body)
+  if (e?.postData?.contents) {
+    try {
+      const payload = JSON.parse(e.postData.contents);
+
+      // Route based on action
+      if (payload.action === 'auth') {
+        return handleAuthPost_(payload);
+      }
+
+      if (payload.action === 'ai') {
+        return handleAIQueryPost_(payload);
+      }
+
+      if (payload.action === 'data') {
+        return handleDataFetch_(payload);
+      }
+
+      if (payload.action === 'learn') {
+        return handleLearnCategory_(payload);
+      }
+
+      // Default: SMS ingestion (existing behavior)
+      return handleSMSIngestion_(e, payload);
+
+    } catch (parseErr) {
+      return json_({ error: 'Invalid JSON: ' + parseErr.message });
+    }
+  }
+
+  return json_({ error: 'Missing POST body' });
+}
+
+/**
+ * Secure authentication via POST
+ * Returns short-lived token instead of sheetId
+ */
+function handleAuthPost_(payload) {
+  const username = (payload.user || '').toLowerCase().trim();
+  const password = payload.pass || '';
 
   if (!username || !password) {
     return json_({ success: false, error: 'Missing credentials' });
   }
 
-  // Get users from Script Properties
-  // Format: PULSE_USERS = {"fares": {"pass": "xxx", "sheetId": "yyy"}, ...}
   const props = PropertiesService.getScriptProperties();
   let users = {};
 
@@ -97,7 +184,6 @@ function handleAuth(e) {
     return json_({ success: false, error: 'Auth config error' });
   }
 
-  // Check credentials
   const userConfig = users[username];
   if (!userConfig) {
     return json_({ success: false, error: 'User not found' });
@@ -107,40 +193,49 @@ function handleAuth(e) {
     return json_({ success: false, error: 'Invalid password' });
   }
 
-  // Success - return sheetId
+  // Generate session token
+  const { token, expiry } = storeSession_(username, userConfig.sheetId);
+
   return json_({
     success: true,
     user: username,
-    sheetId: userConfig.sheetId,
-    model: CONFIG.AI_MODEL_FRONTEND
+    token: token,
+    expiry: expiry,
+    model: CONFIG.AI_MODEL_FRONTEND,
+    modelDeep: CONFIG.AI_MODEL_FRONTEND_DEEP
   });
 }
 
-function handleAIQuery(e) {
-  const query = e.parameter.q || '';
-  const txnData = e.parameter.data || '';
+/**
+ * Secure AI query via POST
+ */
+function handleAIQueryPost_(payload) {
+  const token = payload.token;
+  const query = payload.q || '';
+  const txnData = payload.data || '';
+
+  // Validate token
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
 
   if (!query) {
-    return json_({ error: 'Missing query parameter "q"' });
+    return json_({ error: 'Missing query' });
   }
 
   const apiKey = PropertiesService.getScriptProperties().getProperty("OPENAI_API_KEY");
   if (!apiKey) {
-    return json_({ error: 'OpenAI API key not configured in GAS' });
+    return json_({ error: 'OpenAI API key not configured' });
   }
 
   try {
-    // Decode transaction data if provided
-    let decodedData = '';
-    if (txnData) {
-      try {
-        decodedData = Utilities.newBlob(Utilities.base64Decode(txnData)).getDataAsString();
-      } catch (decodeErr) {
-        decodedData = txnData; // Fallback to raw if not base64
-      }
-    }
+    // Smart model selection
+    const queryLower = query.toLowerCase();
+    const isDeepAnalysis = CONFIG.DEEP_ANALYSIS_KEYWORDS.some(kw => queryLower.includes(kw));
+    const selectedModel = isDeepAnalysis ? CONFIG.AI_MODEL_FRONTEND_DEEP : CONFIG.AI_MODEL_FRONTEND;
 
-    const systemPrompt = `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
+    const basePrompt = `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
 Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
 Identify patterns, anomalies, and actionable insights.
 
@@ -150,8 +245,18 @@ The data includes dimensions:
 - dims.size: amount tier (Micro, Small, Medium, Large, Major)
 - dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)`;
 
-    const userPrompt = decodedData
-      ? `Here is my spending data for the selected period:\n\n${decodedData}\n\nQuestion: ${query}`
+    const deepPrompt = isDeepAnalysis
+      ? `\n\nDEEP ANALYSIS MODE: Provide thorough, detailed analysis. Consider:
+- Root causes and underlying patterns
+- Comparative analysis (week-over-week, category comparisons)
+- Actionable recommendations with specific numbers
+- Potential future projections based on current trends
+- Risk factors and opportunities for optimization`
+      : '';
+
+    const systemPrompt = basePrompt + deepPrompt;
+    const userPrompt = txnData
+      ? `Here is my spending data for the selected period:\n\n${txnData}\n\nQuestion: ${query}`
       : query;
 
     const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
@@ -161,13 +266,13 @@ The data includes dimensions:
         'Authorization': 'Bearer ' + apiKey
       },
       payload: JSON.stringify({
-        model: CONFIG.AI_MODEL_FRONTEND,
+        model: selectedModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_completion_tokens: 1000
+        temperature: isDeepAnalysis ? 0.5 : 0.7,
+        max_completion_tokens: isDeepAnalysis ? 2000 : 1000
       }),
       muteHttpExceptions: true
     });
@@ -178,23 +283,107 @@ The data includes dimensions:
       return json_({ error: result.error.message });
     }
 
-    const answer = result.choices[0].message.content;
-    return json_({ answer: answer, model: CONFIG.AI_MODEL_FRONTEND });
+    return json_({
+      answer: result.choices[0].message.content,
+      model: selectedModel,
+      mode: isDeepAnalysis ? 'deep' : 'standard'
+    });
 
   } catch (err) {
     return json_({ error: err.message });
   }
 }
 
-// ============== MAIN ENTRY POINT ==============
+/**
+ * Secure data fetch via POST - replaces direct sheet access
+ */
+function handleDataFetch_(payload) {
+  const token = payload.token;
+  const sheets = payload.sheets || ['RawLedger']; // Which sheets to fetch
 
-function doPost(e) {
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(session.sheetId);
+    const result = {};
+
+    for (const sheetName of sheets) {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        const data = sheet.getDataRange().getValues();
+        result[sheetName] = data;
+      }
+    }
+
+    return json_({ success: true, data: result });
+
+  } catch (err) {
+    return json_({ error: 'Failed to fetch data: ' + err.message });
+  }
+}
+
+/**
+ * Learn from user categorization - syncs to MerchantMap
+ */
+function handleLearnCategory_(payload) {
+  const token = payload.token;
+  const counterparty = payload.counterparty;
+  const merchantType = payload.merchantType;
+  const consolidated = payload.consolidated || counterparty;
+
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  if (!counterparty || !merchantType) {
+    return json_({ error: 'Missing counterparty or merchantType' });
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(session.sheetId);
+    let mapSheet = ss.getSheetByName("MerchantMap");
+
+    if (!mapSheet) {
+      mapSheet = ss.insertSheet("MerchantMap");
+      mapSheet.getRange(1, 1, 1, 4).setValues([["Pattern", "DisplayName", "ConsolidatedName", "MerchantType"]]);
+    }
+
+    const data = mapSheet.getDataRange().getValues();
+    const counterpartyLower = counterparty.toLowerCase();
+
+    // Check if pattern already exists
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][0].toLowerCase() === counterpartyLower) {
+        // Update existing
+        mapSheet.getRange(i + 1, 3).setValue(consolidated);
+        mapSheet.getRange(i + 1, 4).setValue(merchantType);
+        return json_({ success: true, action: 'updated' });
+      }
+    }
+
+    // Add new pattern
+    mapSheet.appendRow([counterpartyLower, counterparty, consolidated, merchantType]);
+    return json_({ success: true, action: 'added' });
+
+  } catch (err) {
+    return json_({ error: 'Failed to save: ' + err.message });
+  }
+}
+
+/**
+ * Handle SMS ingestion (existing logic, refactored)
+ */
+function handleSMSIngestion_(e, payload) {
   const debugLog = [];
   const log_ = (msg, data) => {
     debugLog.push({ step: debugLog.length + 1, msg, data: data ?? null, ts: new Date().toISOString() });
   };
 
-  log_("doPost started - Enhanced v5");
+  log_("SMS ingestion started - Enhanced v6");
 
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
@@ -205,19 +394,6 @@ function doPost(e) {
   log_("Lock acquired");
 
   try {
-    if (!e?.postData?.contents) {
-      log_("No POST body contents");
-      return json_({ result: "error", error: "Missing POST body", debug: debugLog });
-    }
-
-    let payload;
-    try {
-      payload = JSON.parse(e.postData.contents);
-      log_("Payload parsed", { keys: Object.keys(payload), user: payload.user });
-    } catch (parseErr) {
-      return json_({ result: "error", error: "Invalid JSON: " + parseErr.message, debug: debugLog });
-    }
-
     // Get user and their sheet
     const userId = (payload.user || CONFIG.DEFAULT_USER).toLowerCase();
     const SHEET_ID = CONFIG.USER_SHEETS[userId];
@@ -286,6 +462,16 @@ function doPost(e) {
       entryLog.timestamp = ts;
       entryLog.context = txnContext;
 
+      // Idempotency check: hash of key fields
+      const idempotencyKey = generateIdempotencyKey_(sms, ts);
+      if (isDuplicateEntry_(sheet, idempotencyKey, log_)) {
+        entryLog.fate = "skipped";
+        entryLog.reason = "Duplicate (idempotency check)";
+        entryLogs.push(entryLog);
+        skipped++;
+        continue;
+      }
+
       // AI extraction with context
       log_("Calling AI for entry " + i);
       let extracted;
@@ -318,7 +504,7 @@ function doPost(e) {
       // RawText for dedupe
       const raw200 = (normalised.rawText ?? sms).toString().slice(0, 200);
 
-      // Dedupe check
+      // Legacy dedupe check
       if (alreadyLogged_(sheet, raw200)) {
         entryLog.fate = "skipped";
         entryLog.reason = "Duplicate";
@@ -345,7 +531,7 @@ function doPost(e) {
         continue;
       }
 
-      // Append to sheet (enhanced schema)
+      // Append to sheet
       log_("Appending row for entry " + i);
       try {
         sheet.appendRow([
@@ -393,6 +579,51 @@ function doPost(e) {
   } finally {
     try { lock.releaseLock(); } catch (_) {}
   }
+}
+
+// ============== IDEMPOTENCY ==============
+
+function generateIdempotencyKey_(sms, timestamp) {
+  // Create a hash-like key from SMS content + timestamp (rounded to minute)
+  const tsMinute = timestamp.slice(0, 16); // YYYY-MM-DDTHH:MM
+  const content = sms.replace(/\s+/g, '').toLowerCase().slice(0, 100);
+  return Utilities.base64Encode(Utilities.computeDigest(
+    Utilities.DigestAlgorithm.MD5,
+    content + tsMinute
+  ));
+}
+
+function isDuplicateEntry_(sheet, idempotencyKey, log_) {
+  const cache = CacheService.getScriptCache();
+  const cacheKey = `idem_${idempotencyKey}`;
+
+  if (cache.get(cacheKey)) {
+    log_("Idempotency cache hit", { key: idempotencyKey.slice(0, 8) });
+    return true;
+  }
+
+  // Store in cache for 1 hour to prevent rapid duplicates
+  cache.put(cacheKey, '1', 3600);
+  return false;
+}
+
+// ============== LEGACY HANDLERS (for backwards compatibility) ==============
+// These will be removed in future versions
+
+function handleAuth(e) {
+  // Redirect to POST-based auth
+  return json_({
+    error: 'Auth via GET is deprecated. Please update your client.',
+    code: 'DEPRECATED'
+  });
+}
+
+function handleAIQuery(e) {
+  // Redirect to POST-based AI
+  return json_({
+    error: 'AI queries via GET are deprecated. Please update your client.',
+    code: 'DEPRECATED'
+  });
 }
 
 // ============== TIME CONTEXT EXTRACTION ==============
@@ -469,13 +700,54 @@ function extractWithContext_(sms, timeContext, merchantPatterns, familyPatterns,
 
   // Build context hints for the AI
   const contextHints = buildContextHints_(sms, timeContext, merchantPatterns, familyPatterns);
-
   const systemPrompt = buildEnhancedPrompt_(contextHints);
 
+  // First attempt with cost-effective model
+  let result = callExtractionAPI_(sms, timeContext, systemPrompt, CONFIG.AI_MODEL_SMS, apiKey, log_);
+
+  // Retry with premium model if low confidence or uncategorized
+  const needsRetry = !result.skip && (
+    result.confidence === 'low' ||
+    result.subcategory === 'Uncategorized' ||
+    result.subcategory === 'Other'
+  );
+
+  if (needsRetry) {
+    log_("Low confidence or uncategorized - retrying with premium model", {
+      confidence: result.confidence,
+      subcategory: result.subcategory,
+      retryModel: CONFIG.AI_MODEL_SMS_RETRY
+    });
+
+    const retryResult = callExtractionAPI_(sms, timeContext, systemPrompt, CONFIG.AI_MODEL_SMS_RETRY, apiKey, log_);
+
+    // Use retry result if it's better (higher confidence or more specific category)
+    const confidenceRank = { 'high': 3, 'medium': 2, 'low': 1 };
+    const retryBetter = (
+      confidenceRank[retryResult.confidence] > confidenceRank[result.confidence] ||
+      (retryResult.subcategory !== 'Uncategorized' && retryResult.subcategory !== 'Other' &&
+       (result.subcategory === 'Uncategorized' || result.subcategory === 'Other'))
+    );
+
+    if (retryBetter) {
+      log_("Using retry result", { newConfidence: retryResult.confidence, newSubcategory: retryResult.subcategory });
+      result = retryResult;
+      result.wasRetried = true;
+      result.originalConfidence = result.confidence;
+    } else {
+      log_("Keeping original result (retry not better)");
+    }
+  }
+
+  return result;
+}
+
+// Helper function to call the extraction API
+function callExtractionAPI_(sms, timeContext, systemPrompt, model, apiKey, log_) {
   const url = "https://api.openai.com/v1/responses";
 
   const body = {
-    model: CONFIG.AI_MODEL,
+    model: model,
     instructions: systemPrompt,
     input: `Extract and categorize this QNB SMS transaction:\n\n${sms}\n\nTransaction Context:\n- Time: ${timeContext.timeOfDay} (${timeContext.hour}:00)\n- Day: ${timeContext.dayOfWeek}\n- Weekend: ${timeContext.isWeekend}\n- Month timing: ${timeContext.isStartOfMonth ? 'start of month' : timeContext.isEndOfMonth ? 'end of month' : 'mid-month'}`,
     text: {
@@ -522,7 +794,7 @@ function extractWithContext_(sms, timeContext, merchantPatterns, familyPatterns,
     }
   };
 
-  log_("AI request", { model: CONFIG.AI_MODEL, contextHints: contextHints.length });
+  log_("AI request", { model: model });
 
   const res = UrlFetchApp.fetch(url, {
     method: "post",
@@ -535,7 +807,7 @@ function extractWithContext_(sms, timeContext, merchantPatterns, familyPatterns,
   const status = res.getResponseCode();
   const txt = res.getContentText();
 
-  log_("AI response", { status, length: txt.length });
+  log_("AI response", { model: model, status, length: txt.length });
 
   if (status < 200 || status >= 300) {
     throw new Error("AI HTTP " + status + ": " + txt.slice(0, 300));
@@ -841,21 +1113,47 @@ function generateInsights_(transactions) {
     `${t.timestamp}: ${t.direction} ${t.amount} ${t.currency} @ ${t.counterparty} (${t.subcategory})`
   ).join('\n');
 
-  const prompt = `Analyze these personal finance transactions from the last 30 days and provide:
-1. Spending patterns and trends
-2. Unusual or anomalous transactions
-3. Category breakdown summary
-4. Actionable suggestions for saving money
-5. Recurring payments detected
+  // Premium insights prompt for batch analysis
+  const prompt = `You are a senior financial analyst reviewing personal transaction data. Provide a comprehensive but actionable monthly financial review.
 
-Keep it concise and actionable.
+## Transaction Data (Last 30 Days)
+${txnSummary}
 
-Transactions:
-${txnSummary}`;
+## Required Analysis
+
+### 1. Executive Summary
+- Total spending vs typical month (if patterns visible)
+- Key financial health indicators
+
+### 2. Spending Patterns & Trends
+- Day-of-week patterns (weekday vs weekend spending)
+- Time-of-day patterns (work hours vs evening vs late night)
+- Category concentration analysis
+
+### 3. Anomaly Detection
+- Transactions that deviate from established patterns
+- One-time large purchases
+- Unusual merchant activity
+
+### 4. Recurring Payments Audit
+- Detected subscriptions and their monthly cost
+- Potential duplicate or forgotten subscriptions
+- Optimization opportunities
+
+### 5. Actionable Recommendations
+- Specific, numbered recommendations with estimated savings
+- Quick wins vs longer-term changes
+- Priority ranking
+
+### 6. Forward Look
+- Predicted expenses for next month based on patterns
+- Upcoming potential budget pressure points
+
+Format in clean markdown. Be specific with numbers and merchant names. Prioritize actionable insights over generic advice.`;
 
   const url = "https://api.openai.com/v1/responses";
   const body = {
-    model: CONFIG.AI_MODEL,
+    model: CONFIG.AI_MODEL_INSIGHTS, // Premium model for best quality insights
     input: prompt
   };
 
