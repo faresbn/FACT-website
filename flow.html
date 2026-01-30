@@ -5,13 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>FACT Finance</title>
-    
+    <title>FACT/Flow</title>
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <script>
         dayjs.extend(dayjs_plugin_isBetween);
@@ -225,12 +232,10 @@
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fact-yellow via-fact-green to-fact-purple"></div>
 
             <div class="text-center mb-6">
-                <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 relative" style="background: conic-gradient(from 0deg, #F4C44E 0deg 120deg, #75B876 120deg 240deg, #B593C6 240deg 360deg);">
-                    <div class="w-14 h-14 bg-white dark:bg-fact-dark-card rounded-lg flex items-center justify-center">
-                        <span class="font-display font-bold text-xl bg-gradient-to-br from-fact-yellow via-fact-green to-fact-purple bg-clip-text text-transparent">F</span>
-                    </div>
+                <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 bg-[#0a0a0a]">
+                    <img src="flow-icon-512.png" alt="/" class="w-12 h-12 object-contain">
                 </div>
-                <h1 class="font-display font-bold text-2xl">FACT Finance</h1>
+                <h1 class="font-display font-bold text-2xl">FACT/Flow</h1>
                 <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Intelligence</p>
             </div>
 
@@ -254,7 +259,7 @@
                 <p id="loginError" class="text-center text-sm text-fact-red hidden">Invalid credentials</p>
             </div>
 
-            <p class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted mt-6">FACT · Secure Access</p>
+            <p class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted mt-6">FACT/Flow · Secure Access</p>
         </div>
     </div>
 
@@ -265,13 +270,11 @@
         <!-- HEADER -->
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded flex items-center justify-center relative" style="background: conic-gradient(from 0deg, #F4C44E 0deg 120deg, #75B876 120deg 240deg, #B593C6 240deg 360deg);">
-                    <div class="w-8 h-8 bg-white dark:bg-fact-dark-card rounded flex items-center justify-center">
-                        <span class="font-display font-bold text-sm bg-gradient-to-br from-fact-yellow via-fact-green to-fact-purple bg-clip-text text-transparent">F</span>
-                    </div>
+                <div class="w-10 h-10 rounded flex items-center justify-center bg-[#0a0a0a]">
+                    <img src="flow-icon-512.png" alt="/" class="w-8 h-8 object-contain">
                 </div>
                 <div>
-                    <h1 class="font-display font-bold text-xl tracking-tight">FACT <span class="text-fact-muted font-normal text-sm">Finance</span></h1>
+                    <h1 class="font-display font-bold text-xl tracking-tight">FACT<span class="text-fact-yellow">/</span><span class="text-fact-muted font-normal text-sm">Flow</span></h1>
                     <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
                         <span id="currentUserDisplay">Personal Intelligence</span> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
                     </p>
@@ -753,7 +756,7 @@
             STORAGE_KEY: 'qnb_tracker_v4',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
             // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
-            GAS_URL: 'https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec'
+            GAS_URL: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
         };
 
         // Get user from URL parameter
@@ -944,19 +947,37 @@
 
         function getSession() {
             try {
-                const stored = localStorage.getItem('pulse_session');
-                return stored ? JSON.parse(stored) : null;
+                const stored = localStorage.getItem('fact_session');
+                if (!stored) return null;
+
+                const session = JSON.parse(stored);
+                // Check if token expired
+                if (session.expiry && new Date(session.expiry) < new Date()) {
+                    clearSession();
+                    return null;
+                }
+                return session;
             } catch (e) {
                 return null;
             }
         }
 
-        function saveSession(user, sheetId) {
-            localStorage.setItem('pulse_session', JSON.stringify({ user, sheetId, ts: Date.now() }));
+        function saveSession(user, token, expiry) {
+            localStorage.setItem('fact_session', JSON.stringify({
+                user,
+                token,
+                expiry,
+                ts: Date.now()
+            }));
         }
 
         function clearSession() {
-            localStorage.removeItem('pulse_session');
+            localStorage.removeItem('fact_session');
+        }
+
+        function getAuthToken() {
+            const session = getSession();
+            return session?.token || null;
         }
 
         async function attemptLogin() {
@@ -973,14 +994,21 @@
             btn.disabled = true;
 
             try {
-                // Call GAS auth endpoint
-                const url = `${CONFIG.GAS_URL}?action=auth&user=${encodeURIComponent(username)}&pass=${encodeURIComponent(password)}`;
-                const response = await fetch(url);
+                // Secure POST-based authentication
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'auth',
+                        user: username,
+                        pass: password
+                    })
+                });
                 const data = await response.json();
 
-                if (data.success && data.sheetId) {
-                    saveSession(username, data.sheetId);
-                    showApp({ user: username, sheetId: data.sheetId });
+                if (data.success && data.token) {
+                    saveSession(data.user, data.token, data.expiry);
+                    showApp({ user: data.user, token: data.token });
                 } else {
                     showLoginError(data.error || 'Invalid credentials');
                 }
@@ -1006,7 +1034,7 @@
 
             // Set user context
             STATE.currentUser = session.user;
-            STATE.sheetId = session.sheetId;
+            STATE.authToken = session.token;
 
             // Update display
             const userDisplay = document.getElementById('currentUserDisplay');
@@ -1048,24 +1076,41 @@
             }));
         }
 
-        // DATA FETCHING
+        // DATA FETCHING - Secure via GAS proxy
         async function syncData() {
             document.getElementById('loadingState').classList.remove('hidden');
             document.getElementById('mainContent').classList.add('hidden');
 
-            const sheetId = getSheetId();
-            const url = (sheet) => `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
-
             try {
-                const [ledger, map, fx] = await Promise.all([
-                    fetchCSV(url('RawLedger')),
-                    fetchCSV(url('MerchantMap')),
-                    fetchCSV(url('FXRates'))
-                ]);
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'data',
+                        token: getAuthToken(),
+                        sheets: ['RawLedger', 'MerchantMap', 'FXRates']
+                    })
+                });
 
-                processFX(fx);
-                processMerchantMap(map);
-                processTxns(ledger);
+                const result = await response.json();
+
+                // Handle auth expiry
+                if (result.code === 'AUTH_REQUIRED') {
+                    clearSession();
+                    location.reload();
+                    return;
+                }
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                const data = result.data;
+
+                // Process each sheet (GAS returns arrays, same format as CSV)
+                if (data.FXRates) processFX(data.FXRates.slice(1)); // Skip header
+                if (data.MerchantMap) processMerchantMap(data.MerchantMap);
+                if (data.RawLedger) processTxns(data.RawLedger);
 
                 document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
 
@@ -1086,6 +1131,7 @@
             }
         }
 
+        // Legacy CSV fetch (kept for backwards compatibility if needed)
         function fetchCSV(url) {
             return new Promise((resolve, reject) => {
                 Papa.parse(url, {
@@ -2228,19 +2274,30 @@
             const isOut = t.direction === 'OUT';
             const isUncat = t.merchantType === 'Uncategorized';
             const color = CAT_COLORS[t.merchantType] || '#999';
+            // Use data attribute for raw text (safely escaped via base64)
+            const safeRawData = btoa(unescape(encodeURIComponent(t.raw)));
 
             return `
-                <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center justify-between cursor-pointer" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center justify-between cursor-pointer" data-raw="${safeRawData}" onclick="openCatModalSafe(this)">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${color}"></div>
+                        <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${escapeHtml(color)}"></div>
                         <div class="min-w-0">
-                            <div class="font-medium text-sm truncate">${t.display}</div>
+                            <div class="font-medium text-sm truncate">${escapeHtml(t.display)}</div>
                             <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
                         </div>
                     </div>
                     <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">${isOut ? '' : '+'}${formatNum(t.amount)}</div>
                 </div>
             `;
+        }
+
+        // Safe onclick handler that reads from data attribute
+        function openCatModalSafe(el) {
+            const rawData = el.dataset.raw;
+            if (rawData) {
+                const raw = decodeURIComponent(escape(atob(rawData)));
+                openCatModal(raw);
+            }
         }
 
         // UNCATEGORIZED ALERT
@@ -2615,15 +2672,18 @@
         function openUncatModal() {
             const uncat = STATE.filtered.filter(t => t.merchantType === 'Uncategorized' && t.direction === 'OUT');
 
-            document.getElementById('uncatList').innerHTML = uncat.map(t => `
-                <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
-                    <div class="min-w-0">
-                        <div class="font-medium text-sm truncate">${t.raw}</div>
-                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
+            document.getElementById('uncatList').innerHTML = uncat.map(t => {
+                const safeRawData = btoa(unescape(encodeURIComponent(t.raw)));
+                return `
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" data-raw="${safeRawData}" onclick="closeUncatModal(); openCatModalSafe(this)">
+                        <div class="min-w-0">
+                            <div class="font-medium text-sm truncate">${escapeHtml(t.raw)}</div>
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
+                        </div>
+                        <div class="font-display font-semibold text-sm">${formatNum(t.amount)}</div>
                     </div>
-                    <div class="font-display font-semibold text-sm">${formatNum(t.amount)}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             document.getElementById('uncatModal').classList.remove('hidden');
         }
@@ -2644,7 +2704,7 @@
             document.getElementById('catModal').classList.add('hidden');
         }
 
-        function saveCategorization() {
+        async function saveCategorization() {
             const raw = STATE.catTarget;
             const name = document.getElementById('catModalName').value || raw;
             const cat = document.getElementById('catModalCat').value;
@@ -2654,6 +2714,7 @@
                 return;
             }
 
+            // Save locally first (for immediate UI update)
             STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
             saveLocal();
 
@@ -2667,14 +2728,42 @@
 
             closeCatModal();
             filterAndRender();
+
+            // Sync to MerchantMap via GAS (fire and forget, but log errors)
+            try {
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'learn',
+                        token: getAuthToken(),
+                        counterparty: raw,
+                        merchantType: cat,
+                        consolidated: name
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Categorization synced to MerchantMap:', result.action);
+                } else if (result.code === 'AUTH_REQUIRED') {
+                    clearSession();
+                    location.reload();
+                }
+            } catch (err) {
+                console.warn('Failed to sync categorization to GAS:', err.message);
+            }
         }
 
         function updateCatDropdowns() {
             const cats = Array.from(STATE.categories).filter(c => c !== 'Uncategorized').sort();
-            
-            document.getElementById('catModalCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('txnFilter').innerHTML = '<option value="">All Categories</option>' + 
-                Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+
+            document.getElementById('catModalCat').innerHTML = cats.map(c =>
+                `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`
+            ).join('');
+            document.getElementById('txnFilter').innerHTML = '<option value="">All Categories</option>' +
+                Array.from(STATE.categories).sort().map(c =>
+                    `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`
+                ).join('');
         }
 
         // ALL TRANSACTIONS MODAL
@@ -2723,8 +2812,8 @@
             const query = question || document.getElementById('aiQueryInput').value.trim();
             if (!query) return;
 
-            if (CONFIG.GAS_URL === '') {
-                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in track_spend.html with your deployed GAS URL</p>';
+            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in flow.html with your deployed GAS URL</p>';
                 return;
             }
 
@@ -2733,21 +2822,34 @@
 
             // Prepare transaction summary and encode it
             const txnSummary = prepareTransactionSummary();
-            const encodedData = btoa(unescape(encodeURIComponent(txnSummary)));
 
             try {
-                // Call GAS proxy endpoint
-                const url = `${CONFIG.GAS_URL}?action=ai&q=${encodeURIComponent(query)}&data=${encodeURIComponent(encodedData)}`;
-
-                const response = await fetch(url);
+                // Secure POST-based AI query
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'ai',
+                        token: getAuthToken(),
+                        q: query,
+                        data: txnSummary
+                    })
+                });
                 const data = await response.json();
+
+                // Handle auth expiry
+                if (data.code === 'AUTH_REQUIRED') {
+                    clearSession();
+                    location.reload();
+                    return;
+                }
 
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
                 const answer = data.answer;
-                responseDiv.innerHTML = marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>');
+                responseDiv.innerHTML = sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'));
 
             } catch (err) {
                 responseDiv.innerHTML = `<p class="text-fact-red">Error: ${err.message}</p>`;
@@ -2807,26 +2909,47 @@
                 ).join('\n');
 
                 const fullContext = `Transaction Data:\n${txnSummary}\n\nConversation:\n${historyContext}`;
-                const encodedData = btoa(unescape(encodeURIComponent(fullContext)));
 
-                const url = `${CONFIG.GAS_URL}?action=ai&q=${encodeURIComponent(query)}&data=${encodeURIComponent(encodedData)}`;
-                const response = await fetch(url);
+                // Secure POST-based AI query
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'ai',
+                        token: getAuthToken(),
+                        q: query,
+                        data: fullContext
+                    })
+                });
                 const data = await response.json();
+
+                // Handle auth expiry
+                if (data.code === 'AUTH_REQUIRED') {
+                    clearSession();
+                    location.reload();
+                    return;
+                }
 
                 if (data.error) throw new Error(data.error);
 
                 const answer = data.answer;
                 aiChatHistory.push({ role: 'assistant', content: answer });
 
-                // Update model name if provided
+                // Update model name and mode indicator
                 if (data.model) {
-                    document.getElementById('aiModelName').textContent = data.model;
+                    const modelEl = document.getElementById('aiModelName');
+                    const modeIndicator = data.mode === 'deep' ? ' <span class="text-fact-green">●</span>' : '';
+                    modelEl.innerHTML = escapeHtml(data.model) + modeIndicator;
                 }
 
-                // Replace loading with answer
+                // Replace loading with answer (with mode badge for deep analysis)
+                const modeBadge = data.mode === 'deep'
+                    ? '<div class="text-[9px] text-fact-green font-medium mb-1">✦ DEEP ANALYSIS</div>'
+                    : '';
                 document.getElementById(loadingId).innerHTML = `
                     <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 max-w-[85%]">
-                        <div class="text-sm prose prose-sm dark:prose-invert">${marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>')}</div>
+                        ${modeBadge}
+                        <div class="text-sm prose prose-sm dark:prose-invert">${sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'))}</div>
                     </div>
                 `;
 
@@ -2852,6 +2975,19 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Sanitize HTML (for markdown output) using DOMPurify
+        function sanitizeHTML(html) {
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(html, {
+                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'code', 'pre', 'blockquote', 'a', 'span', 'div'],
+                    ALLOWED_ATTR: ['href', 'target', 'class'],
+                    ALLOW_DATA_ATTR: false
+                });
+            }
+            // Fallback: escape everything
+            return escapeHtml(html);
         }
 
         function prepareTransactionSummary() {

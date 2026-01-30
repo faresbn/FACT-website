@@ -1,6 +1,6 @@
-# QNB Tracker Enhanced Setup Guide
+# FACT/Flow Setup Guide
 
-This document explains the enhanced QNB spending tracker with:
+This document explains FACT/Flow personal finance tracker with:
 - Multi-user support
 - AI-powered contextual categorization (GPT-4.1/5.1)
 - Pattern learning from user corrections
@@ -28,7 +28,7 @@ This document explains the enhanced QNB spending tracker with:
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                       track_spend.html                                   │
+│                       flow.html                                   │
 │  - Multi-user via ?u=username                                           │
 │  - Hierarchical categories (5 groups, 13 subcategories)                 │
 │  - Merchant analysis (count + total)                                    │
@@ -145,7 +145,7 @@ Your shortcut should POST to the GAS URL with:
 
 ### 3. Configure Frontend
 
-In `track_spend.html`, update `USER_SHEETS`:
+In `flow.html`, update `USER_SHEETS`:
 
 ```javascript
 USER_SHEETS: {
@@ -154,7 +154,7 @@ USER_SHEETS: {
 },
 ```
 
-Access via: `https://www.fact.qa/track_spend.html?u=fares`
+Access via: `https://www.fact.qa/flow.html?u=fares`
 
 ---
 
