@@ -167,10 +167,41 @@
         .txn-row { transition: background 0.15s ease; }
         .txn-row:hover { background: #FAFAFA; }
         .txn-row.uncat { background: #FEF3E2; }
-        
+
         @media (prefers-color-scheme: dark) {
             .txn-row:hover { background: #222; }
             .txn-row.uncat { background: #3D3020; }
+        }
+
+        /* Improved mobile spacing */
+        @media (max-width: 640px) {
+            .card { border-radius: 12px; }
+            .modal-box { max-height: 95vh; }
+        }
+
+        /* Fade-in animation for cards */
+        .card {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Better touch targets on mobile */
+        @media (max-width: 640px) {
+            .period-btn { padding: 8px 12px; }
+            .txn-row { padding: 16px 12px; }
+        }
+
+        /* Category group card hover effect */
+        .cat-group:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            .cat-group:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
         }
         
         /* Date input styling */
@@ -197,7 +228,9 @@
                 </div>
                 <div>
                     <h1 class="font-display font-bold text-xl tracking-tight">QNB Tracker</h1>
-                    <p class="text-fact-muted dark:text-fact-dark-muted text-xs">Personal Finance · FACT</p>
+                    <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
+                        <span id="currentUserDisplay">Personal Finance</span> · FACT
+                    </p>
                 </div>
             </div>
             
@@ -359,13 +392,33 @@
                 </div>
             </div>
             
-            <!-- ROW 4: CATEGORIES LIST -->
+            <!-- ROW 4: CATEGORIES LIST (Hierarchical) -->
             <div class="card rounded-xl overflow-hidden">
-                <div class="p-5 border-b border-fact-border dark:border-fact-dark-border">
-                    <h2 class="font-display font-semibold text-sm">Categories</h2>
-                    <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Click any row for drill-down</p>
+                <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                    <div>
+                        <h2 class="font-display font-semibold text-sm">Spending by Category</h2>
+                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Organized by priority</p>
+                    </div>
+                    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+                        <button onclick="setViewMode('parent')" id="viewParent" class="px-2 py-1 text-[10px] font-medium rounded-md bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg">Groups</button>
+                        <button onclick="setViewMode('subcat')" id="viewSubcat" class="px-2 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted">Details</button>
+                    </div>
                 </div>
-                <div id="categoryList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-80 overflow-y-auto">
+                <div id="categoryList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-96 overflow-y-auto">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- ROW 4.5: TOP MERCHANTS -->
+            <div class="card rounded-xl overflow-hidden">
+                <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                    <div>
+                        <h2 class="font-display font-semibold text-sm">Top Merchants</h2>
+                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Transaction count & total value</p>
+                    </div>
+                    <button onclick="openMerchantModal()" class="text-xs font-medium text-fact-yellow hover:underline">View All</button>
+                </div>
+                <div id="merchantList" class="divide-y divide-fact-border dark:divide-fact-dark-border max-h-72 overflow-y-auto">
                     <!-- Populated by JS -->
                 </div>
             </div>
@@ -483,12 +536,9 @@
                     </div>
                 </div>
                 
-                <!-- Merchant Breakdown -->
-                <div>
-                    <p class="text-xs font-medium mb-2">Top Merchants</p>
-                    <div id="drilldownMerchants" class="space-y-2">
-                        <!-- Populated by JS -->
-                    </div>
+                <!-- Breakdown Section (Merchants/Subcategories/Stats) -->
+                <div id="drilldownMerchants" class="space-y-2">
+                    <!-- Populated by JS -->
                 </div>
             </div>
             
@@ -572,32 +622,124 @@
         </div>
     </div>
 
+    <!-- ALL MERCHANTS MODAL -->
+    <div id="merchantModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">All Merchants</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="merchantModalCount">-- merchants</p>
+                </div>
+                <button onclick="closeMerchantModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex gap-3">
+                <input type="text" id="merchantSearch" placeholder="Search merchants..." class="flex-1 px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" oninput="filterMerchantModal()">
+                <select id="merchantSort" class="px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none" onchange="filterMerchantModal()">
+                    <option value="amount">By Total</option>
+                    <option value="count">By Count</option>
+                    <option value="name">By Name</option>
+                </select>
+            </div>
+            <div id="merchantModalList" class="flex-1 overflow-y-auto divide-y divide-fact-border dark:divide-fact-dark-border">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // CONFIG
         const CONFIG = {
-            SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
-            STORAGE_KEY: 'qnb_tracker_v3',
+            // Multi-user: Users access via ?u=<userId> in URL
+            // Each user maps to their own SHEET_ID in USER_SHEETS
+            USER_SHEETS: {
+                'fares': '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
+                // Add more users: 'username': 'sheet_id'
+            },
+            DEFAULT_SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
+            STORAGE_KEY: 'qnb_tracker_v4',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
         };
 
-        // CATEGORY COLORS
+        // Get user from URL parameter
+        function getCurrentUser() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('u') || 'default';
+        }
+
+        function getSheetId() {
+            const user = getCurrentUser();
+            return CONFIG.USER_SHEETS[user] || CONFIG.DEFAULT_SHEET_ID;
+        }
+
+        // CATEGORY HIERARCHY: Parent categories with subcategories
+        // Priority-based structure: Essentials > Lifestyle > Growth > Financial > Other
+        const CATEGORY_HIERARCHY = {
+            'Essentials': {
+                color: '#75B876',
+                icon: '🏠',
+                subcategories: ['Groceries', 'Bills', 'Health', 'Transport']
+            },
+            'Lifestyle': {
+                color: '#F4C44E',
+                icon: '✨',
+                subcategories: ['Dining', 'Delivery', 'Bars & Hotels', 'Shopping']
+            },
+            'Growth': {
+                color: '#3498DB',
+                icon: '📈',
+                subcategories: ['Hobbies', 'Travel', 'Family']
+            },
+            'Financial': {
+                color: '#9B59B6',
+                icon: '💸',
+                subcategories: ['Transfers']
+            },
+            'Other': {
+                color: '#95A5A6',
+                icon: '📦',
+                subcategories: ['Other', 'Uncategorized']
+            }
+        };
+
+        // Build reverse lookup: subcategory -> parent
+        const SUBCAT_TO_PARENT = {};
+        Object.entries(CATEGORY_HIERARCHY).forEach(([parent, data]) => {
+            data.subcategories.forEach(sub => {
+                SUBCAT_TO_PARENT[sub] = parent;
+            });
+        });
+
+        // CATEGORY COLORS - now includes both parents and subcategories
         const CAT_COLORS = {
-            'Groceries': '#75B876',
-            'Delivery': '#F4C44E',
+            // Parent categories
+            'Essentials': '#75B876',
+            'Lifestyle': '#F4C44E',
+            'Growth': '#3498DB',
+            'Financial': '#9B59B6',
+            'Other': '#95A5A6',
+            // Subcategories (legacy support + drilldown coloring)
+            'Groceries': '#4CAF50',
+            'Delivery': '#FFA726',
             'Dining': '#E67E22',
-            'Bars & Hotels': '#9B59B6',
-            'Shopping': '#3498DB',
+            'Bars & Hotels': '#AB47BC',
+            'Shopping': '#42A5F5',
             'Hobbies': '#E91E63',
-            'Bills': '#607D8B',
-            'Transport': '#00BCD4',
-            'Travel': '#FF5722',
-            'Health': '#4CAF50',
-            'Family': '#8E44AD',
-            'Transfers': '#95A5A6',
-            'Other': '#BDC3C7',
+            'Bills': '#78909C',
+            'Transport': '#26C6DA',
+            'Travel': '#FF7043',
+            'Health': '#66BB6A',
+            'Family': '#7E57C2',
+            'Transfers': '#8D6E63',
             'Uncategorized': '#E74C3C'
         };
+
+        // Helper to get parent category for any subcategory
+        function getParentCategory(subcat) {
+            return SUBCAT_TO_PARENT[subcat] || 'Other';
+        }
 
         // STATE
         const STATE = {
@@ -609,7 +751,9 @@
             localMappings: {},
             period: 'thisMonth',
             dateRange: { start: dayjs().startOf('month'), end: dayjs() },
-            catTarget: null
+            catTarget: null,
+            currentUser: getCurrentUser(),
+            viewMode: 'parent' // 'parent' or 'subcat'
         };
 
         // CHARTS
@@ -617,16 +761,27 @@
 
         // INIT
         document.addEventListener('DOMContentLoaded', () => {
+            // Display current user
+            const user = getCurrentUser();
+            const userDisplay = document.getElementById('currentUserDisplay');
+            if (user && user !== 'default') {
+                userDisplay.textContent = user.charAt(0).toUpperCase() + user.slice(1);
+            }
+
             loadLocal();
             syncData();
-            
+
             document.getElementById('txnSearch').addEventListener('input', debounce(filterTxnModal, 200));
             document.getElementById('txnFilter').addEventListener('change', filterTxnModal);
         });
 
+        function getStorageKey() {
+            return `${CONFIG.STORAGE_KEY}_${STATE.currentUser}`;
+        }
+
         function loadLocal() {
             try {
-                const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+                const stored = localStorage.getItem(getStorageKey());
                 if (stored) {
                     const data = JSON.parse(stored);
                     STATE.localMappings = data.mappings || {};
@@ -635,7 +790,7 @@
         }
 
         function saveLocal() {
-            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+            localStorage.setItem(getStorageKey(), JSON.stringify({
                 mappings: STATE.localMappings
             }));
         }
@@ -645,7 +800,8 @@
             document.getElementById('loadingState').classList.remove('hidden');
             document.getElementById('mainContent').classList.add('hidden');
 
-            const url = (sheet) => `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
+            const sheetId = getSheetId();
+            const url = (sheet) => `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
 
             try {
                 const [ledger, map, fx] = await Promise.all([
@@ -826,9 +982,33 @@
             renderCumulativeChart();
             renderComparisonChart();
             renderCategories();
+            renderMerchants();
             renderRecurring();
             renderRecentTxns();
             renderUncatAlert();
+        }
+
+        // VIEW MODE TOGGLE
+        function setViewMode(mode) {
+            STATE.viewMode = mode;
+
+            const parentBtn = document.getElementById('viewParent');
+            const subcatBtn = document.getElementById('viewSubcat');
+
+            if (mode === 'parent') {
+                parentBtn.classList.add('bg-fact-ink', 'dark:bg-fact-dark-ink', 'text-white', 'dark:text-fact-dark-bg');
+                parentBtn.classList.remove('text-fact-muted', 'dark:text-fact-dark-muted');
+                subcatBtn.classList.remove('bg-fact-ink', 'dark:bg-fact-dark-ink', 'text-white', 'dark:text-fact-dark-bg');
+                subcatBtn.classList.add('text-fact-muted', 'dark:text-fact-dark-muted');
+            } else {
+                subcatBtn.classList.add('bg-fact-ink', 'dark:bg-fact-dark-ink', 'text-white', 'dark:text-fact-dark-bg');
+                subcatBtn.classList.remove('text-fact-muted', 'dark:text-fact-dark-muted');
+                parentBtn.classList.remove('bg-fact-ink', 'dark:bg-fact-dark-ink', 'text-white', 'dark:text-fact-dark-bg');
+                parentBtn.classList.add('text-fact-muted', 'dark:text-fact-dark-muted');
+            }
+
+            renderCategories();
+            renderDonutChart();
         }
 
         // METRICS
@@ -859,15 +1039,34 @@
         // DONUT CHART
         function renderDonutChart() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
-            const catSpend = {};
-            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
 
-            const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
-            const labels = sorted.map(c => c[0]);
-            const data = sorted.map(c => c[1]);
-            const colors = labels.map(l => CAT_COLORS[l] || '#999');
+            let labels, data, colors;
+
+            if (STATE.viewMode === 'parent') {
+                // Group by parent category
+                const parentSpend = {};
+                out.forEach(t => {
+                    const parent = getParentCategory(t.category);
+                    parentSpend[parent] = (parentSpend[parent] || 0) + t.amount;
+                });
+
+                // Sort by priority order
+                const parentOrder = ['Essentials', 'Lifestyle', 'Growth', 'Financial', 'Other'];
+                labels = parentOrder.filter(p => parentSpend[p] > 0);
+                data = labels.map(p => parentSpend[p]);
+                colors = labels.map(l => CAT_COLORS[l] || '#999');
+            } else {
+                // Original subcategory view
+                const catSpend = {};
+                out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+
+                const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
+                labels = sorted.map(c => c[0]);
+                data = sorted.map(c => c[1]);
+                colors = labels.map(l => CAT_COLORS[l] || '#999');
+            }
+
             const total = data.reduce((s, v) => s + v, 0);
-
             document.getElementById('donutTotal').textContent = formatNum(total);
 
             const ctx = document.getElementById('donutChart');
@@ -894,7 +1093,11 @@
                     onClick: (e, elements) => {
                         if (elements.length > 0) {
                             const idx = elements[0].index;
-                            openDrilldown(labels[idx]);
+                            if (STATE.viewMode === 'parent') {
+                                openParentDrilldown(labels[idx]);
+                            } else {
+                                openDrilldown(labels[idx]);
+                            }
                         }
                     }
                 }
@@ -1107,40 +1310,152 @@
             });
         }
 
-        // CATEGORIES LIST
+        // CATEGORIES LIST (Hierarchical)
         function renderCategories() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
-            const catSpend = {};
-            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
-
-            const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
-            const total = sorted.reduce((s, c) => s + c[1], 0) || 1;
-
             const container = document.getElementById('categoryList');
-            container.innerHTML = sorted.map(([cat, amount]) => {
-                const pct = (amount / total * 100).toFixed(1);
-                const color = CAT_COLORS[cat] || '#999';
-                const count = out.filter(t => t.category === cat).length;
+
+            if (STATE.viewMode === 'parent') {
+                // Group by parent category
+                const parentSpend = {};
+                const parentCount = {};
+                const subcatBreakdown = {};
+
+                out.forEach(t => {
+                    const parent = getParentCategory(t.category);
+                    parentSpend[parent] = (parentSpend[parent] || 0) + t.amount;
+                    parentCount[parent] = (parentCount[parent] || 0) + 1;
+                    if (!subcatBreakdown[parent]) subcatBreakdown[parent] = {};
+                    subcatBreakdown[parent][t.category] = (subcatBreakdown[parent][t.category] || 0) + t.amount;
+                });
+
+                // Sort parents by priority order
+                const parentOrder = ['Essentials', 'Lifestyle', 'Growth', 'Financial', 'Other'];
+                const total = Object.values(parentSpend).reduce((s, v) => s + v, 0) || 1;
+
+                container.innerHTML = parentOrder
+                    .filter(p => parentSpend[p] > 0)
+                    .map(parent => {
+                        const amount = parentSpend[parent];
+                        const count = parentCount[parent];
+                        const pct = (amount / total * 100).toFixed(1);
+                        const color = CAT_COLORS[parent];
+                        const icon = CATEGORY_HIERARCHY[parent].icon;
+
+                        // Top subcategories
+                        const subs = Object.entries(subcatBreakdown[parent] || {})
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 3)
+                            .map(([sub]) => sub)
+                            .join(', ');
+
+                        return `
+                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openParentDrilldown('${parent}')">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style="background:${color}20">${icon}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="font-semibold text-sm">${parent}</span>
+                                            <span class="font-display font-bold text-sm">${formatNum(amount)}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full transition-all" style="width:${pct}%;background:${color}"></div>
+                                            </div>
+                                            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted w-12 text-right">${pct}%</span>
+                                        </div>
+                                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">${subs} · ${count} txns</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+            } else {
+                // Original subcategory view
+                const catSpend = {};
+                out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+
+                const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((s, c) => s + c[1], 0) || 1;
+
+                container.innerHTML = sorted.map(([cat, amount]) => {
+                    const pct = (amount / total * 100).toFixed(1);
+                    const color = CAT_COLORS[cat] || '#999';
+                    const count = out.filter(t => t.category === cat).length;
+                    const parent = getParentCategory(cat);
+
+                    return `
+                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openDrilldown('${cat}')">
+                            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div>
+                                        <span class="font-medium text-sm truncate">${cat}</span>
+                                        <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted ml-2">${parent}</span>
+                                    </div>
+                                    <span class="font-display font-semibold text-sm">${formatNum(amount)}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
+                                    </div>
+                                    <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted w-12 text-right">${pct}%</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-fact-muted dark:text-fact-dark-muted">${count}x</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // MERCHANTS LIST
+        function renderMerchants() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const merchants = {};
+
+            out.forEach(t => {
+                if (!merchants[t.consolidated]) {
+                    merchants[t.consolidated] = { count: 0, total: 0, category: t.category };
+                }
+                merchants[t.consolidated].count++;
+                merchants[t.consolidated].total += t.amount;
+            });
+
+            const sorted = Object.entries(merchants)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 8);
+
+            const container = document.getElementById('merchantList');
+            const maxTotal = sorted[0]?.total || 1;
+
+            container.innerHTML = sorted.map(m => {
+                const color = CAT_COLORS[m.category] || '#999';
+                const pct = (m.total / maxTotal * 100);
 
                 return `
-                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openDrilldown('${cat}')">
-                        <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${color}"></div>
+                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openMerchantDrilldown('${m.name.replace(/'/g, "\\'")}')">
+                        <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${color}"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="font-medium text-sm truncate">${cat}</span>
-                                <span class="font-display font-semibold text-sm">${formatNum(amount)}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
+                                <span class="font-medium text-sm truncate">${m.name}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-fact-muted dark:text-fact-dark-muted">${m.count}x</span>
+                                    <span class="font-display font-semibold text-sm">${formatNum(m.total)}</span>
                                 </div>
-                                <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted w-12 text-right">${pct}%</span>
+                            </div>
+                            <div class="h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
                             </div>
                         </div>
-                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">${count}x</span>
                     </div>
                 `;
             }).join('');
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="p-4 text-sm text-fact-muted dark:text-fact-dark-muted text-center">No transactions in this period</div>';
+            }
         }
 
         // RECURRING
@@ -1292,27 +1607,40 @@
                 }
             });
 
-            // Merchants
+            // Merchants with count
             const merchants = {};
             out.forEach(t => {
-                merchants[t.consolidated] = (merchants[t.consolidated] || 0) + t.amount;
+                if (!merchants[t.consolidated]) {
+                    merchants[t.consolidated] = { total: 0, count: 0 };
+                }
+                merchants[t.consolidated].total += t.amount;
+                merchants[t.consolidated].count++;
             });
-            const sortedMerch = Object.entries(merchants).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            const maxMerch = sortedMerch[0]?.[1] || 1;
+            const sortedMerch = Object.entries(merchants)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+            const maxMerch = sortedMerch[0]?.total || 1;
 
-            document.getElementById('drilldownMerchants').innerHTML = sortedMerch.map(([name, amt]) => `
-                <div class="flex items-center gap-2">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between text-xs mb-0.5">
-                            <span class="truncate">${name}</span>
-                            <span class="font-medium">${formatNum(amt)}</span>
-                        </div>
-                        <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full" style="width:${(amt/maxMerch*100)}%;background:${color}"></div>
+            document.getElementById('drilldownMerchants').innerHTML = `
+                <p class="text-xs font-medium mb-2">Top Merchants</p>
+                ${sortedMerch.map(m => `
+                    <div class="flex items-center gap-2 cursor-pointer hover:opacity-80" onclick="closeDrilldown(); openMerchantDrilldown('${m.name.replace(/'/g, "\\'")}')">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between text-xs mb-0.5">
+                                <span class="truncate">${m.name}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${m.count}x</span>
+                                    <span class="font-medium">${formatNum(m.total)}</span>
+                                </div>
+                            </div>
+                            <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full" style="width:${(m.total/maxMerch*100)}%;background:${color}"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('')}
+            `;
 
             // Transactions
             document.getElementById('drilldownTxns').innerHTML = out.slice(0, 20).map(t => renderTxnRow(t)).join('');
@@ -1322,6 +1650,256 @@
 
         function closeDrilldown() {
             document.getElementById('drilldownModal').classList.add('hidden');
+        }
+
+        // PARENT CATEGORY DRILLDOWN
+        function openParentDrilldown(parentCategory) {
+            const subcats = CATEGORY_HIERARCHY[parentCategory]?.subcategories || [];
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && subcats.includes(t.category));
+            const total = out.reduce((s, t) => s + t.amount, 0);
+
+            // Calculate delta vs previous period
+            const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day');
+            const prevStart = STATE.dateRange.start.subtract(periodDays + 1, 'day');
+            const prevEnd = STATE.dateRange.start.subtract(1, 'day');
+            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && subcats.includes(t.category) && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
+            const prevTotal = prevTxns.reduce((s, t) => s + t.amount, 0);
+            const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100) : 0;
+
+            const icon = CATEGORY_HIERARCHY[parentCategory]?.icon || '📦';
+            document.getElementById('drilldownTitle').textContent = `${icon} ${parentCategory}`;
+            document.getElementById('drilldownSubtitle').textContent = `${out.length} transactions · ${subcats.length} subcategories`;
+            document.getElementById('drilldownTotal').textContent = `QAR ${formatNum(total)}`;
+            document.getElementById('drilldownDelta').textContent = (delta >= 0 ? '+' : '') + delta.toFixed(0) + '%';
+            document.getElementById('drilldownDelta').className = `font-display font-bold text-2xl ${delta <= 0 ? 'text-fact-green' : 'text-fact-red'}`;
+
+            // Timeline by subcategory
+            const color = CAT_COLORS[parentCategory];
+            const dailySpend = {};
+            out.forEach(t => {
+                const key = t.date.format('YYYY-MM-DD');
+                dailySpend[key] = (dailySpend[key] || 0) + t.amount;
+            });
+
+            const days = [];
+            let d = STATE.dateRange.start;
+            while (d.isBefore(STATE.dateRange.end) || d.isSame(STATE.dateRange.end, 'day')) {
+                days.push(d.format('YYYY-MM-DD'));
+                d = d.add(1, 'day');
+            }
+
+            const ctx = document.getElementById('drilldownTimeline');
+            if (charts.drilldownTimeline) charts.drilldownTimeline.destroy();
+
+            charts.drilldownTimeline = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days.map(d => dayjs(d).format('D')),
+                    datasets: [{
+                        data: days.map(d => dailySpend[d] || 0),
+                        backgroundColor: color,
+                        borderRadius: 2,
+                        barThickness: Math.min(10, Math.max(2, 300 / days.length))
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Subcategory breakdown (instead of merchants)
+            const subcatSpend = {};
+            out.forEach(t => {
+                subcatSpend[t.category] = (subcatSpend[t.category] || 0) + t.amount;
+            });
+            const sortedSubs = Object.entries(subcatSpend).sort((a, b) => b[1] - a[1]);
+            const maxSub = sortedSubs[0]?.[1] || 1;
+
+            document.getElementById('drilldownMerchants').innerHTML = `
+                <p class="text-xs font-medium mb-2 -mt-2">Subcategories</p>
+                ${sortedSubs.map(([name, amt]) => {
+                    const subColor = CAT_COLORS[name] || color;
+                    return `
+                        <div class="flex items-center gap-2 cursor-pointer hover:opacity-80" onclick="closeDrilldown(); openDrilldown('${name}')">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between text-xs mb-0.5">
+                                    <span class="truncate">${name}</span>
+                                    <span class="font-medium">${formatNum(amt)}</span>
+                                </div>
+                                <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full" style="width:${(amt/maxSub*100)}%;background:${subColor}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+
+            // Transactions
+            document.getElementById('drilldownTxns').innerHTML = out.slice(0, 20).map(t => renderTxnRow(t)).join('');
+
+            document.getElementById('drilldownModal').classList.remove('hidden');
+        }
+
+        // MERCHANT DRILLDOWN
+        function openMerchantDrilldown(merchantName) {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && t.consolidated === merchantName);
+            const total = out.reduce((s, t) => s + t.amount, 0);
+            const avgTxn = out.length > 0 ? total / out.length : 0;
+
+            document.getElementById('drilldownTitle').textContent = merchantName;
+            document.getElementById('drilldownSubtitle').textContent = `${out.length} transactions · Avg: QAR ${formatNum(avgTxn)}`;
+            document.getElementById('drilldownTotal').textContent = `QAR ${formatNum(total)}`;
+
+            // Calculate delta vs previous period
+            const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day');
+            const prevStart = STATE.dateRange.start.subtract(periodDays + 1, 'day');
+            const prevEnd = STATE.dateRange.start.subtract(1, 'day');
+            const prevTxns = STATE.allTxns.filter(t => t.direction === 'OUT' && t.consolidated === merchantName && t.date.isBetween(prevStart, prevEnd, 'day', '[]'));
+            const prevTotal = prevTxns.reduce((s, t) => s + t.amount, 0);
+            const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100) : 0;
+
+            document.getElementById('drilldownDelta').textContent = (delta >= 0 ? '+' : '') + delta.toFixed(0) + '%';
+            document.getElementById('drilldownDelta').className = `font-display font-bold text-2xl ${delta <= 0 ? 'text-fact-green' : 'text-fact-red'}`;
+
+            const category = out[0]?.category || 'Other';
+            const color = CAT_COLORS[category] || '#999';
+
+            // Timeline
+            const dailySpend = {};
+            out.forEach(t => {
+                const key = t.date.format('YYYY-MM-DD');
+                dailySpend[key] = (dailySpend[key] || 0) + t.amount;
+            });
+
+            const days = [];
+            let d = STATE.dateRange.start;
+            while (d.isBefore(STATE.dateRange.end) || d.isSame(STATE.dateRange.end, 'day')) {
+                days.push(d.format('YYYY-MM-DD'));
+                d = d.add(1, 'day');
+            }
+
+            const ctx = document.getElementById('drilldownTimeline');
+            if (charts.drilldownTimeline) charts.drilldownTimeline.destroy();
+
+            charts.drilldownTimeline = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days.map(d => dayjs(d).format('D')),
+                    datasets: [{
+                        data: days.map(d => dailySpend[d] || 0),
+                        backgroundColor: color,
+                        borderRadius: 2,
+                        barThickness: Math.min(10, Math.max(2, 300 / days.length))
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Show category & stats instead of merchants
+            document.getElementById('drilldownMerchants').innerHTML = `
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Transactions</div>
+                        <div class="font-display font-bold">${out.length}</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Average</div>
+                        <div class="font-display font-bold">${formatNum(avgTxn)}</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Category</div>
+                        <div class="font-display font-bold text-sm truncate">${category}</div>
+                    </div>
+                </div>
+            `;
+
+            // Transactions
+            document.getElementById('drilldownTxns').innerHTML = out.slice(0, 30).map(t => renderTxnRow(t)).join('');
+
+            document.getElementById('drilldownModal').classList.remove('hidden');
+        }
+
+        // MERCHANT MODAL
+        function openMerchantModal() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const merchants = {};
+
+            out.forEach(t => {
+                if (!merchants[t.consolidated]) {
+                    merchants[t.consolidated] = { count: 0, total: 0, category: t.category };
+                }
+                merchants[t.consolidated].count++;
+                merchants[t.consolidated].total += t.amount;
+            });
+
+            STATE.allMerchants = Object.entries(merchants)
+                .map(([name, data]) => ({ name, ...data }));
+
+            document.getElementById('merchantModalCount').textContent = `${STATE.allMerchants.length} merchants`;
+            document.getElementById('merchantSearch').value = '';
+            document.getElementById('merchantSort').value = 'amount';
+            filterMerchantModal();
+            document.getElementById('merchantModal').classList.remove('hidden');
+        }
+
+        function closeMerchantModal() {
+            document.getElementById('merchantModal').classList.add('hidden');
+        }
+
+        function filterMerchantModal() {
+            const search = document.getElementById('merchantSearch').value.toLowerCase();
+            const sortBy = document.getElementById('merchantSort').value;
+
+            let merchants = STATE.allMerchants || [];
+            if (search) {
+                merchants = merchants.filter(m => m.name.toLowerCase().includes(search));
+            }
+
+            merchants.sort((a, b) => {
+                if (sortBy === 'amount') return b.total - a.total;
+                if (sortBy === 'count') return b.count - a.count;
+                return a.name.localeCompare(b.name);
+            });
+
+            const maxTotal = merchants[0]?.total || 1;
+
+            document.getElementById('merchantModalList').innerHTML = merchants.slice(0, 50).map(m => {
+                const color = CAT_COLORS[m.category] || '#999';
+                const pct = (m.total / maxTotal * 100);
+
+                return `
+                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="closeMerchantModal(); openMerchantDrilldown('${m.name.replace(/'/g, "\\'")}')">
+                        <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${color}"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm truncate">${m.name}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-fact-muted dark:text-fact-dark-muted">${m.count}x</span>
+                                    <span class="font-display font-semibold text-sm w-20 text-right">${formatNum(m.total)}</span>
+                                </div>
+                            </div>
+                            <div class="h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // UNCATEGORIZED MODAL
