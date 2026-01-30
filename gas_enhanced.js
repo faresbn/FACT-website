@@ -166,6 +166,10 @@ function doPost(e) {
         return handleGetContext_(payload);
       }
 
+      if (payload.action === 'changePassword') {
+        return handleChangePassword_(payload);
+      }
+
       // Default: SMS ingestion (existing behavior)
       return handleSMSIngestion_(e, payload);
 
@@ -224,12 +228,69 @@ function handleAuthPost_(payload) {
 }
 
 /**
+ * Change password for authenticated user
+ */
+function handleChangePassword_(payload) {
+  const token = payload.token;
+  const currentPass = payload.currentPass;
+  const newPass = payload.newPass;
+
+  // Validate token
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  if (!currentPass || !newPass) {
+    return json_({ error: 'Missing password fields' });
+  }
+
+  if (newPass.length < 6) {
+    return json_({ error: 'Password must be at least 6 characters' });
+  }
+
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const usersJson = props.getProperty('PULSE_USERS');
+    if (!usersJson) {
+      return json_({ error: 'User config not found' });
+    }
+
+    const users = JSON.parse(usersJson);
+    const username = session.user;
+    const userConfig = users[username];
+
+    if (!userConfig) {
+      return json_({ error: 'User not found' });
+    }
+
+    // Verify current password
+    if (userConfig.pass !== currentPass) {
+      return json_({ error: 'Current password is incorrect' });
+    }
+
+    // Update password
+    userConfig.pass = newPass;
+    users[username] = userConfig;
+
+    // Save back to properties
+    props.setProperty('PULSE_USERS', JSON.stringify(users));
+
+    return json_({ success: true, message: 'Password updated successfully' });
+
+  } catch (err) {
+    return json_({ error: 'Failed to update password: ' + err.message });
+  }
+}
+
+/**
  * Secure AI query via POST
  */
 function handleAIQueryPost_(payload) {
   const token = payload.token;
   const query = payload.q || '';
   const txnData = payload.data || '';
+  const userModel = payload.model || null; // User-selected model from settings
 
   // Validate token
   const session = validateToken_(token);
@@ -264,9 +325,11 @@ function handleAIQueryPost_(payload) {
       }
     }
 
-    // Smart model selection
+    // Smart model selection - user preference overrides default, but deep analysis always uses best model
     const isDeepAnalysis = CONFIG.DEEP_ANALYSIS_KEYWORDS.some(kw => queryLower.includes(kw));
-    const selectedModel = isDeepAnalysis ? CONFIG.AI_MODEL_FRONTEND_DEEP : CONFIG.AI_MODEL_FRONTEND;
+    const selectedModel = isDeepAnalysis
+      ? CONFIG.AI_MODEL_FRONTEND_DEEP  // Always use gpt-5.1 for deep analysis
+      : (userModel || CONFIG.AI_MODEL_FRONTEND);  // User preference or default
 
     // Load user context for personalized responses
     const userContext = getUserContext_(session.sheetId);
