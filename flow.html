@@ -252,7 +252,7 @@
                         class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
                         onkeypress="if(event.key==='Enter')attemptLogin()">
                 </div>
-                <button onclick="attemptLogin()" id="loginBtn"
+                <button type="button" onclick="attemptLogin()" id="loginBtn"
                     class="w-full py-3 bg-gradient-to-r from-fact-yellow via-fact-green to-fact-purple text-white rounded-lg font-medium hover:opacity-90 transition shadow-sm">
                     Sign In
                 </button>
@@ -756,7 +756,7 @@
             STORAGE_KEY: 'qnb_tracker_v4',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
             // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
-            https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec'
         };
 
         // Get user from URL parameter
@@ -981,6 +981,7 @@
         }
 
         async function attemptLogin() {
+            console.log('attemptLogin called');
             const username = document.getElementById('loginUsername').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
 
@@ -998,13 +999,22 @@
                 const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
+                    redirect: 'follow',
                     body: JSON.stringify({
                         action: 'auth',
                         user: username,
                         pass: password
                     })
                 });
+
+                if (!response.ok) {
+                    console.error('Auth response not ok:', response.status, response.statusText);
+                    showLoginError('Server error: ' + response.status);
+                    return;
+                }
+
                 const data = await response.json();
+                console.log('Auth response:', data);
 
                 if (data.success && data.token) {
                     saveSession(data.user, data.token, data.expiry);
@@ -1013,7 +1023,8 @@
                     showLoginError(data.error || 'Invalid credentials');
                 }
             } catch (err) {
-                showLoginError('Connection error. Check GAS URL.');
+                console.error('Login error:', err);
+                showLoginError('Connection error: ' + err.message);
             } finally {
                 btn.textContent = 'Sign In';
                 btn.disabled = false;
