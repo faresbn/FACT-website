@@ -995,7 +995,7 @@
 
             try {
                 const [ledger, map, fx] = await Promise.all([
-                    fetchCSV(url('RawLedge')),
+                    fetchCSV(url('RawLedger')),
                     fetchCSV(url('MerchantMap')),
                     fetchCSV(url('FXRates'))
                 ]);
