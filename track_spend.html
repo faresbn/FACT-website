@@ -533,15 +533,17 @@
             if (icon) icon.classList.add('animate-spin');
 
             const SHEET_GIDS = {
-                'RawLedger': '0',
+                'RawLedger': '1085809901',
                 'MerchantMap': '614038315',
                 'FXRates': '990676259'
             };
             
+            // Published spreadsheet base URL
+            const PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-54Eo6RKtFcXFLkBLAfR1bsJipcBpmrhMil8grYJAWEsxBDMLKMrgUONW2JNQFIM3S2EGZysWBl50/pub';
+            
             const url = (sheet) => {
                 const gid = SHEET_GIDS[sheet];
-                // Try pub format which handles data more cleanly
-                const u = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/pub?gid=${gid}&single=true&output=csv&_=${Date.now()}`;
+                const u = `${PUB_BASE}?gid=${gid}&single=true&output=csv&_=${Date.now()}`;
                 console.log('Fetching:', sheet, 'gid:', gid);
                 return u;
             };
