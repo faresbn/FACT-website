@@ -877,6 +877,11 @@
             }
         };
 
+        // Build CAT_COLORS from MERCHANT_TYPES and SUMMARY_GROUPS for backwards compatibility
+        const CAT_COLORS = {};
+        Object.entries(MERCHANT_TYPES).forEach(([name, data]) => CAT_COLORS[name] = data.color);
+        Object.entries(SUMMARY_GROUPS).forEach(([name, data]) => CAT_COLORS[name] = data.color);
+
         // Compute summary group from merchant type
         function getSummaryGroup(merchantType) {
             for (const [group, data] of Object.entries(SUMMARY_GROUPS)) {
