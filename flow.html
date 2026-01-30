@@ -484,10 +484,78 @@
             animation: dash 1s linear infinite;
         }
         @keyframes dash { to { stroke-dashoffset: -8; } }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #1A1A1A;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.3s ease-out;
+            pointer-events: auto;
+        }
+        .toast.success { border-left: 3px solid #75B876; }
+        .toast.error { border-left: 3px solid #E57373; }
+        .toast.info { border-left: 3px solid #F4C44E; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(50px); }
+        }
+
+        /* Keyboard shortcuts help */
+        .kbd-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            background: #F3F3F3;
+            border: 1px solid #E5E5E5;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #666;
+        }
+        @media (prefers-color-scheme: dark) {
+            .kbd-key { background: #2A2A2A; border-color: #3A3A3A; color: #AAA; }
+        }
+
+        /* Print styles */
+        @media print {
+            body { background: white !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+            #loginScreen, .period-btn, .theme-toggle, button, .modal-backdrop,
+            .cmd-palette, .toast-container, .install-banner { display: none !important; }
+            #mainApp { display: block !important; }
+            @page { margin: 1cm; }
+        }
     </style>
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
@@ -1130,6 +1198,46 @@
         </div>
     </div>
 
+    <!-- KEYBOARD SHORTCUTS HELP MODAL -->
+    <div id="shortcutsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-md overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <h3 class="font-display font-semibold">Keyboard Shortcuts</h3>
+                <button onclick="closeShortcuts()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="space-y-3">
+                    <h4 class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wide">Navigation</h4>
+                    <div class="flex items-center justify-between py-1">
+                        <span class="text-sm">Open command palette</span>
+                        <div class="flex gap-1"><span class="kbd-key">⌘</span><span class="kbd-key">K</span></div>
+                    </div>
+                    <div class="flex items-center justify-between py-1">
+                        <span class="text-sm">Close modal</span>
+                        <span class="kbd-key">Esc</span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wide">Quick Actions (in palette)</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between"><span>Ask AI</span><span class="kbd-key">A</span></div>
+                        <div class="flex items-center justify-between"><span>Refresh</span><span class="kbd-key">R</span></div>
+                        <div class="flex items-center justify-between"><span>Goals</span><span class="kbd-key">G</span></div>
+                        <div class="flex items-center justify-between"><span>Heatmap</span><span class="kbd-key">H</span></div>
+                        <div class="flex items-center justify-between"><span>Export</span><span class="kbd-key">E</span></div>
+                        <div class="flex items-center justify-between"><span>Dark Mode</span><span class="kbd-key">D</span></div>
+                        <div class="flex items-center justify-between"><span>Merchants</span><span class="kbd-key">M</span></div>
+                        <div class="flex items-center justify-between"><span>Transactions</span><span class="kbd-key">T</span></div>
+                        <div class="flex items-center justify-between"><span>Voice</span><span class="kbd-key">V</span></div>
+                        <div class="flex items-center justify-between"><span>Settings</span><span class="kbd-key">S</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- GOALS MODAL -->
     <div id="goalsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
         <div class="modal-box card rounded-2xl w-full max-w-md overflow-hidden">
@@ -1620,9 +1728,18 @@
                     setPeriod(STATE.period);
                 }
 
+                // Show success toast (only after initial load)
+                if (STATE.hasLoaded && typeof showToast === 'function') {
+                    showToast(`Synced ${STATE.allTxns.length} transactions`, 'success');
+                }
+
             } catch (err) {
                 console.error('Sync error:', err);
-                alert('Sync failed. Check your connection.');
+                if (typeof showToast === 'function') {
+                    showToast('Sync failed: ' + err.message, 'error');
+                } else {
+                    alert('Sync failed. Check your connection.');
+                }
             }
         }
 
@@ -4074,6 +4191,7 @@
             { id: 'period-month', icon: '📅', label: 'This Month', action: () => { closeCmdPalette(); setPeriod('thisMonth'); } },
             { id: 'period-last', icon: '📅', label: 'Last Month', action: () => { closeCmdPalette(); setPeriod('lastMonth'); } },
             { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
+            { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
 
@@ -4527,6 +4645,10 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
+
+                showToast(`Exported ${rows.length} transactions`, 'success');
+            } catch (err) {
+                showToast('Export failed: ' + err.message, 'error');
             } finally {
                 setTimeout(() => icon.classList.remove('export-spin'), 500);
             }
@@ -4557,6 +4679,50 @@
                 pace: proj.onTrack ? 'on-track' : 'over-budget'
             };
         }
+
+        // ============== TOAST NOTIFICATIONS ==============
+
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: '✓',
+                error: '✕',
+                info: 'ℹ'
+            };
+
+            toast.innerHTML = `
+                <span>${icons[type] || icons.info}</span>
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ============== KEYBOARD SHORTCUTS HELP ==============
+
+        function openShortcuts() {
+            document.getElementById('shortcutsModal').classList.remove('hidden');
+        }
+
+        function closeShortcuts() {
+            document.getElementById('shortcutsModal').classList.add('hidden');
+        }
+
+        // Add ? key to open shortcuts help
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                openShortcuts();
+            }
+        });
 
         // ============== INIT ENHANCEMENTS ==============
 
