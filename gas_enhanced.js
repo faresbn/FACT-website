@@ -17,7 +17,7 @@ const CONFIG = {
   // Model selection - upgrade as needed
   // Options: 'gpt-4.1-nano' (fast), 'gpt-4.1-mini' (balanced), 'gpt-4.1' (best), 'gpt-5.1' (cutting edge)
   AI_MODEL: 'gpt-4.1',
-  AI_MODEL_FRONTEND: 'gpt-4.1-mini', // Faster model for frontend queries
+  AI_MODEL_FRONTEND: 'gpt-5', // GPT-5 for frontend AI chat
 
   // Multi-user sheet mapping
   USER_SHEETS: {
