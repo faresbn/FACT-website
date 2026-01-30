@@ -7,7 +7,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>FACT/Flow</title>
 
-    <!-- Favicons -->
+    <!-- PWA & Favicons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#F4C44E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="FACT/Flow">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
@@ -220,6 +224,193 @@
                 color-scheme: dark;
             }
         }
+
+        /* Command Palette */
+        .cmd-palette {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+        }
+        .cmd-palette.active { display: flex; }
+        .cmd-palette-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .cmd-palette-box {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 16px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+            animation: cmdSlideIn 0.15s ease-out;
+        }
+        @media (prefers-color-scheme: dark) {
+            .cmd-palette-box { background: #1A1A1A; }
+        }
+        @keyframes cmdSlideIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .cmd-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .cmd-item:hover, .cmd-item.selected {
+            background: #F4C44E20;
+        }
+        .cmd-item-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #F3F3F3;
+            font-size: 14px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .cmd-item-icon { background: #2A2A2A; }
+        }
+        .cmd-item-shortcut {
+            margin-left: auto;
+            font-size: 10px;
+            font-family: monospace;
+            padding: 2px 6px;
+            background: #E5E5E5;
+            border-radius: 4px;
+            color: #666;
+        }
+        @media (prefers-color-scheme: dark) {
+            .cmd-item-shortcut { background: #333; color: #999; }
+        }
+
+        /* Voice Input */
+        .voice-btn {
+            position: relative;
+            transition: all 0.2s;
+        }
+        .voice-btn.listening {
+            animation: voicePulse 1s ease-in-out infinite;
+        }
+        .voice-btn.listening::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid #E57373;
+            animation: voiceRing 1s ease-out infinite;
+        }
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        @keyframes voiceRing {
+            from { transform: scale(0.8); opacity: 1; }
+            to { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* Goals Progress */
+        .goal-progress {
+            position: relative;
+            height: 6px;
+            background: #E5E5E5;
+            border-radius: 3px;
+            overflow: visible;
+        }
+        @media (prefers-color-scheme: dark) {
+            .goal-progress { background: #2A2A2A; }
+        }
+        .goal-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease-out;
+        }
+        .goal-progress-marker {
+            position: absolute;
+            top: -2px;
+            width: 2px;
+            height: 10px;
+            background: #111;
+            border-radius: 1px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .goal-progress-marker { background: #F3F3F3; }
+        }
+
+        /* Timeline Heatmap */
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Swipe Actions */
+        .swipe-container {
+            overflow: hidden;
+            position: relative;
+        }
+        .swipe-content {
+            transition: transform 0.2s ease-out;
+        }
+        .swipe-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: stretch;
+        }
+        .swipe-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Install Banner */
+        .install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #F4C44E 0%, #75B876 50%, #B593C6 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 90;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -276,7 +467,12 @@
                 <div>
                     <h1 class="font-display font-bold text-xl tracking-tight">FACT<span class="text-fact-yellow">/</span><span class="text-fact-muted font-normal text-sm">Flow</span></h1>
                     <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
-                        <span id="currentUserDisplay">Personal Intelligence</span> · <button onclick="openSettings()" class="hover:text-fact-yellow">Settings</button> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
+                        <span id="currentUserDisplay">Personal Intelligence</span> ·
+                        <button onclick="openGoals()" class="hover:text-fact-green">Goals</button> ·
+                        <button onclick="openHeatmap()" class="hover:text-fact-purple">Heatmap</button> ·
+                        <button onclick="openSettings()" class="hover:text-fact-yellow">Settings</button> ·
+                        <button onclick="logout()" class="hover:text-fact-red">Logout</button>
+                        <span class="hidden md:inline ml-2 text-[10px] opacity-50">(</span><kbd class="hidden md:inline text-[10px] opacity-50 px-1 rounded bg-gray-100 dark:bg-gray-800">⌘K</kbd><span class="hidden md:inline text-[10px] opacity-50">)</span>
                     </p>
                 </div>
             </div>
@@ -457,13 +653,22 @@
                             </div>
                         </div>
 
-                        <!-- Input -->
+                        <!-- Input with Voice -->
                         <div class="p-3 border-t border-fact-border dark:border-fact-dark-border">
                             <div class="flex gap-2">
                                 <input type="text" id="aiChatInput" placeholder="Ask about your spending..."
                                     class="flex-1 px-3 py-2 text-sm border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
                                     onkeypress="if(event.key==='Enter')askAIChat()">
+                                <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input"
+                                    class="voice-btn w-10 h-10 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                                    </svg>
+                                </button>
                                 <button onclick="askAIChat()" class="px-4 py-2 text-sm font-medium rounded-lg bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Send</button>
+                            </div>
+                            <div id="voiceStatus" class="hidden mt-2 text-xs text-fact-muted dark:text-fact-dark-muted text-center">
+                                <span class="animate-pulse">Listening...</span>
                             </div>
                         </div>
                     </div>
@@ -808,6 +1013,125 @@
                     Save Settings
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- COMMAND PALETTE -->
+    <div id="cmdPalette" class="cmd-palette">
+        <div class="cmd-palette-backdrop" onclick="closeCmdPalette()"></div>
+        <div class="cmd-palette-box">
+            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+                <input type="text" id="cmdInput" placeholder="Type a command or search..."
+                    class="w-full px-3 py-2 text-sm bg-transparent border-none focus:outline-none"
+                    oninput="filterCommands(this.value)" onkeydown="handleCmdKeydown(event)">
+            </div>
+            <div id="cmdList" class="max-h-[300px] overflow-y-auto">
+                <!-- Populated by JS -->
+            </div>
+            <div class="p-2 border-t border-fact-border dark:border-fact-dark-border bg-gray-50 dark:bg-gray-800">
+                <div class="flex items-center justify-between text-[10px] text-fact-muted dark:text-fact-dark-muted">
+                    <span><kbd class="px-1 py-0.5 bg-white dark:bg-gray-700 rounded text-[9px]">↑↓</kbd> Navigate</span>
+                    <span><kbd class="px-1 py-0.5 bg-white dark:bg-gray-700 rounded text-[9px]">↵</kbd> Select</span>
+                    <span><kbd class="px-1 py-0.5 bg-white dark:bg-gray-700 rounded text-[9px]">Esc</kbd> Close</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOALS MODAL -->
+    <div id="goalsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-md overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">Budget Goals</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Set spending limits by category</p>
+                </div>
+                <button onclick="closeGoals()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="goalsList" class="p-5 space-y-4 max-h-[400px] overflow-y-auto">
+                <!-- Populated by JS -->
+            </div>
+            <div class="p-4 border-t border-fact-border dark:border-fact-dark-border bg-gray-50 dark:bg-gray-800">
+                <button onclick="addNewGoal()" class="w-full py-2 text-sm font-medium text-fact-yellow hover:bg-fact-yellow/10 rounded-lg transition">
+                    + Add Category Goal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD GOAL MODAL -->
+    <div id="addGoalModal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border">
+                <h3 class="font-display font-semibold">New Budget Goal</h3>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Category</label>
+                    <select id="goalCategory" class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Monthly Budget (QAR)</label>
+                    <input type="number" id="goalAmount" placeholder="1000"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card">
+                </div>
+            </div>
+            <div class="p-5 border-t border-fact-border dark:border-fact-dark-border flex gap-3">
+                <button onclick="closeAddGoal()" class="flex-1 px-4 py-2 text-sm text-fact-muted hover:text-fact-ink rounded-lg">Cancel</button>
+                <button onclick="saveGoal()" class="flex-1 px-4 py-2 text-sm bg-fact-yellow text-fact-ink rounded-lg font-medium">Save Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIMELINE HEATMAP MODAL -->
+    <div id="heatmapModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-2xl overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">Spending Heatmap</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Daily spending intensity</p>
+                </div>
+                <button onclick="closeHeatmap()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5">
+                <div id="heatmapContainer" class="overflow-x-auto">
+                    <!-- Heatmap grid populated by JS -->
+                </div>
+                <div class="flex items-center justify-between mt-4 text-[10px] text-fact-muted">
+                    <span>Less</span>
+                    <div class="flex gap-1">
+                        <div class="heatmap-cell" style="background: #E5E5E5"></div>
+                        <div class="heatmap-cell" style="background: #C6E48B"></div>
+                        <div class="heatmap-cell" style="background: #7BC96F"></div>
+                        <div class="heatmap-cell" style="background: #239A3B"></div>
+                        <div class="heatmap-cell" style="background: #196127"></div>
+                    </div>
+                    <span>More</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA INSTALL BANNER -->
+    <div id="installBanner" class="install-banner">
+        <div class="flex items-center gap-3">
+            <img src="flow-icon-512.png" alt="FACT/Flow" class="w-10 h-10 rounded-lg">
+            <div>
+                <div class="font-medium text-sm">Install FACT/Flow</div>
+                <div class="text-[11px] opacity-80">Add to home screen for quick access</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="dismissInstall()" class="px-3 py-1.5 text-xs opacity-80 hover:opacity-100">Later</button>
+            <button onclick="installPWA()" class="px-3 py-1.5 text-xs bg-white/20 rounded-lg hover:bg-white/30 font-medium">Install</button>
         </div>
     </div>
 
@@ -3534,6 +3858,519 @@
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/\n/g, '<br>')
         };
+
+        // ============== PWA & SERVICE WORKER ==============
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[PWA] Service worker registered'))
+                    .catch(err => console.log('[PWA] Service worker registration failed:', err));
+            });
+        }
+
+        // PWA Install handling
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install banner if not dismissed before
+            if (!localStorage.getItem('pwa_install_dismissed')) {
+                setTimeout(() => {
+                    document.getElementById('installBanner').style.display = 'flex';
+                }, 3000);
+            }
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('[PWA] User accepted install');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installBanner').style.display = 'none';
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installBanner').style.display = 'none';
+            localStorage.setItem('pwa_install_dismissed', 'true');
+        }
+
+        // ============== VOICE INPUT (Web Speech API) ==============
+
+        let recognition = null;
+        let isListening = false;
+
+        function initVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0].transcript)
+                        .join('');
+                    document.getElementById('aiChatInput').value = transcript;
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    document.getElementById('voiceBtn').classList.remove('listening');
+                    document.getElementById('voiceStatus').classList.add('hidden');
+                    // Auto-submit if we have text
+                    const input = document.getElementById('aiChatInput');
+                    if (input.value.trim()) {
+                        askAIChat();
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Voice recognition error:', event.error);
+                    isListening = false;
+                    document.getElementById('voiceBtn').classList.remove('listening');
+                    document.getElementById('voiceStatus').classList.add('hidden');
+                };
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initVoiceRecognition();
+            }
+
+            if (!recognition) {
+                alert('Voice input is not supported in this browser');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceStatus').classList.add('hidden');
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById('voiceBtn').classList.add('listening');
+                document.getElementById('voiceStatus').classList.remove('hidden');
+                document.getElementById('aiChatInput').value = '';
+            }
+        }
+
+        // ============== COMMAND PALETTE ==============
+
+        const COMMANDS = [
+            { id: 'ai', icon: '🤖', label: 'Ask AI', shortcut: 'A', action: () => { closeCmdPalette(); openAIQuery(); } },
+            { id: 'sync', icon: '🔄', label: 'Sync Data', shortcut: 'R', action: () => { closeCmdPalette(); syncData(); } },
+            { id: 'goals', icon: '🎯', label: 'Budget Goals', shortcut: 'G', action: () => { closeCmdPalette(); openGoals(); } },
+            { id: 'heatmap', icon: '📊', label: 'Spending Heatmap', shortcut: 'H', action: () => { closeCmdPalette(); openHeatmap(); } },
+            { id: 'merchants', icon: '🏪', label: 'All Merchants', shortcut: 'M', action: () => { closeCmdPalette(); openMerchantModal(); } },
+            { id: 'txns', icon: '📋', label: 'All Transactions', shortcut: 'T', action: () => { closeCmdPalette(); openTxnModal(); } },
+            { id: 'uncat', icon: '❓', label: 'Uncategorized', shortcut: 'U', action: () => { closeCmdPalette(); openUncatModal(); } },
+            { id: 'settings', icon: '⚙️', label: 'Settings', shortcut: 'S', action: () => { closeCmdPalette(); openSettings(); } },
+            { id: 'period-salary', icon: '💰', label: 'Salary Period', action: () => { closeCmdPalette(); setSalaryPeriod(); } },
+            { id: 'period-month', icon: '📅', label: 'This Month', action: () => { closeCmdPalette(); setPeriod('thisMonth'); } },
+            { id: 'period-last', icon: '📅', label: 'Last Month', action: () => { closeCmdPalette(); setPeriod('lastMonth'); } },
+            { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
+            { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
+        ];
+
+        let cmdSelectedIndex = 0;
+        let filteredCommands = [...COMMANDS];
+
+        function openCmdPalette() {
+            const palette = document.getElementById('cmdPalette');
+            palette.classList.add('active');
+            document.getElementById('cmdInput').value = '';
+            document.getElementById('cmdInput').focus();
+            filteredCommands = [...COMMANDS];
+            cmdSelectedIndex = 0;
+            renderCommands();
+        }
+
+        function closeCmdPalette() {
+            document.getElementById('cmdPalette').classList.remove('active');
+        }
+
+        function filterCommands(query) {
+            const q = query.toLowerCase();
+            filteredCommands = COMMANDS.filter(cmd =>
+                cmd.label.toLowerCase().includes(q) || cmd.id.includes(q)
+            );
+            cmdSelectedIndex = 0;
+            renderCommands();
+        }
+
+        function renderCommands() {
+            const list = document.getElementById('cmdList');
+            list.innerHTML = filteredCommands.map((cmd, i) => `
+                <div class="cmd-item ${i === cmdSelectedIndex ? 'selected' : ''}" onclick="${cmd.action.name ? cmd.action.name + '()' : ''}" data-index="${i}">
+                    <div class="cmd-item-icon">${cmd.icon}</div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">${cmd.label}</div>
+                    </div>
+                    ${cmd.shortcut ? `<div class="cmd-item-shortcut">${cmd.shortcut}</div>` : ''}
+                </div>
+            `).join('');
+
+            // Add click handlers
+            list.querySelectorAll('.cmd-item').forEach((item, i) => {
+                item.onclick = () => filteredCommands[i].action();
+            });
+        }
+
+        function handleCmdKeydown(event) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                cmdSelectedIndex = Math.min(cmdSelectedIndex + 1, filteredCommands.length - 1);
+                renderCommands();
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                cmdSelectedIndex = Math.max(cmdSelectedIndex - 1, 0);
+                renderCommands();
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (filteredCommands[cmdSelectedIndex]) {
+                    filteredCommands[cmdSelectedIndex].action();
+                }
+            } else if (event.key === 'Escape') {
+                closeCmdPalette();
+            }
+        }
+
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Cmd/Ctrl + K - Open command palette
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openCmdPalette();
+            }
+            // Escape - Close modals
+            if (e.key === 'Escape') {
+                closeCmdPalette();
+            }
+        });
+
+        // ============== GOALS SYSTEM ==============
+
+        function getGoals() {
+            try {
+                return JSON.parse(localStorage.getItem(`fact_goals_${STATE.currentUser}`)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveGoals(goals) {
+            localStorage.setItem(`fact_goals_${STATE.currentUser}`, JSON.stringify(goals));
+        }
+
+        function openGoals() {
+            renderGoalsList();
+            document.getElementById('goalsModal').classList.remove('hidden');
+        }
+
+        function closeGoals() {
+            document.getElementById('goalsModal').classList.add('hidden');
+        }
+
+        function renderGoalsList() {
+            const goals = getGoals();
+            const container = document.getElementById('goalsList');
+
+            if (goals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-3xl mb-2">🎯</div>
+                        <p class="text-sm text-fact-muted dark:text-fact-dark-muted">No budget goals set yet</p>
+                        <p class="text-xs text-fact-muted dark:text-fact-dark-muted mt-1">Set spending limits to track your progress</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate spending for current month
+            const now = dayjs();
+            const monthStart = now.startOf('month');
+            const monthTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.isAfter(monthStart) &&
+                t.date.isBefore(now.add(1, 'day'))
+            );
+
+            const spendByCategory = {};
+            monthTxns.forEach(t => {
+                spendByCategory[t.merchantType] = (spendByCategory[t.merchantType] || 0) + t.amount;
+            });
+
+            // Calculate days progress
+            const daysInMonth = now.daysInMonth();
+            const daysPassed = now.date();
+            const dayProgress = (daysPassed / daysInMonth) * 100;
+
+            container.innerHTML = goals.map((goal, i) => {
+                const spent = spendByCategory[goal.category] || 0;
+                const pct = Math.min(100, (spent / goal.amount) * 100);
+                const remaining = Math.max(0, goal.amount - spent);
+                const color = pct > 100 ? '#E57373' : pct > 80 ? '#F4C44E' : '#75B876';
+                const typeInfo = MERCHANT_TYPES[goal.category] || {};
+
+                return `
+                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">${typeInfo.icon || '📋'}</span>
+                                <span class="font-medium text-sm">${goal.category}</span>
+                            </div>
+                            <button onclick="deleteGoal(${i})" class="text-fact-muted hover:text-fact-red text-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-baseline justify-between mb-2">
+                            <div class="font-display">
+                                <span class="text-xl font-bold">${formatNum(spent)}</span>
+                                <span class="text-sm text-fact-muted dark:text-fact-dark-muted">/ ${formatNum(goal.amount)}</span>
+                            </div>
+                            <span class="text-xs ${pct > 100 ? 'text-fact-red' : 'text-fact-green'}">${formatNum(remaining)} left</span>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-bar" style="width: ${pct}%; background: ${color}"></div>
+                            <div class="goal-progress-marker" style="left: ${dayProgress}%" title="Expected pace"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-[10px] text-fact-muted dark:text-fact-dark-muted">
+                            <span>${pct.toFixed(0)}% used</span>
+                            <span>${pct > dayProgress ? '⚠️ Ahead of pace' : '✓ On track'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addNewGoal() {
+            // Populate category dropdown
+            const categories = Object.keys(MERCHANT_TYPES).filter(c => c !== 'Uncategorized');
+            document.getElementById('goalCategory').innerHTML = categories.map(c =>
+                `<option value="${c}">${MERCHANT_TYPES[c]?.icon || ''} ${c}</option>`
+            ).join('');
+            document.getElementById('goalAmount').value = '';
+            document.getElementById('addGoalModal').classList.remove('hidden');
+        }
+
+        function closeAddGoal() {
+            document.getElementById('addGoalModal').classList.add('hidden');
+        }
+
+        function saveGoal() {
+            const category = document.getElementById('goalCategory').value;
+            const amount = parseFloat(document.getElementById('goalAmount').value);
+
+            if (!category || !amount || amount <= 0) {
+                alert('Please select a category and enter a valid amount');
+                return;
+            }
+
+            const goals = getGoals();
+            // Update existing or add new
+            const existing = goals.findIndex(g => g.category === category);
+            if (existing >= 0) {
+                goals[existing].amount = amount;
+            } else {
+                goals.push({ category, amount });
+            }
+            saveGoals(goals);
+
+            closeAddGoal();
+            renderGoalsList();
+        }
+
+        function deleteGoal(index) {
+            const goals = getGoals();
+            goals.splice(index, 1);
+            saveGoals(goals);
+            renderGoalsList();
+        }
+
+        // ============== TIMELINE HEATMAP ==============
+
+        function openHeatmap() {
+            renderHeatmap();
+            document.getElementById('heatmapModal').classList.remove('hidden');
+        }
+
+        function closeHeatmap() {
+            document.getElementById('heatmapModal').classList.add('hidden');
+        }
+
+        function renderHeatmap() {
+            const container = document.getElementById('heatmapContainer');
+            const out = STATE.allTxns.filter(t => t.direction === 'OUT');
+
+            // Get last 90 days of data
+            const endDate = dayjs();
+            const startDate = endDate.subtract(90, 'day');
+
+            // Calculate daily spending
+            const dailySpend = {};
+            out.forEach(t => {
+                if (t.date.isAfter(startDate) && t.date.isBefore(endDate.add(1, 'day'))) {
+                    const key = t.date.format('YYYY-MM-DD');
+                    dailySpend[key] = (dailySpend[key] || 0) + t.amount;
+                }
+            });
+
+            // Calculate max for color scaling
+            const amounts = Object.values(dailySpend);
+            const maxSpend = Math.max(...amounts, 1);
+            const avgSpend = amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0;
+
+            // Build grid (7 rows for days of week, columns for weeks)
+            const weeks = [];
+            let currentWeek = [];
+            let d = startDate;
+
+            // Fill in empty days at start
+            const startDow = d.day();
+            for (let i = 0; i < startDow; i++) {
+                currentWeek.push(null);
+            }
+
+            while (d.isBefore(endDate) || d.isSame(endDate, 'day')) {
+                const key = d.format('YYYY-MM-DD');
+                const amount = dailySpend[key] || 0;
+                currentWeek.push({ date: d, amount, key });
+
+                if (d.day() === 6) { // Saturday
+                    weeks.push(currentWeek);
+                    currentWeek = [];
+                }
+                d = d.add(1, 'day');
+            }
+            if (currentWeek.length > 0) {
+                weeks.push(currentWeek);
+            }
+
+            // Color scale (GitHub-style greens, but using FACT colors)
+            const getColor = (amount) => {
+                if (amount === 0) return '#E5E5E5';
+                const ratio = amount / maxSpend;
+                if (ratio < 0.25) return '#C6E48B';
+                if (ratio < 0.5) return '#7BC96F';
+                if (ratio < 0.75) return '#239A3B';
+                return '#196127';
+            };
+
+            // Render
+            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            container.innerHTML = `
+                <div class="flex gap-1">
+                    <div class="flex flex-col gap-1 text-[9px] text-fact-muted dark:text-fact-dark-muted mr-1">
+                        ${dayLabels.map((l, i) => `<div class="h-3 flex items-center">${i % 2 === 1 ? l : ''}</div>`).join('')}
+                    </div>
+                    ${weeks.map((week, wi) => `
+                        <div class="flex flex-col gap-1">
+                            ${[0,1,2,3,4,5,6].map(dow => {
+                                const cell = week[dow];
+                                if (!cell) return '<div class="heatmap-cell" style="background: transparent"></div>';
+                                const color = getColor(cell.amount);
+                                const tooltip = `${cell.date.format('MMM D')}: QAR ${formatNum(cell.amount)}`;
+                                return `<div class="heatmap-cell" style="background: ${color}" title="${tooltip}" onclick="drilldownDate('${cell.key}')"></div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-4 text-center text-xs">
+                    <div>
+                        <div class="text-lg font-display font-bold">${formatNum(amounts.reduce((a, b) => a + b, 0))}</div>
+                        <div class="text-fact-muted dark:text-fact-dark-muted">Total (90 days)</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-display font-bold">${formatNum(avgSpend)}</div>
+                        <div class="text-fact-muted dark:text-fact-dark-muted">Daily Avg</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-display font-bold">${formatNum(maxSpend)}</div>
+                        <div class="text-fact-muted dark:text-fact-dark-muted">Max Day</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function drilldownDate(dateKey) {
+            const date = dayjs(dateKey);
+            const txns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.format('YYYY-MM-DD') === dateKey
+            );
+            showFilteredResults(txns, `📅 ${date.format('MMM D, YYYY')}`);
+            closeHeatmap();
+        }
+
+        // ============== TOUCH GESTURES ==============
+
+        function initSwipeGestures() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let currentTarget = null;
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.txn-row')) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    currentTarget = e.target.closest('.txn-row');
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!currentTarget) return;
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+
+                // Only handle horizontal swipes
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+                    currentTarget.style.transform = `translateX(${Math.max(-100, Math.min(0, deltaX))}px)`;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                if (!currentTarget) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+
+                if (deltaX < -60) {
+                    // Swipe left - quick categorize
+                    const rawData = currentTarget.dataset.raw;
+                    if (rawData) {
+                        currentTarget.style.transform = '';
+                        const raw = decodeURIComponent(escape(atob(rawData)));
+                        openCatModal(raw);
+                    }
+                } else {
+                    currentTarget.style.transform = '';
+                }
+                currentTarget = null;
+            }, { passive: true });
+        }
+
+        // Initialize touch gestures on mobile
+        if ('ontouchstart' in window) {
+            initSwipeGestures();
+        }
+
+        // ============== INIT ENHANCEMENTS ==============
+
+        // Initialize voice recognition on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initVoiceRecognition();
+        });
     </script>
 </body>
 </html>
