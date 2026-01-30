@@ -423,12 +423,20 @@ function handleAIQueryPost_(payload) {
 
     // Load user context for personalized responses
     const userContext = getUserContext_(session.sheetId);
-    const contextPrompt = formatContextForPrompt_(userContext);
+
+    // Load MerchantMap for alias recognition
+    const ss = SpreadsheetApp.openById(session.sheetId);
+    const merchantMap = getMerchantMap_(ss);
+
+    // Format context including MerchantMap
+    const contextPrompt = formatContextForPrompt_(userContext, merchantMap);
     log_('handleAIQueryPost_', 'Context loaded', {
       income: userContext.income.length,
       payees: userContext.payees.length,
       corrections: userContext.corrections.length,
-      preferences: userContext.preferences.length
+      preferences: userContext.preferences.length,
+      rules: userContext.rules?.length || 0,
+      merchants: merchantMap.length
     });
 
     const basePrompt = `You are a personal finance analyst for this specific user. Answer their questions about spending data.
@@ -503,7 +511,9 @@ You MUST apply this context to your analysis. For example:
       income: userContext.income.length,
       payees: userContext.payees.length,
       corrections: userContext.corrections.length,
-      preferences: userContext.preferences.length
+      preferences: userContext.preferences.length,
+      rules: userContext.rules?.length || 0,
+      merchants: merchantMap.length
     };
 
     log_('handleAIQueryPost_', 'OpenAI API success', {
@@ -570,19 +580,22 @@ function handleDataFetch_(payload) {
 }
 
 /**
- * Learn from user categorization - syncs to MerchantMap
+ * Learn from user categorization - syncs to MerchantMap AND UserContext
+ * This creates a feedback loop: corrections are remembered by the AI
  */
 function handleLearnCategory_(payload) {
   logEntry_('handleLearnCategory_', {
     tokenPrefix: payload.token?.substring(0, 8),
     counterparty: payload.counterparty,
-    merchantType: payload.merchantType
+    merchantType: payload.merchantType,
+    previousType: payload.previousType
   });
 
   const token = payload.token;
   const counterparty = payload.counterparty;
   const merchantType = payload.merchantType;
   const consolidated = payload.consolidated || counterparty;
+  const previousType = payload.previousType || null; // What AI thought it was
 
   const session = validateToken_(token);
   if (!session) {
@@ -598,6 +611,8 @@ function handleLearnCategory_(payload) {
 
   try {
     const ss = SpreadsheetApp.openById(session.sheetId);
+
+    // 1. Update MerchantMap (existing behavior)
     let mapSheet = ss.getSheetByName("MerchantMap");
 
     if (!mapSheet) {
@@ -608,6 +623,7 @@ function handleLearnCategory_(payload) {
 
     const data = mapSheet.getDataRange().getValues();
     const counterpartyLower = counterparty.toLowerCase();
+    let action = 'added';
 
     // Check if pattern already exists
     for (let i = 1; i < data.length; i++) {
@@ -615,17 +631,49 @@ function handleLearnCategory_(payload) {
         // Update existing
         mapSheet.getRange(i + 1, 3).setValue(consolidated);
         mapSheet.getRange(i + 1, 4).setValue(merchantType);
-        log_('handleLearnCategory_', 'Updated existing pattern', { counterparty, merchantType });
-        logExit_('handleLearnCategory_', { success: true, action: 'updated' });
-        return json_({ success: true, action: 'updated' });
+        action = 'updated';
+        break;
       }
     }
 
-    // Add new pattern
-    mapSheet.appendRow([counterpartyLower, counterparty, consolidated, merchantType]);
-    log_('handleLearnCategory_', 'Added new pattern', { counterparty, merchantType });
-    logExit_('handleLearnCategory_', { success: true, action: 'added' });
-    return json_({ success: true, action: 'added' });
+    if (action === 'added') {
+      mapSheet.appendRow([counterpartyLower, counterparty, consolidated, merchantType]);
+    }
+
+    // 2. NEW: Also add to UserContext for AI learning (if this was a correction)
+    if (previousType && previousType !== merchantType) {
+      let ctxSheet = ss.getSheetByName("UserContext");
+
+      if (!ctxSheet) {
+        ctxSheet = ss.insertSheet("UserContext");
+        ctxSheet.getRange(1, 1, 1, 6).setValues([[
+          "Type", "Key", "Value", "Details", "DateAdded", "Source"
+        ]]);
+        ctxSheet.setFrozenRows(1);
+      }
+
+      const timestamp = new Date().toISOString();
+
+      // Add as both payee (for general knowledge) and correction (for AI learning)
+      ctxSheet.appendRow(['payee', counterparty, '', merchantType, timestamp, 'learned']);
+      ctxSheet.appendRow(['correction',
+        `${counterparty} is ${previousType}`,
+        `${counterparty} is ${merchantType}`,
+        'User correction from transaction review',
+        timestamp,
+        'learned'
+      ]);
+
+      log_('handleLearnCategory_', 'Added to UserContext for AI learning', {
+        counterparty,
+        previousType,
+        merchantType
+      });
+    }
+
+    log_('handleLearnCategory_', 'Pattern saved', { counterparty, merchantType, action });
+    logExit_('handleLearnCategory_', { success: true, action });
+    return json_({ success: true, action: action });
 
   } catch (err) {
     logError_('handleLearnCategory_', err, { counterparty, merchantType });
@@ -739,6 +787,7 @@ function handleGetContext_(payload) {
 /**
  * Load user context from UserContext sheet
  * Returns structured context for AI prompts
+ * Now includes 'rules' for transaction-specific patterns
  */
 function getUserContext_(sheetId) {
   logEntry_('getUserContext_', { sheetId: sheetId?.substring(0, 10) });
@@ -747,7 +796,8 @@ function getUserContext_(sheetId) {
     income: [],
     payees: [],
     corrections: [],
-    preferences: []
+    preferences: [],
+    rules: []  // NEW: Transaction-specific rules
   };
 
   try {
@@ -797,6 +847,20 @@ function getUserContext_(sheetId) {
             notes: row[3]
           });
           break;
+        case 'rule':
+          // NEW: Transaction-specific rules
+          let ruleDetails = {};
+          try {
+            ruleDetails = row[3] ? JSON.parse(row[3]) : {};
+          } catch (e) {
+            ruleDetails = { description: row[3] };
+          }
+          context.rules.push({
+            merchant: row[1],
+            condition: row[2],
+            ...ruleDetails
+          });
+          break;
       }
     }
 
@@ -805,22 +869,24 @@ function getUserContext_(sheetId) {
       income: context.income.length,
       payees: context.payees.length,
       corrections: context.corrections.length,
-      preferences: context.preferences.length
+      preferences: context.preferences.length,
+      rules: context.rules.length
     });
   } catch (err) {
     logError_('getUserContext_', err, { sheetId });
   }
 
   logExit_('getUserContext_', {
-    total: context.income.length + context.payees.length + context.corrections.length + context.preferences.length
+    total: context.income.length + context.payees.length + context.corrections.length + context.preferences.length + context.rules.length
   });
   return context;
 }
 
 /**
  * Format user context for inclusion in AI prompts
+ * Includes income, payees, corrections, preferences, rules, and optionally MerchantMap
  */
-function formatContextForPrompt_(context) {
+function formatContextForPrompt_(context, merchantMap = null) {
   const parts = [];
 
   if (context.income.length > 0) {
@@ -831,16 +897,28 @@ function formatContextForPrompt_(context) {
   }
 
   if (context.payees.length > 0) {
-    parts.push("\nKNOWN PAYEES:");
+    parts.push("\nKNOWN PAYEES (user has taught you about these):");
     context.payees.forEach(p => {
-      parts.push(`- ${p.name}: ${p.purpose} (${p.category})${p.isWorkExpense ? ' [WORK EXPENSE]' : ''}`);
+      parts.push(`- ${p.name}: ${p.purpose} (${p.category})${p.isWorkExpense ? ' [WORK EXPENSE - reimbursable]' : ''}`);
+    });
+  }
+
+  // NEW: Transaction-specific rules
+  if (context.rules && context.rules.length > 0) {
+    parts.push("\nTRANSACTION-SPECIFIC RULES (apply these ONLY to matching transactions, not all transactions to this merchant):");
+    context.rules.forEach(r => {
+      const conditions = [];
+      if (r.amount) conditions.push(`amount ~${r.amount} QAR`);
+      if (r.frequency) conditions.push(r.frequency);
+      if (r.condition) conditions.push(r.condition);
+      parts.push(`- ${r.merchant}: when ${conditions.join(', ')} → categorize as ${r.category || r.description}`);
     });
   }
 
   if (context.corrections.length > 0) {
-    parts.push("\nPREVIOUS CORRECTIONS (learn from these):");
+    parts.push("\nPREVIOUS CORRECTIONS (you got these wrong before - don't repeat the mistake):");
     context.corrections.forEach(c => {
-      parts.push(`- Wrong: "${c.original}" → Correct: "${c.corrected}"`);
+      parts.push(`- WRONG: "${c.original}" → CORRECT: "${c.corrected}"${c.context ? ' (' + c.context + ')' : ''}`);
     });
   }
 
@@ -851,18 +929,40 @@ function formatContextForPrompt_(context) {
     });
   }
 
+  // Include MerchantMap for alias recognition
+  if (merchantMap && merchantMap.length > 0) {
+    parts.push("\nMERCHANT ALIASES (recognize these names and their categories):");
+    // Group by category for readability, limit to most relevant
+    const byCategory = {};
+    merchantMap.forEach(m => {
+      const cat = m.category || 'Other';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(m);
+    });
+    Object.keys(byCategory).slice(0, 8).forEach(cat => {
+      const merchants = byCategory[cat].slice(0, 5);
+      parts.push(`- ${cat}: ${merchants.map(m => m.displayName).join(', ')}`);
+    });
+  }
+
   return parts.join('\n');
 }
 
 /**
- * Parse natural language "remember" commands and store context
+ * Parse natural language "remember" commands using AI
+ * Handles complex commands including:
+ * - Multiple entries ("remember this AND that")
+ * - Transaction-specific rules ("one QAR 4000 to Afif is rent")
+ * - Merchant aliases (matches to MerchantMap)
  * Examples:
  * - "Remember that Aleks handles my flight bookings"
  * - "Remember that my salary arrives on day 28"
  * - "Remember that Ooredoo is a telecom bill, not a splurge"
+ * - "Remember that one QAR 4000 transaction per month to Afif is rent"
+ * - "Remember that Afif handles my travel bookings and Ooredoo is my phone bill"
  */
 function handleRememberFromQuery_(sheetId, query) {
-  const queryLower = query.toLowerCase();
+  logEntry_('handleRememberFromQuery_', { sheetId: sheetId?.substring(0, 10), query: query?.substring(0, 50) });
 
   try {
     const ss = SpreadsheetApp.openById(sheetId);
@@ -876,59 +976,335 @@ function handleRememberFromQuery_(sheetId, query) {
       ctxSheet.setFrozenRows(1);
     }
 
+    // Load MerchantMap for alias matching
+    const merchantMap = getMerchantMap_(ss);
+
+    // Use AI to parse complex remember commands
+    const parsedEntries = parseRememberWithAI_(query, merchantMap);
+
+    if (!parsedEntries || parsedEntries.length === 0) {
+      // Fallback to simple parsing
+      return handleRememberSimple_(ctxSheet, query);
+    }
+
+    // Check for contradictions before saving
+    const existingContext = getUserContext_(sheetId);
+    const contradictions = checkContradictions_(parsedEntries, existingContext);
+
     const timestamp = new Date().toISOString();
-    let saved = false;
-    let message = '';
+    const savedEntries = [];
+    const warnings = [];
 
-    // Pattern: salary/income arrives on day X
-    const incomeMatch = query.match(/(?:salary|income|pay).+(?:arrives?|comes?|paid|on)\s+(?:day\s+)?(\d+)/i);
-    if (incomeMatch) {
-      const day = parseInt(incomeMatch[1]);
-      ctxSheet.appendRow(['income', 'Salary', day, '', timestamp, query]);
-      saved = true;
-      message = `Got it! I'll remember your salary arrives on day ${day}.`;
-    }
-
-    // Pattern: [name] handles/books my [purpose]
-    const payeeMatch = query.match(/(?:remember\s+that\s+)?(\w+)\s+(?:handles?|books?|manages?|does)\s+(?:my\s+)?(.+)/i);
-    if (!saved && payeeMatch) {
-      const name = payeeMatch[1];
-      const purpose = payeeMatch[2].replace(/\.$/, '');
-      // Infer category from purpose
-      let category = 'Other';
-      let isWork = false;
-      if (/flight|travel|trip|booking/i.test(purpose)) {
-        category = 'Travel';
-        isWork = /work|business/i.test(query);
+    for (const entry of parsedEntries) {
+      // Add contradiction warning but still save (newer info takes precedence)
+      if (contradictions[entry.key]) {
+        warnings.push(`Note: This updates previous info about "${entry.key}"`);
       }
-      ctxSheet.appendRow(['payee', name, purpose, category, timestamp, isWork ? 'work' : 'personal']);
-      saved = true;
-      message = `Got it! I'll remember that ${name} ${purpose}.`;
+
+      // Map entry type to row format
+      let rowData;
+      switch (entry.type) {
+        case 'income':
+          rowData = ['income', entry.incomeType || 'Salary', entry.day || '', entry.amount || '', timestamp, entry.notes || query];
+          break;
+        case 'payee':
+          rowData = ['payee', entry.name, entry.purpose || '', entry.category || 'Other', timestamp, entry.isWorkExpense ? 'work' : 'personal'];
+          break;
+        case 'correction':
+          rowData = ['correction', entry.original || '', entry.corrected || '', entry.context || '', timestamp, 'user'];
+          break;
+        case 'rule':
+          // Transaction-specific rules (new type!)
+          rowData = ['rule', entry.merchant || '', entry.condition || '', JSON.stringify({
+            amount: entry.amount,
+            frequency: entry.frequency,
+            category: entry.category,
+            description: entry.description
+          }), timestamp, 'user'];
+          break;
+        case 'preference':
+        default:
+          rowData = ['preference', entry.key || 'user_note', entry.value || '', entry.notes || '', timestamp, 'user'];
+      }
+
+      ctxSheet.appendRow(rowData);
+      savedEntries.push(entry);
     }
 
-    // Pattern: [thing] is [correction], not [wrong]
-    const correctionMatch = query.match(/(\w+(?:\s+\w+)?)\s+is\s+(?:a\s+)?(.+?)(?:,\s*not\s+(?:a\s+)?(.+))?$/i);
-    if (!saved && correctionMatch) {
-      const subject = correctionMatch[1];
-      const correct = correctionMatch[2];
-      const wrong = correctionMatch[3] || '';
-      ctxSheet.appendRow(['correction', wrong ? `${subject} is ${wrong}` : subject, `${subject} is ${correct}`, '', timestamp, 'user']);
-      saved = true;
-      message = `Got it! I'll remember that ${subject} is ${correct}${wrong ? ', not ' + wrong : ''}.`;
+    // Build confirmation message
+    let message;
+    if (savedEntries.length === 1) {
+      message = formatSingleEntryConfirmation_(savedEntries[0]);
+    } else {
+      message = `Got it! I've remembered ${savedEntries.length} things:\n` +
+                savedEntries.map((e, i) => `${i + 1}. ${formatEntryDescription_(e)}`).join('\n');
     }
 
-    // Generic remember - store as preference
-    if (!saved) {
-      const content = query.replace(/^remember\s+that\s+/i, '').replace(/^note\s+that\s+/i, '');
-      ctxSheet.appendRow(['preference', 'user_note', content, '', timestamp, 'user']);
-      saved = true;
-      message = "Got it! I've noted that for future reference.";
+    if (warnings.length > 0) {
+      message += '\n\n' + warnings.join('\n');
     }
 
-    return json_({ success: true, remembered: true, message: message });
+    log_('handleRememberFromQuery_', 'Entries saved', { count: savedEntries.length, types: savedEntries.map(e => e.type) });
+    logExit_('handleRememberFromQuery_', { success: true, count: savedEntries.length });
+
+    return json_({ success: true, remembered: true, message: message, entriesSaved: savedEntries.length });
 
   } catch (err) {
+    logError_('handleRememberFromQuery_', err, { query: query?.substring(0, 50) });
+    logExit_('handleRememberFromQuery_', { success: false, error: err.message });
     return json_({ error: 'Failed to save: ' + err.message });
+  }
+}
+
+/**
+ * Simple fallback parsing for remember commands (no AI)
+ */
+function handleRememberSimple_(ctxSheet, query) {
+  const timestamp = new Date().toISOString();
+  let saved = false;
+  let message = '';
+
+  // Pattern: salary/income arrives on day X
+  const incomeMatch = query.match(/(?:salary|income|pay).+(?:arrives?|comes?|paid|on)\s+(?:day\s+)?(\d+)/i);
+  if (incomeMatch) {
+    const day = parseInt(incomeMatch[1]);
+    ctxSheet.appendRow(['income', 'Salary', day, '', timestamp, query]);
+    saved = true;
+    message = `Got it! I'll remember your salary arrives on day ${day}.`;
+  }
+
+  // Pattern: [name] handles/books my [purpose]
+  const payeeMatch = query.match(/(?:remember\s+that\s+)?(\w+)\s+(?:handles?|books?|manages?|does)\s+(?:my\s+)?(.+)/i);
+  if (!saved && payeeMatch) {
+    const name = payeeMatch[1];
+    const purpose = payeeMatch[2].replace(/\.$/, '');
+    let category = 'Other';
+    let isWork = false;
+    if (/flight|travel|trip|booking/i.test(purpose)) {
+      category = 'Travel';
+      isWork = /work|business/i.test(query);
+    }
+    ctxSheet.appendRow(['payee', name, purpose, category, timestamp, isWork ? 'work' : 'personal']);
+    saved = true;
+    message = `Got it! I'll remember that ${name} ${purpose}.`;
+  }
+
+  // Pattern: [thing] is [correction], not [wrong]
+  const correctionMatch = query.match(/(\w+(?:\s+\w+)?)\s+is\s+(?:a\s+)?(.+?)(?:,\s*not\s+(?:a\s+)?(.+))?$/i);
+  if (!saved && correctionMatch) {
+    const subject = correctionMatch[1];
+    const correct = correctionMatch[2];
+    const wrong = correctionMatch[3] || '';
+    ctxSheet.appendRow(['correction', wrong ? `${subject} is ${wrong}` : subject, `${subject} is ${correct}`, '', timestamp, 'user']);
+    saved = true;
+    message = `Got it! I'll remember that ${subject} is ${correct}${wrong ? ', not ' + wrong : ''}.`;
+  }
+
+  // Generic remember - store as preference
+  if (!saved) {
+    const content = query.replace(/^remember\s+that\s+/i, '').replace(/^note\s+that\s+/i, '');
+    ctxSheet.appendRow(['preference', 'user_note', content, '', timestamp, 'user']);
+    saved = true;
+    message = "Got it! I've noted that for future reference.";
+  }
+
+  return json_({ success: true, remembered: true, message: message });
+}
+
+/**
+ * Use AI to parse complex remember commands
+ * Returns array of structured entries
+ */
+function parseRememberWithAI_(query, merchantMap) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty("OPENAI_API_KEY");
+  if (!apiKey) {
+    log_('parseRememberWithAI_', 'No API key, falling back to simple parsing');
+    return null;
+  }
+
+  // Build merchant context for AI
+  const merchantContext = merchantMap.length > 0
+    ? `\n\nKnown merchants/payees from user's data:\n${merchantMap.map(m => `- ${m.displayName} (pattern: ${m.pattern}, category: ${m.category})`).join('\n')}`
+    : '';
+
+  const systemPrompt = `You are a parser for personal finance "remember" commands. Extract structured data entries from user's natural language.
+
+IMPORTANT RULES:
+1. If the user mentions multiple things to remember (connected by "and", "also", commas, etc.), extract EACH as a separate entry
+2. Match partial names to known merchants (e.g., "Afif" matches "Afif Bou Nassif")
+3. Detect transaction-specific rules vs general merchant categorization:
+   - "Afif is travel" → payee (ALL Afif transactions)
+   - "One QAR 4000 to Afif per month is rent" → rule (ONLY matching transactions)
+4. Recognize income patterns, payees, corrections, and preferences
+${merchantContext}
+
+ENTRY TYPES:
+- income: salary/income schedule (day of month, amount, type)
+- payee: merchant/person info (name, purpose, category, isWorkExpense)
+- correction: fixing AI mistakes (original interpretation, correct interpretation)
+- rule: transaction-specific pattern (merchant, amount condition, frequency, category)
+- preference: general user preference
+
+Return a JSON array of entries. Each entry should have:
+- type: one of [income, payee, correction, rule, preference]
+- Plus type-specific fields as appropriate`;
+
+  const requestPayload = {
+    model: CONFIG.AI_MODEL_FRONTEND, // Use standard model for parsing
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Parse this remember command into structured entries:\n\n"${query}"` }
+    ],
+    response_format: { type: 'json_object' },
+    max_completion_tokens: 500
+  };
+
+  try {
+    const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      payload: JSON.stringify(requestPayload),
+      muteHttpExceptions: true
+    });
+
+    const result = JSON.parse(response.getContentText());
+
+    if (result.error) {
+      log_('parseRememberWithAI_', 'API error', { error: result.error.message });
+      return null;
+    }
+
+    const content = result.choices[0].message.content;
+    const parsed = JSON.parse(content);
+
+    // Handle both { entries: [...] } and direct array format
+    const entries = Array.isArray(parsed) ? parsed : (parsed.entries || [parsed]);
+
+    log_('parseRememberWithAI_', 'Parsed entries', { count: entries.length, types: entries.map(e => e.type) });
+    return entries;
+
+  } catch (err) {
+    log_('parseRememberWithAI_', 'Parse error', { error: err.message });
+    return null;
+  }
+}
+
+/**
+ * Load MerchantMap data for AI context
+ */
+function getMerchantMap_(ss) {
+  const merchants = [];
+  try {
+    const mapSheet = ss.getSheetByName("MerchantMap");
+    if (!mapSheet) return merchants;
+
+    const data = mapSheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[0]) {
+        merchants.push({
+          pattern: String(row[0]).toLowerCase(),
+          displayName: row[1] || row[0],
+          consolidatedName: row[2] || row[1] || row[0],
+          category: row[3] || 'Other'
+        });
+      }
+    }
+  } catch (err) {
+    log_('getMerchantMap_', 'Error loading', { error: err.message });
+  }
+  return merchants;
+}
+
+/**
+ * Check for contradictions with existing context
+ */
+function checkContradictions_(newEntries, existingContext) {
+  const contradictions = {};
+
+  for (const entry of newEntries) {
+    const key = entry.key || entry.name || entry.merchant || entry.incomeType;
+    if (!key) continue;
+
+    const keyLower = key.toLowerCase();
+
+    // Check payees
+    for (const payee of existingContext.payees) {
+      if (payee.name.toLowerCase() === keyLower &&
+          entry.type === 'payee' &&
+          payee.category !== entry.category) {
+        contradictions[key] = {
+          type: 'payee_category',
+          existing: payee.category,
+          new: entry.category
+        };
+      }
+    }
+
+    // Check corrections
+    for (const correction of existingContext.corrections) {
+      if (correction.original.toLowerCase().includes(keyLower) && entry.type === 'correction') {
+        contradictions[key] = {
+          type: 'correction_exists',
+          existing: correction.corrected
+        };
+      }
+    }
+
+    // Check income (only one salary date should exist)
+    if (entry.type === 'income' && existingContext.income.length > 0) {
+      const existingSalary = existingContext.income.find(i => i.type === 'Salary');
+      if (existingSalary && existingSalary.day !== entry.day) {
+        contradictions[key || 'Salary'] = {
+          type: 'income_date',
+          existing: existingSalary.day,
+          new: entry.day
+        };
+      }
+    }
+  }
+
+  return contradictions;
+}
+
+/**
+ * Format confirmation message for single entry
+ */
+function formatSingleEntryConfirmation_(entry) {
+  switch (entry.type) {
+    case 'income':
+      return `Got it! I'll remember your ${entry.incomeType || 'salary'} arrives on day ${entry.day}.`;
+    case 'payee':
+      return `Got it! I'll remember that ${entry.name} ${entry.purpose || 'is categorized as ' + entry.category}.`;
+    case 'correction':
+      return `Got it! I'll remember that ${entry.corrected} (not ${entry.original}).`;
+    case 'rule':
+      return `Got it! I'll remember that ${entry.condition} transactions to ${entry.merchant} are ${entry.category || entry.description}.`;
+    case 'preference':
+    default:
+      return `Got it! I've noted: ${entry.value || entry.key}.`;
+  }
+}
+
+/**
+ * Format brief entry description
+ */
+function formatEntryDescription_(entry) {
+  switch (entry.type) {
+    case 'income':
+      return `${entry.incomeType || 'Salary'} on day ${entry.day}`;
+    case 'payee':
+      return `${entry.name}: ${entry.purpose || entry.category}`;
+    case 'correction':
+      return `${entry.corrected}`;
+    case 'rule':
+      return `${entry.condition || ''} to ${entry.merchant} = ${entry.category || entry.description}`;
+    case 'preference':
+    default:
+      return entry.value || entry.key;
   }
 }
 
