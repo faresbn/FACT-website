@@ -276,7 +276,7 @@
                 <div>
                     <h1 class="font-display font-bold text-xl tracking-tight">FACT<span class="text-fact-yellow">/</span><span class="text-fact-muted font-normal text-sm">Flow</span></h1>
                     <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
-                        <span id="currentUserDisplay">Personal Intelligence</span> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
+                        <span id="currentUserDisplay">Personal Intelligence</span> · <button onclick="openSettings()" class="hover:text-fact-yellow">Settings</button> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
                     </p>
                 </div>
             </div>
@@ -738,6 +738,67 @@
 
             <div id="filteredList" class="flex-1 overflow-y-auto divide-y divide-fact-border dark:divide-fact-dark-border">
                 <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-md overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <h3 class="font-display font-semibold">Settings</h3>
+                <button onclick="closeSettings()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-6">
+                <!-- AI Model Selection -->
+                <div>
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">AI Model (Ask AI)</label>
+                    <select id="settingsAiModel" class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm">
+                        <option value="gpt-4.1-mini">gpt-4.1-mini (Fast, economical)</option>
+                        <option value="gpt-4.1">gpt-4.1 (Balanced)</option>
+                        <option value="gpt-5-mini" selected>gpt-5-mini (Recommended)</option>
+                        <option value="gpt-5.1">gpt-5.1 (Most capable)</option>
+                    </select>
+                    <p class="text-[10px] text-fact-muted mt-1">Deep analysis always uses gpt-5.1</p>
+                </div>
+
+                <!-- Password Change -->
+                <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">Change Password</label>
+                    <div class="space-y-3">
+                        <input type="password" id="settingsCurrentPass" placeholder="Current password"
+                            class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm">
+                        <input type="password" id="settingsNewPass" placeholder="New password"
+                            class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm">
+                        <input type="password" id="settingsConfirmPass" placeholder="Confirm new password"
+                            class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm">
+                        <button onclick="changePassword()" class="w-full px-4 py-2 text-sm bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-lg font-medium hover:opacity-90">
+                            Update Password
+                        </button>
+                    </div>
+                    <p id="settingsPassError" class="text-xs text-fact-red mt-2 hidden"></p>
+                    <p id="settingsPassSuccess" class="text-xs text-fact-green mt-2 hidden"></p>
+                </div>
+
+                <!-- User Context Info -->
+                <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">AI Memory</label>
+                    <p class="text-xs text-fact-muted mb-3">Teach the AI about your finances using Ask AI:</p>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs font-mono space-y-1">
+                        <p>"Remember that my salary arrives on day 28"</p>
+                        <p>"Remember that Aleks handles my flights"</p>
+                        <p>"Remember that Ooredoo is telecom, not splurge"</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-fact-border dark:border-fact-dark-border">
+                <button onclick="saveSettings()" class="w-full px-4 py-2 text-sm bg-gradient-to-r from-fact-yellow via-fact-green to-fact-purple text-white rounded-lg font-medium hover:opacity-90">
+                    Save Settings
+                </button>
             </div>
         </div>
     </div>
@@ -1587,6 +1648,104 @@
                 filterAndRender();
             } else {
                 alert('Please select a valid date range');
+            }
+        }
+
+        // SETTINGS
+        function openSettings() {
+            // Load saved settings
+            const savedModel = localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+            document.getElementById('settingsAiModel').value = savedModel;
+
+            // Clear password fields
+            document.getElementById('settingsCurrentPass').value = '';
+            document.getElementById('settingsNewPass').value = '';
+            document.getElementById('settingsConfirmPass').value = '';
+            document.getElementById('settingsPassError').classList.add('hidden');
+            document.getElementById('settingsPassSuccess').classList.add('hidden');
+
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const selectedModel = document.getElementById('settingsAiModel').value;
+            localStorage.setItem('fact_ai_model', selectedModel);
+
+            // Update the model display if visible
+            const modelEl = document.getElementById('aiModelName');
+            if (modelEl) {
+                modelEl.textContent = selectedModel;
+            }
+
+            closeSettings();
+        }
+
+        function getSelectedAiModel() {
+            return localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+        }
+
+        async function changePassword() {
+            const currentPass = document.getElementById('settingsCurrentPass').value;
+            const newPass = document.getElementById('settingsNewPass').value;
+            const confirmPass = document.getElementById('settingsConfirmPass').value;
+
+            const errorEl = document.getElementById('settingsPassError');
+            const successEl = document.getElementById('settingsPassSuccess');
+
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+
+            if (!currentPass || !newPass || !confirmPass) {
+                errorEl.textContent = 'Please fill in all password fields';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                errorEl.textContent = 'New passwords do not match';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'changePassword',
+                        token: getAuthToken(),
+                        currentPass: currentPass,
+                        newPass: newPass
+                    })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+
+                if (data.success) {
+                    successEl.textContent = 'Password updated successfully';
+                    successEl.classList.remove('hidden');
+                    document.getElementById('settingsCurrentPass').value = '';
+                    document.getElementById('settingsNewPass').value = '';
+                    document.getElementById('settingsConfirmPass').value = '';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Connection error: ' + err.message;
+                errorEl.classList.remove('hidden');
             }
         }
 
@@ -2834,7 +2993,7 @@
             const txnSummary = prepareTransactionSummary();
 
             try {
-                // Secure POST-based AI query
+                // Secure POST-based AI query with user-selected model
                 const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
@@ -2842,7 +3001,8 @@
                         action: 'ai',
                         token: getAuthToken(),
                         q: query,
-                        data: txnSummary
+                        data: txnSummary,
+                        model: getSelectedAiModel()
                     })
                 });
                 const data = await response.json();
@@ -2935,7 +3095,7 @@
 
                 const fullContext = `Transaction Data:\n${txnSummary}\n\nConversation:\n${historyContext}`;
 
-                // Secure POST-based AI query
+                // Secure POST-based AI query with user-selected model
                 const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
@@ -2943,7 +3103,8 @@
                         action: 'ai',
                         token: getAuthToken(),
                         q: query,
-                        data: fullContext
+                        data: fullContext,
+                        model: getSelectedAiModel()
                     })
                 });
                 const data = await response.json();
