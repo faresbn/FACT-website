@@ -2872,6 +2872,10 @@
         // CATEGORIZE MODAL
         function openCatModal(raw) {
             STATE.catTarget = raw;
+            // Store previous category for learning feedback loop
+            const existingTxn = STATE.allTxns.find(t => t.raw.toLowerCase() === raw.toLowerCase());
+            STATE.catTargetPreviousType = existingTxn?.merchantType || null;
+
             document.getElementById('catModalRaw').textContent = raw;
             document.getElementById('catModalName').value = '';
             document.getElementById('catModal').classList.remove('hidden');
@@ -2907,6 +2911,7 @@
             filterAndRender();
 
             // Sync to MerchantMap via GAS (fire and forget, but log errors)
+            // Include previousType for learning feedback loop
             try {
                 const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
@@ -2916,12 +2921,15 @@
                         token: getAuthToken(),
                         counterparty: raw,
                         merchantType: cat,
-                        consolidated: name
+                        consolidated: name,
+                        previousType: STATE.catTargetPreviousType || null
                     })
                 });
                 const result = await response.json();
                 if (result.success) {
                     console.log('Categorization synced to MerchantMap:', result.action);
+                    // Clear the previous type after successful sync
+                    STATE.catTargetPreviousType = null;
                 } else if (result.code === 'AUTH_REQUIRED') {
                     clearSession();
                     location.reload();
@@ -3152,19 +3160,26 @@
                     const modeIndicator = data.mode === 'deep' ? ' <span class="text-fact-green">●</span>' : '';
                     // Show context indicator if context is loaded
                     const ctx = data.contextLoaded;
-                    const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences > 0);
+                    const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences + (ctx.rules || 0) > 0);
                     const ctxIndicator = hasContext ? ' <span class="text-fact-purple" title="Using your context">◆</span>' : '';
                     modelEl.innerHTML = escapeHtml(data.model) + modeIndicator + ctxIndicator;
                 }
 
                 // Replace loading with answer (with mode badge for deep analysis)
                 const ctx = data.contextLoaded;
-                const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences > 0);
+                const hasContext = ctx && (ctx.income + ctx.payees + ctx.corrections + ctx.preferences + (ctx.rules || 0) > 0);
                 const modeBadge = data.mode === 'deep'
                     ? '<div class="text-[9px] text-fact-green font-medium mb-1">✦ DEEP ANALYSIS</div>'
                     : '';
+                // Build context description
+                const ctxParts = [];
+                if (ctx?.income) ctxParts.push(`${ctx.income} income`);
+                if (ctx?.payees) ctxParts.push(`${ctx.payees} payees`);
+                if (ctx?.corrections) ctxParts.push(`${ctx.corrections} corrections`);
+                if (ctx?.rules) ctxParts.push(`${ctx.rules} rules`);
+                if (ctx?.merchants) ctxParts.push(`${ctx.merchants} merchants`);
                 const ctxBadge = hasContext
-                    ? `<div class="text-[9px] text-fact-purple font-medium mb-1">◆ Using ${ctx.income} income, ${ctx.payees} payees, ${ctx.corrections} corrections</div>`
+                    ? `<div class="text-[9px] text-fact-purple font-medium mb-1">◆ Using ${ctxParts.join(', ')}</div>`
                     : '';
                 document.getElementById(loadingId).innerHTML = `
                     <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 max-w-[85%]">
