@@ -4960,6 +4960,9 @@
             { id: 'health', icon: '❤️', label: 'Financial Health Score', shortcut: 'L', action: () => { closeCmdPalette(); openHealthScore(); } },
             { id: 'patterns', icon: '🔍', label: 'Spending Patterns', shortcut: 'P', action: () => { closeCmdPalette(); openPatternAnalysis(); } },
             { id: 'future', icon: '🔮', label: 'Future Projection', shortcut: 'Z', action: () => { closeCmdPalette(); openFutureProjection(); } },
+            { id: 'weekly', icon: '📅', label: 'Weekly Check-In', shortcut: 'I', action: () => { closeCmdPalette(); openWeeklyCheckIn(); } },
+            { id: 'emergency', icon: '🚨', label: 'Emergency Mode', shortcut: 'X', action: () => { closeCmdPalette(); toggleEmergencyMode(); } },
+            { id: 'share', icon: '📤', label: 'Share Summary', action: () => { closeCmdPalette(); shareWeeklySummary(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -5529,7 +5532,8 @@
             'focus-mode': { icon: '👁️', name: 'Zen Master', desc: 'Used Focus Mode for simplified view', check: () => localStorage.getItem('fact_focus_mode') === 'true' },
             'health-check': { icon: '❤️', name: 'Health Conscious', desc: 'Checked your financial health score', check: () => localStorage.getItem('fact_health_score') === 'true' },
             'pattern-watcher': { icon: '🔍', name: 'Pattern Detective', desc: 'Analyzed your spending patterns', check: () => localStorage.getItem('fact_viewed_patterns') === 'true' },
-            'future-self': { icon: '🔮', name: 'Time Traveler', desc: 'Viewed your future spending projection', check: () => localStorage.getItem('fact_viewed_future') === 'true' }
+            'future-self': { icon: '🔮', name: 'Time Traveler', desc: 'Viewed your future spending projection', check: () => localStorage.getItem('fact_viewed_future') === 'true' },
+            'weekly-reviewer': { icon: '📅', name: 'Weekly Warrior', desc: 'Did a weekly check-in', check: () => localStorage.getItem('fact_weekly_checkin') === 'true' }
         };
 
         function getUnlockedAchievements() {
@@ -6787,6 +6791,217 @@
             trackAchievement('fact_viewed_future');
         }
 
+        // ============== WEEKLY CHECK-IN SYSTEM (Iteration 11) ==============
+
+        function getWeeklyStats() {
+            const now = dayjs();
+            const weekStart = now.startOf('week');
+            const weekEnd = now.endOf('week');
+
+            const weekTxns = STATE.allTxns.filter(t =>
+                t.date.isBetween(weekStart, weekEnd, 'day', '[]')
+            );
+
+            const totalOut = weekTxns.filter(t => t.direction === 'OUT').reduce((s, t) => s + Math.abs(t.qar), 0);
+            const totalIn = weekTxns.filter(t => t.direction === 'IN').reduce((s, t) => s + t.qar, 0);
+
+            // Count days under budget
+            const daysUnderBudget = [0, 1, 2, 3, 4, 5, 6].filter(offset => {
+                const day = weekStart.add(offset, 'day');
+                const dayTxns = weekTxns.filter(t => t.date.isSame(day, 'day') && t.direction === 'OUT');
+                const dayTotal = dayTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+                return dayTotal < checkDailyBudget().budget;
+            }).length;
+
+            // Top category
+            const byCategory = {};
+            weekTxns.filter(t => t.direction === 'OUT').forEach(t => {
+                const cat = t.summaryGroup || 'Uncategorized';
+                byCategory[cat] = (byCategory[cat] || 0) + Math.abs(t.qar);
+            });
+            const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+
+            return {
+                spent: totalOut,
+                income: totalIn,
+                saved: totalIn - totalOut,
+                daysUnderBudget,
+                topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null,
+                txnCount: weekTxns.filter(t => t.direction === 'OUT').length
+            };
+        }
+
+        function openWeeklyCheckIn() {
+            const stats = getWeeklyStats();
+            const streak = getStreakData();
+
+            // Generate wins
+            const wins = [];
+            if (stats.daysUnderBudget >= 5) wins.push('📅 5+ days under budget!');
+            if (stats.saved > 0) wins.push(`💰 Saved QAR ${formatNum(stats.saved)}`);
+            if (streak.currentStreak >= 3) wins.push(`🔥 ${streak.currentStreak} day streak!`);
+            if (stats.txnCount < 20) wins.push('🧘 Kept purchases minimal');
+
+            // Generate areas to improve
+            const improvements = [];
+            if (stats.daysUnderBudget < 4) improvements.push('💡 Try to stay under budget more days');
+            if (stats.topCategory && stats.topCategory.amount > stats.spent * 0.4) {
+                improvements.push(`📊 ${stats.topCategory.name} is ${Math.round(stats.topCategory.amount / stats.spent * 100)}% of spending`);
+            }
+            if (stats.saved <= 0) improvements.push('💸 Spending exceeded income');
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="text-center p-4 rounded-lg bg-gradient-to-r from-fact-yellow/10 to-fact-green/10">
+                        <div class="text-2xl mb-1">📊</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">This Week's Summary</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                            <div class="text-lg font-bold text-fact-red">QAR ${formatNum(stats.spent)}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Spent</div>
+                        </div>
+                        <div class="p-3 ${stats.saved >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'} rounded-lg text-center">
+                            <div class="text-lg font-bold ${stats.saved >= 0 ? 'text-fact-green' : 'text-fact-red'}">${stats.saved >= 0 ? '+' : ''}QAR ${formatNum(stats.saved)}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Net</div>
+                        </div>
+                    </div>
+
+                    ${wins.length > 0 ? `
+                    <div>
+                        <div class="text-xs font-medium text-fact-green mb-2">🎉 This Week's Wins</div>
+                        <div class="space-y-1">
+                            ${wins.map(w => `<div class="text-sm">${w}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${improvements.length > 0 ? `
+                    <div>
+                        <div class="text-xs font-medium text-fact-yellow mb-2">📈 Areas to Improve</div>
+                        <div class="space-y-1">
+                            ${improvements.map(i => `<div class="text-sm">${i}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="p-3 bg-fact-purple/10 rounded-lg">
+                        <div class="text-xs font-medium mb-2">🎯 Next Week's Focus</div>
+                        <div class="text-sm text-fact-muted dark:text-fact-dark-muted">
+                            ${improvements.length > 0 ? improvements[0].replace(/[📊💡💸]/, '').trim() : 'Keep up the great work!'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const overlay = document.querySelector('.confirm-overlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="confirm-box" style="max-width: 380px;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-semibold text-lg">📅 Weekly Check-In</h3>
+                            <button onclick="document.querySelector('.confirm-overlay').classList.add('hidden')"
+                                class="text-fact-muted hover:text-fact-ink">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+                overlay.classList.remove('hidden');
+            }
+
+            trackAchievement('fact_weekly_checkin');
+        }
+
+        // ============== EMERGENCY BUDGET MODE (Iteration 13) ==============
+
+        let emergencyMode = false;
+
+        function toggleEmergencyMode() {
+            emergencyMode = !emergencyMode;
+            localStorage.setItem(`fact_emergency_${STATE.currentUser}`, emergencyMode);
+
+            if (emergencyMode) {
+                document.body.classList.add('emergency-mode');
+                showToast('🚨 Emergency Mode ON - Essential spending only!', 'error');
+            } else {
+                document.body.classList.remove('emergency-mode');
+                showToast('Emergency Mode OFF - Normal spending resumed', 'success');
+            }
+
+            updateEmergencyUI();
+        }
+
+        function updateEmergencyUI() {
+            // Add emergency banner if active
+            const existing = document.getElementById('emergencyBanner');
+            if (emergencyMode && !existing) {
+                const banner = document.createElement('div');
+                banner.id = 'emergencyBanner';
+                banner.className = 'fixed top-0 left-0 right-0 bg-fact-red text-white text-center py-2 text-sm font-medium z-40';
+                banner.innerHTML = `
+                    🚨 EMERGENCY MODE - Essentials Only
+                    <button onclick="toggleEmergencyMode()" class="ml-4 underline">Turn Off</button>
+                `;
+                document.body.prepend(banner);
+            } else if (!emergencyMode && existing) {
+                existing.remove();
+            }
+        }
+
+        function initEmergencyMode() {
+            emergencyMode = localStorage.getItem(`fact_emergency_${STATE.currentUser}`) === 'true';
+            if (emergencyMode) {
+                document.body.classList.add('emergency-mode');
+                updateEmergencyUI();
+            }
+        }
+
+        // ============== CELEBRATION MILESTONES (Iteration 14) ==============
+
+        const MILESTONES = [
+            { id: 'first-week', check: () => getStreakData().longestStreak >= 7, message: '🎉 First full week under budget!' },
+            { id: 'first-month', check: () => getStreakData().longestStreak >= 30, message: '🏆 A whole month of discipline!' },
+            { id: 'savings-100', check: () => calculateFutureProjection().projection.current.savings >= 100, message: '💰 On track to save 100+ QAR!' },
+            { id: 'savings-500', check: () => calculateFutureProjection().projection.current.savings >= 500, message: '💎 On track to save 500+ QAR!' },
+            { id: 'all-categorized', check: () => STATE.txns.filter(t => !t.category).length === 0, message: '✅ All transactions categorized!' }
+        ];
+
+        function checkMilestones() {
+            const reached = JSON.parse(localStorage.getItem(`fact_milestones_${STATE.currentUser}`) || '[]');
+
+            MILESTONES.forEach(m => {
+                if (!reached.includes(m.id) && m.check()) {
+                    reached.push(m.id);
+                    localStorage.setItem(`fact_milestones_${STATE.currentUser}`, JSON.stringify(reached));
+
+                    // Show celebration toast
+                    showToast(m.message, 'success');
+                }
+            });
+        }
+
+        // Quick share function for accountability
+        function shareWeeklySummary() {
+            const stats = getWeeklyStats();
+            const text = `📊 My FACT/Flow Week:\n` +
+                `Spent: QAR ${formatNum(stats.spent)}\n` +
+                `${stats.saved >= 0 ? 'Saved' : 'Over'}: QAR ${formatNum(Math.abs(stats.saved))}\n` +
+                `Days under budget: ${stats.daysUnderBudget}/7\n` +
+                `#FACT #PersonalFinance`;
+
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                navigator.clipboard.writeText(text);
+                showToast('Summary copied to clipboard!', 'success');
+            }
+        }
+
         // ============== INIT ENHANCEMENTS ==============
 
         // Initialize all enhancements on load
@@ -6794,6 +7009,14 @@
             initVoiceRecognition();
             initFocusMode();
             initDarkMode();
+            initEmergencyMode();
+
+            // Check milestones after data loads (delayed)
+            setTimeout(() => {
+                if (STATE.hasLoaded && typeof checkMilestones === 'function') {
+                    checkMilestones();
+                }
+            }, 5000);
         });
     </script>
 </body>
