@@ -470,6 +470,50 @@
                 </div>
             </div>
             
+            <!-- ROW 7: AI INSIGHTS -->
+            <div class="card rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="font-display font-semibold text-sm">AI Insights</h2>
+                        <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Pattern analysis & anomalies</p>
+                    </div>
+                    <button onclick="openAIQuery()" class="text-xs font-medium text-fact-yellow hover:underline">Ask AI</button>
+                </div>
+
+                <!-- Quick Insights -->
+                <div id="quickInsights" class="space-y-3">
+                    <div class="text-sm text-fact-muted dark:text-fact-dark-muted">Loading insights...</div>
+                </div>
+
+                <!-- Dimension Filters -->
+                <div class="mt-4 pt-4 border-t border-fact-border dark:border-fact-dark-border">
+                    <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-2">Quick Filters</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterByDimension('workHours')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            💼 Work Hours
+                        </button>
+                        <button onclick="filterByDimension('lateNight')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            🌙 Late Night
+                        </button>
+                        <button onclick="filterByDimension('nightOut')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            🎉 Night Out
+                        </button>
+                        <button onclick="filterByDimension('splurge')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            💸 Splurges
+                        </button>
+                        <button onclick="filterByDimension('large')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            •••• Large
+                        </button>
+                        <button onclick="filterByDimension('subscription')" class="dim-filter px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">
+                            📅 Subscriptions
+                        </button>
+                        <button onclick="filterByDimension('clear')" class="dim-filter px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            ✕ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- FOOTER -->
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
@@ -648,6 +692,83 @@
         </div>
     </div>
 
+    <!-- AI QUERY MODAL -->
+    <div id="aiModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">Ask AI About Your Spending</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by GPT via GAS</p>
+                </div>
+                <button onclick="closeAIQuery()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Quick Questions -->
+            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+                <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-2">Quick Questions</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="askAI('What are my biggest spending categories this period?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Top categories</button>
+                    <button onclick="askAI('Find any unusual or suspicious transactions')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Anomalies</button>
+                    <button onclick="askAI('Which transactions might be work expenses I could claim?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Work expenses</button>
+                    <button onclick="askAI('Summarize my night out spending patterns')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Night outs</button>
+                    <button onclick="askAI('What subscriptions or recurring payments do I have?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Subscriptions</button>
+                </div>
+            </div>
+
+            <!-- Custom Query -->
+            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+                <div class="flex gap-2">
+                    <input type="text" id="aiQueryInput" placeholder="Ask anything about your spending..." class="flex-1 px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" onkeydown="if(event.key==='Enter')askAI()">
+                    <button onclick="askAI()" class="px-4 py-2 bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg rounded-lg text-sm font-medium">Ask</button>
+                </div>
+            </div>
+
+            <!-- Response -->
+            <div class="flex-1 overflow-y-auto p-5">
+                <div id="aiResponse" class="prose prose-sm dark:prose-invert max-w-none">
+                    <p class="text-fact-muted dark:text-fact-dark-muted text-sm">Ask a question to analyze your spending data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTERED VIEW MODAL -->
+    <div id="filteredModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold" id="filteredTitle">Filtered Transactions</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="filteredSubtitle">-- transactions</p>
+                </div>
+                <button onclick="closeFilteredModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Total</div>
+                    <div class="font-display font-bold" id="filteredTotal">--</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Count</div>
+                    <div class="font-display font-bold" id="filteredCount">--</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Average</div>
+                    <div class="font-display font-bold" id="filteredAvg">--</div>
+                </div>
+            </div>
+
+            <div id="filteredList" class="flex-1 overflow-y-auto divide-y divide-fact-border dark:divide-fact-dark-border">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // CONFIG
@@ -660,7 +781,9 @@
             },
             DEFAULT_SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
             STORAGE_KEY: 'qnb_tracker_v4',
-            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
+            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
+            // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
+            GAS_URL: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
         };
 
         // Get user from URL parameter
@@ -674,71 +797,138 @@
             return CONFIG.USER_SHEETS[user] || CONFIG.DEFAULT_SHEET_ID;
         }
 
-        // CATEGORY HIERARCHY: Parent categories with subcategories
-        // Priority-based structure: Essentials > Lifestyle > Growth > Financial > Other
-        const CATEGORY_HIERARCHY = {
+        // DIMENSION-BASED CATEGORIZATION SYSTEM
+        // Instead of rigid hierarchy, use computed dimensions for flexible analysis
+
+        // DIMENSION 1: WHAT (merchant type) - the base category
+        const MERCHANT_TYPES = {
+            'Groceries': { color: '#4CAF50', icon: '🛒', essential: true },
+            'Dining': { color: '#E67E22', icon: '🍽️', essential: false },
+            'Bars & Nightlife': { color: '#AB47BC', icon: '🍸', essential: false },
+            'Coffee': { color: '#795548', icon: '☕', essential: false },
+            'Delivery': { color: '#FFA726', icon: '📦', essential: false },
+            'Shopping': { color: '#42A5F5', icon: '🛍️', essential: false },
+            'Transport': { color: '#26C6DA', icon: '🚗', essential: true },
+            'Health': { color: '#66BB6A', icon: '💊', essential: true },
+            'Bills': { color: '#78909C', icon: '📄', essential: true },
+            'Travel': { color: '#FF7043', icon: '✈️', essential: false },
+            'Entertainment': { color: '#EC407A', icon: '🎬', essential: false },
+            'Transfer': { color: '#8D6E63', icon: '💸', essential: false },
+            'Family': { color: '#E91E63', icon: '👨‍👩‍👧‍👦', essential: false },
+            'Other': { color: '#95A5A6', icon: '📋', essential: false },
+            'Uncategorized': { color: '#E74C3C', icon: '❓', essential: false }
+        };
+
+        // DIMENSION 2: WHEN (time context)
+        const TIME_CONTEXTS = {
+            'Work Hours': { color: '#3498DB', hours: [7, 16], days: [0, 1, 2, 3, 4], icon: '💼' }, // Sun-Thu in Qatar
+            'Evening': { color: '#9B59B6', hours: [17, 21], icon: '🌆' },
+            'Late Night': { color: '#2C3E50', hours: [21, 4], icon: '🌙' },
+            'Weekend': { color: '#E74C3C', days: [5, 6], icon: '🎉' }, // Fri-Sat
+            'Early Morning': { color: '#F39C12', hours: [5, 7], icon: '🌅' }
+        };
+
+        // DIMENSION 3: SIZE (amount tier)
+        const SIZE_TIERS = {
+            'Micro': { max: 25, color: '#BDC3C7', icon: '•' },
+            'Small': { max: 100, color: '#95A5A6', icon: '••' },
+            'Medium': { max: 500, color: '#7F8C8D', icon: '•••' },
+            'Large': { max: 2000, color: '#34495E', icon: '••••' },
+            'Major': { max: Infinity, color: '#2C3E50', icon: '•••••' }
+        };
+
+        // DIMENSION 4: PATTERN (AI-detected, computed from sequences)
+        const PATTERNS = {
+            'Routine': { color: '#3498DB', icon: '🔄', description: 'Regular, repeated spending' },
+            'Night Out': { color: '#9B59B6', icon: '🎉', description: 'Evening social spending cluster' },
+            'Splurge': { color: '#E74C3C', icon: '💸', description: 'Unusually large purchase' },
+            'Trip': { color: '#E67E22', icon: '✈️', description: 'Travel-related cluster' },
+            'Subscription': { color: '#1ABC9C', icon: '📅', description: 'Recurring fixed amount' },
+            'Work Expense': { color: '#3498DB', icon: '💼', description: 'Likely work-related' },
+            'Normal': { color: '#95A5A6', icon: '○', description: 'Standard transaction' }
+        };
+
+        // High-level groupings for summary view (simplified)
+        const SUMMARY_GROUPS = {
             'Essentials': {
                 color: '#75B876',
                 icon: '🏠',
-                subcategories: ['Groceries', 'Bills', 'Health', 'Transport']
+                types: ['Groceries', 'Bills', 'Health', 'Transport']
             },
-            'Lifestyle': {
-                color: '#F4C44E',
-                icon: '✨',
-                subcategories: ['Dining', 'Delivery', 'Bars & Hotels', 'Shopping']
+            'Food & Drinks': {
+                color: '#E67E22',
+                icon: '🍽️',
+                types: ['Dining', 'Coffee', 'Delivery', 'Bars & Nightlife']
             },
-            'Growth': {
-                color: '#3498DB',
-                icon: '📈',
-                subcategories: ['Hobbies', 'Travel', 'Family']
+            'Shopping & Fun': {
+                color: '#42A5F5',
+                icon: '🛍️',
+                types: ['Shopping', 'Entertainment', 'Travel']
             },
-            'Financial': {
-                color: '#9B59B6',
-                icon: '💸',
-                subcategories: ['Transfers']
+            'Family': {
+                color: '#E91E63',
+                icon: '👨‍👩‍👧‍👦',
+                types: ['Family']
             },
             'Other': {
                 color: '#95A5A6',
-                icon: '📦',
-                subcategories: ['Other', 'Uncategorized']
+                icon: '📋',
+                types: ['Transfer', 'Other', 'Uncategorized']
             }
         };
 
-        // Build reverse lookup: subcategory -> parent
-        const SUBCAT_TO_PARENT = {};
-        Object.entries(CATEGORY_HIERARCHY).forEach(([parent, data]) => {
-            data.subcategories.forEach(sub => {
-                SUBCAT_TO_PARENT[sub] = parent;
-            });
-        });
+        // Compute summary group from merchant type
+        function getSummaryGroup(merchantType) {
+            for (const [group, data] of Object.entries(SUMMARY_GROUPS)) {
+                if (data.types.includes(merchantType)) return group;
+            }
+            return 'Other';
+        }
 
-        // CATEGORY COLORS - now includes both parents and subcategories
-        const CAT_COLORS = {
-            // Parent categories
-            'Essentials': '#75B876',
-            'Lifestyle': '#F4C44E',
-            'Growth': '#3498DB',
-            'Financial': '#9B59B6',
-            'Other': '#95A5A6',
-            // Subcategories (legacy support + drilldown coloring)
-            'Groceries': '#4CAF50',
-            'Delivery': '#FFA726',
-            'Dining': '#E67E22',
-            'Bars & Hotels': '#AB47BC',
-            'Shopping': '#42A5F5',
-            'Hobbies': '#E91E63',
-            'Bills': '#78909C',
-            'Transport': '#26C6DA',
-            'Travel': '#FF7043',
-            'Health': '#66BB6A',
-            'Family': '#7E57C2',
-            'Transfers': '#8D6E63',
-            'Uncategorized': '#E74C3C'
-        };
+        // Compute time context from timestamp
+        function getTimeContext(date) {
+            const hour = date.hour();
+            const day = date.day(); // 0 = Sunday
 
-        // Helper to get parent category for any subcategory
-        function getParentCategory(subcat) {
-            return SUBCAT_TO_PARENT[subcat] || 'Other';
+            const contexts = [];
+
+            // Check weekend first (Fri-Sat in Qatar)
+            if (day === 5 || day === 6) {
+                contexts.push('Weekend');
+            }
+
+            // Check time of day
+            if (hour >= 7 && hour < 16 && day >= 0 && day <= 4) {
+                contexts.push('Work Hours');
+            }
+            if (hour >= 17 && hour < 21) {
+                contexts.push('Evening');
+            }
+            if (hour >= 21 || hour < 5) {
+                contexts.push('Late Night');
+            }
+            if (hour >= 5 && hour < 7) {
+                contexts.push('Early Morning');
+            }
+
+            return contexts.length > 0 ? contexts : ['Normal'];
+        }
+
+        // Compute size tier from amount
+        function getSizeTier(amount) {
+            for (const [tier, data] of Object.entries(SIZE_TIERS)) {
+                if (amount <= data.max) return tier;
+            }
+            return 'Major';
+        }
+
+        // COLORS helper
+        function getTypeColor(type) {
+            return MERCHANT_TYPES[type]?.color || '#95A5A6';
+        }
+
+        function getGroupColor(group) {
+            return SUMMARY_GROUPS[group]?.color || '#95A5A6';
         }
 
         // STATE
@@ -870,6 +1060,11 @@
         }
 
         function processTxns(rows) {
+            // Detect schema: old (8 cols) vs enhanced (12 cols)
+            const headers = rows[0] || [];
+            const hasEnhancedSchema = headers.length >= 10 &&
+                (clean(headers[7]) === 'Category' || clean(headers[8]) === 'Category');
+
             const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
 
             STATE.allTxns = data.map(r => {
@@ -878,35 +1073,179 @@
                 const amount = parseFloat(r[1]);
                 const rate = STATE.fxRates[currency] || 1;
                 const amtQAR = currency === 'QAR' ? amount : amount * rate;
-                const meta = categorize(raw);
+                const txnDate = dayjs(clean(r[0]));
+
+                // Try to get AI-assigned category from enhanced schema
+                let aiMerchantType = null;
+                let confidence = null;
+                let aiContext = null;
+
+                if (hasEnhancedSchema) {
+                    aiMerchantType = clean(r[8]) || clean(r[7]) || null;
+                    confidence = clean(r[9]) || null;
+                    try {
+                        aiContext = r[10] ? JSON.parse(clean(r[10])) : null;
+                    } catch (e) {
+                        aiContext = null;
+                    }
+                }
+
+                // Get merchant type and display info
+                const meta = categorize(raw, aiMerchantType);
+
+                // COMPUTE DIMENSIONS
+                const dims = {
+                    what: meta.merchantType,
+                    when: getTimeContext(txnDate),
+                    size: getSizeTier(amtQAR),
+                    pattern: 'Normal' // Will be computed in batch by AI
+                };
 
                 return {
-                    date: dayjs(clean(r[0])),
+                    date: txnDate,
                     amount: amtQAR,
                     currency,
                     raw,
                     display: meta.display,
                     consolidated: meta.consolidated,
-                    category: meta.category,
+                    merchantType: meta.merchantType,
+                    summaryGroup: getSummaryGroup(meta.merchantType),
                     direction: clean(r[5]),
-                    type: clean(r[6])
+                    txnType: clean(r[6]),
+                    confidence,
+                    aiContext,
+                    // Dimensions
+                    dims,
+                    // Computed flags for quick filtering
+                    isWorkHours: dims.when.includes('Work Hours'),
+                    isLateNight: dims.when.includes('Late Night'),
+                    isWeekend: dims.when.includes('Weekend'),
+                    isLarge: dims.size === 'Large' || dims.size === 'Major',
+                    isEssential: MERCHANT_TYPES[meta.merchantType]?.essential || false
                 };
             }).sort((a, b) => b.date - a.date);
+
+            // After loading, detect patterns
+            detectPatterns();
         }
 
-        function categorize(raw) {
+        function categorize(raw, aiMerchantType = null) {
             const lower = raw.toLowerCase();
 
+            // Priority 1: Local user overrides
             if (STATE.localMappings[lower]) {
-                return STATE.localMappings[lower];
+                const m = STATE.localMappings[lower];
+                return {
+                    display: m.display,
+                    consolidated: m.consolidated,
+                    merchantType: m.merchantType || m.category || 'Other'
+                };
             }
 
+            // Priority 2: AI-assigned type (if provided and valid)
+            if (aiMerchantType && MERCHANT_TYPES[aiMerchantType]) {
+                return { display: raw, consolidated: raw, merchantType: aiMerchantType };
+            }
+
+            // Priority 3: MerchantMap patterns
             const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
             if (match) {
-                return { display: match.display, consolidated: match.consolidated, category: match.category };
+                // Map old categories to new merchant types
+                const typeMap = {
+                    'Groceries': 'Groceries',
+                    'Dining': 'Dining',
+                    'Bars & Hotels': 'Bars & Nightlife',
+                    'Delivery': 'Delivery',
+                    'Shopping': 'Shopping',
+                    'Hobbies': 'Entertainment',
+                    'Bills': 'Bills',
+                    'Transport': 'Transport',
+                    'Travel': 'Travel',
+                    'Health': 'Health',
+                    'Family Transfers': 'Family',
+                    'Family': 'Family',
+                    'Transfers': 'Transfer',
+                    'Fees': 'Transfer'
+                };
+                const merchantType = typeMap[match.category] || match.category || 'Other';
+                return { display: match.display, consolidated: match.consolidated, merchantType };
             }
 
-            return { display: raw, consolidated: raw, category: 'Uncategorized' };
+            return { display: raw, consolidated: raw, merchantType: 'Uncategorized' };
+        }
+
+        // PATTERN DETECTION - runs on all transactions to find clusters
+        function detectPatterns() {
+            const out = STATE.allTxns.filter(t => t.direction === 'OUT');
+
+            // Detect Night Out patterns: multiple bar/dining transactions in same evening
+            const byDate = {};
+            out.forEach(t => {
+                const dateKey = t.date.format('YYYY-MM-DD');
+                if (!byDate[dateKey]) byDate[dateKey] = [];
+                byDate[dateKey].push(t);
+            });
+
+            Object.values(byDate).forEach(dayTxns => {
+                const lateNightSocial = dayTxns.filter(t =>
+                    t.isLateNight &&
+                    ['Bars & Nightlife', 'Dining', 'Coffee'].includes(t.merchantType)
+                );
+                if (lateNightSocial.length >= 2) {
+                    lateNightSocial.forEach(t => t.dims.pattern = 'Night Out');
+                }
+            });
+
+            // Detect Work Expense candidates: work hours dining/coffee
+            out.forEach(t => {
+                if (t.isWorkHours && ['Dining', 'Coffee'].includes(t.merchantType) && t.dims.pattern === 'Normal') {
+                    t.dims.pattern = 'Work Expense';
+                }
+            });
+
+            // Detect Splurges: transactions > 3x average for that merchant type
+            const avgByType = {};
+            out.forEach(t => {
+                if (!avgByType[t.merchantType]) avgByType[t.merchantType] = { sum: 0, count: 0 };
+                avgByType[t.merchantType].sum += t.amount;
+                avgByType[t.merchantType].count++;
+            });
+            Object.keys(avgByType).forEach(type => {
+                avgByType[type].avg = avgByType[type].sum / avgByType[type].count;
+            });
+
+            out.forEach(t => {
+                const avg = avgByType[t.merchantType]?.avg || 0;
+                if (avg > 0 && t.amount > avg * 3 && t.dims.pattern === 'Normal') {
+                    t.dims.pattern = 'Splurge';
+                }
+            });
+
+            // Detect Subscriptions: same merchant, similar amount, ~monthly interval
+            const byMerchant = {};
+            out.forEach(t => {
+                if (!byMerchant[t.consolidated]) byMerchant[t.consolidated] = [];
+                byMerchant[t.consolidated].push(t);
+            });
+
+            Object.values(byMerchant).forEach(txns => {
+                if (txns.length < 2) return;
+                txns.sort((a, b) => a.date - b.date);
+
+                const intervals = [];
+                for (let i = 1; i < txns.length; i++) {
+                    intervals.push(txns[i].date.diff(txns[i-1].date, 'day'));
+                }
+
+                const avgInterval = intervals.reduce((s, i) => s + i, 0) / intervals.length;
+                const amounts = txns.map(t => t.amount);
+                const avgAmount = amounts.reduce((s, a) => s + a, 0) / amounts.length;
+                const amountVariance = amounts.every(a => Math.abs(a - avgAmount) < avgAmount * 0.1);
+
+                if (avgInterval >= 25 && avgInterval <= 35 && amountVariance) {
+                    txns.forEach(t => t.dims.pattern = 'Subscription');
+                }
+            });
         }
 
         function clean(str) {
@@ -986,6 +1325,7 @@
             renderRecurring();
             renderRecentTxns();
             renderUncatAlert();
+            renderQuickInsights();
         }
 
         // VIEW MODE TOGGLE
@@ -1310,52 +1650,52 @@
             });
         }
 
-        // CATEGORIES LIST (Hierarchical)
+        // CATEGORIES LIST (Dimension-based)
         function renderCategories() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
             const container = document.getElementById('categoryList');
 
             if (STATE.viewMode === 'parent') {
-                // Group by parent category
-                const parentSpend = {};
-                const parentCount = {};
-                const subcatBreakdown = {};
+                // Group by summary group
+                const groupSpend = {};
+                const groupCount = {};
+                const typeBreakdown = {};
 
                 out.forEach(t => {
-                    const parent = getParentCategory(t.category);
-                    parentSpend[parent] = (parentSpend[parent] || 0) + t.amount;
-                    parentCount[parent] = (parentCount[parent] || 0) + 1;
-                    if (!subcatBreakdown[parent]) subcatBreakdown[parent] = {};
-                    subcatBreakdown[parent][t.category] = (subcatBreakdown[parent][t.category] || 0) + t.amount;
+                    const group = t.summaryGroup || 'Other';
+                    groupSpend[group] = (groupSpend[group] || 0) + t.amount;
+                    groupCount[group] = (groupCount[group] || 0) + 1;
+                    if (!typeBreakdown[group]) typeBreakdown[group] = {};
+                    typeBreakdown[group][t.merchantType] = (typeBreakdown[group][t.merchantType] || 0) + t.amount;
                 });
 
-                // Sort parents by priority order
-                const parentOrder = ['Essentials', 'Lifestyle', 'Growth', 'Financial', 'Other'];
-                const total = Object.values(parentSpend).reduce((s, v) => s + v, 0) || 1;
+                // Sort groups by defined order
+                const groupOrder = ['Essentials', 'Food & Drinks', 'Shopping & Fun', 'Family', 'Other'];
+                const total = Object.values(groupSpend).reduce((s, v) => s + v, 0) || 1;
 
-                container.innerHTML = parentOrder
-                    .filter(p => parentSpend[p] > 0)
-                    .map(parent => {
-                        const amount = parentSpend[parent];
-                        const count = parentCount[parent];
+                container.innerHTML = groupOrder
+                    .filter(g => groupSpend[g] > 0)
+                    .map(group => {
+                        const amount = groupSpend[group];
+                        const count = groupCount[group];
                         const pct = (amount / total * 100).toFixed(1);
-                        const color = CAT_COLORS[parent];
-                        const icon = CATEGORY_HIERARCHY[parent].icon;
+                        const color = SUMMARY_GROUPS[group]?.color || '#95A5A6';
+                        const icon = SUMMARY_GROUPS[group]?.icon || '📋';
 
-                        // Top subcategories
-                        const subs = Object.entries(subcatBreakdown[parent] || {})
+                        // Top merchant types
+                        const types = Object.entries(typeBreakdown[group] || {})
                             .sort((a, b) => b[1] - a[1])
                             .slice(0, 3)
-                            .map(([sub]) => sub)
+                            .map(([type]) => type)
                             .join(', ');
 
                         return `
-                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openParentDrilldown('${parent}')">
+                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openGroupDrilldown('${group}')">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style="background:${color}20">${icon}</div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between mb-1">
-                                            <span class="font-semibold text-sm">${parent}</span>
+                                            <span class="font-semibold text-sm">${group}</span>
                                             <span class="font-display font-bold text-sm">${formatNum(amount)}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
@@ -1364,34 +1704,35 @@
                                             </div>
                                             <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted w-12 text-right">${pct}%</span>
                                         </div>
-                                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">${subs} · ${count} txns</div>
+                                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">${types} · ${count} txns</div>
                                     </div>
                                 </div>
                             </div>
                         `;
                     }).join('');
             } else {
-                // Original subcategory view
-                const catSpend = {};
-                out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+                // Detailed merchant type view
+                const typeSpend = {};
+                out.forEach(t => typeSpend[t.merchantType] = (typeSpend[t.merchantType] || 0) + t.amount);
 
-                const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
+                const sorted = Object.entries(typeSpend).sort((a, b) => b[1] - a[1]);
                 const total = sorted.reduce((s, c) => s + c[1], 0) || 1;
 
-                container.innerHTML = sorted.map(([cat, amount]) => {
+                container.innerHTML = sorted.map(([type, amount]) => {
                     const pct = (amount / total * 100).toFixed(1);
-                    const color = CAT_COLORS[cat] || '#999';
-                    const count = out.filter(t => t.category === cat).length;
-                    const parent = getParentCategory(cat);
+                    const color = getTypeColor(type);
+                    const icon = MERCHANT_TYPES[type]?.icon || '📋';
+                    const count = out.filter(t => t.merchantType === type).length;
+                    const group = getSummaryGroup(type);
 
                     return `
-                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openDrilldown('${cat}')">
-                            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${color}"></div>
+                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="openTypeDrilldown('${type}')">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:${color}20">${icon}</div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-1">
                                     <div>
-                                        <span class="font-medium text-sm truncate">${cat}</span>
-                                        <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted ml-2">${parent}</span>
+                                        <span class="font-medium text-sm truncate">${type}</span>
+                                        <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted ml-2">${group}</span>
                                     </div>
                                     <span class="font-display font-semibold text-sm">${formatNum(amount)}</span>
                                 </div>
@@ -1409,6 +1750,19 @@
             }
         }
 
+        // Drilldown for summary group
+        function openGroupDrilldown(group) {
+            const types = SUMMARY_GROUPS[group]?.types || [];
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && types.includes(t.merchantType));
+            showFilteredResults(out, `${SUMMARY_GROUPS[group]?.icon || '📋'} ${group}`);
+        }
+
+        // Drilldown for merchant type
+        function openTypeDrilldown(type) {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT' && t.merchantType === type);
+            showFilteredResults(out, `${MERCHANT_TYPES[type]?.icon || '📋'} ${type}`);
+        }
+
         // MERCHANTS LIST
         function renderMerchants() {
             const out = STATE.filtered.filter(t => t.direction === 'OUT');
@@ -1416,7 +1770,7 @@
 
             out.forEach(t => {
                 if (!merchants[t.consolidated]) {
-                    merchants[t.consolidated] = { count: 0, total: 0, category: t.category };
+                    merchants[t.consolidated] = { count: 0, total: 0, merchantType: t.merchantType };
                 }
                 merchants[t.consolidated].count++;
                 merchants[t.consolidated].total += t.amount;
@@ -1431,7 +1785,8 @@
             const maxTotal = sorted[0]?.total || 1;
 
             container.innerHTML = sorted.map(m => {
-                const color = CAT_COLORS[m.category] || '#999';
+                const color = getTypeColor(m.merchantType);
+                const icon = MERCHANT_TYPES[m.merchantType]?.icon || '📋';
                 const pct = (m.total / maxTotal * 100);
 
                 return `
@@ -1997,7 +2352,263 @@
             document.getElementById('txnModalList').innerHTML = txns.slice(0, 100).map(t => renderTxnRow(t)).join('');
         }
 
-        // UTILS
+        // ============== FRONTEND AI INTEGRATION (via GAS proxy) ==============
+
+        function openAIQuery() {
+            document.getElementById('aiModal').classList.remove('hidden');
+        }
+
+        function closeAIQuery() {
+            document.getElementById('aiModal').classList.add('hidden');
+        }
+
+        async function askAI(question) {
+            const query = question || document.getElementById('aiQueryInput').value.trim();
+            if (!query) return;
+
+            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in track_spend.html with your deployed GAS URL</p>';
+                return;
+            }
+
+            const responseDiv = document.getElementById('aiResponse');
+            responseDiv.innerHTML = '<p class="text-fact-muted animate-pulse">Analyzing your spending...</p>';
+
+            // Prepare transaction summary and encode it
+            const txnSummary = prepareTransactionSummary();
+            const encodedData = btoa(unescape(encodeURIComponent(txnSummary)));
+
+            try {
+                // Call GAS proxy endpoint
+                const url = `${CONFIG.GAS_URL}?action=ai&q=${encodeURIComponent(query)}&data=${encodeURIComponent(encodedData)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const answer = data.answer;
+                responseDiv.innerHTML = marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>');
+
+            } catch (err) {
+                responseDiv.innerHTML = `<p class="text-fact-red">Error: ${err.message}</p>`;
+            }
+
+            document.getElementById('aiQueryInput').value = '';
+        }
+
+        function prepareTransactionSummary() {
+            const txns = STATE.filtered.filter(t => t.direction === 'OUT');
+
+            // Group by merchant type
+            const byType = {};
+            txns.forEach(t => {
+                if (!byType[t.merchantType]) byType[t.merchantType] = { total: 0, count: 0, txns: [] };
+                byType[t.merchantType].total += t.amount;
+                byType[t.merchantType].count++;
+                byType[t.merchantType].txns.push(t);
+            });
+
+            // Build summary
+            let summary = `Period: ${STATE.dateRange.start.format('MMM D')} - ${STATE.dateRange.end.format('MMM D, YYYY')}\n`;
+            summary += `Total Transactions: ${txns.length}\n`;
+            summary += `Total Spent: QAR ${formatNum(txns.reduce((s, t) => s + t.amount, 0))}\n\n`;
+
+            summary += `By Type:\n`;
+            Object.entries(byType)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([type, data]) => {
+                    summary += `- ${type}: QAR ${formatNum(data.total)} (${data.count} txns)\n`;
+                });
+
+            summary += `\nRecent transactions (last 30):\n`;
+            txns.slice(0, 30).forEach(t => {
+                summary += `${t.date.format('MMM D HH:mm')} | ${t.display} | QAR ${formatNum(t.amount)} | ${t.merchantType} | ${t.dims.when.join(', ')} | ${t.dims.pattern}\n`;
+            });
+
+            return summary;
+        }
+
+        // Quick insights generation
+        function renderQuickInsights() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const insights = [];
+
+            // Night out patterns
+            const nightOuts = out.filter(t => t.dims.pattern === 'Night Out');
+            if (nightOuts.length > 0) {
+                const total = nightOuts.reduce((s, t) => s + t.amount, 0);
+                insights.push({
+                    icon: '🎉',
+                    text: `${nightOuts.length} Night Out transactions totaling QAR ${formatNum(total)}`,
+                    filter: 'nightOut'
+                });
+            }
+
+            // Work expense candidates
+            const workExpenses = out.filter(t => t.dims.pattern === 'Work Expense');
+            if (workExpenses.length > 0) {
+                const total = workExpenses.reduce((s, t) => s + t.amount, 0);
+                insights.push({
+                    icon: '💼',
+                    text: `${workExpenses.length} potential work expenses (QAR ${formatNum(total)})`,
+                    filter: 'workHours'
+                });
+            }
+
+            // Splurges
+            const splurges = out.filter(t => t.dims.pattern === 'Splurge');
+            if (splurges.length > 0) {
+                const total = splurges.reduce((s, t) => s + t.amount, 0);
+                insights.push({
+                    icon: '💸',
+                    text: `${splurges.length} splurge purchases (QAR ${formatNum(total)})`,
+                    filter: 'splurge'
+                });
+            }
+
+            // Subscriptions
+            const subs = out.filter(t => t.dims.pattern === 'Subscription');
+            if (subs.length > 0) {
+                const merchants = [...new Set(subs.map(t => t.consolidated))];
+                insights.push({
+                    icon: '📅',
+                    text: `${merchants.length} detected subscriptions`,
+                    filter: 'subscription'
+                });
+            }
+
+            // Late night spending
+            const lateNight = out.filter(t => t.isLateNight);
+            if (lateNight.length >= 3) {
+                const total = lateNight.reduce((s, t) => s + t.amount, 0);
+                insights.push({
+                    icon: '🌙',
+                    text: `QAR ${formatNum(total)} spent late at night (${lateNight.length} txns)`,
+                    filter: 'lateNight'
+                });
+            }
+
+            // Large purchases
+            const large = out.filter(t => t.isLarge);
+            if (large.length > 0) {
+                insights.push({
+                    icon: '••••',
+                    text: `${large.length} large purchases (500+ QAR each)`,
+                    filter: 'large'
+                });
+            }
+
+            const container = document.getElementById('quickInsights');
+            if (insights.length === 0) {
+                container.innerHTML = '<div class="text-sm text-fact-muted dark:text-fact-dark-muted">No notable patterns detected in this period.</div>';
+                return;
+            }
+
+            container.innerHTML = insights.map(i => `
+                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="filterByDimension('${i.filter}')">
+                    <span class="text-lg">${i.icon}</span>
+                    <span class="text-sm">${i.text}</span>
+                    <span class="text-xs text-fact-yellow ml-auto">View →</span>
+                </div>
+            `).join('');
+        }
+
+        // ============== DIMENSION FILTERING ==============
+
+        function filterByDimension(dimension) {
+            let filtered = [];
+            let title = '';
+
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+
+            switch (dimension) {
+                case 'workHours':
+                    filtered = out.filter(t => t.isWorkHours);
+                    title = '💼 Work Hours Spending';
+                    break;
+                case 'lateNight':
+                    filtered = out.filter(t => t.isLateNight);
+                    title = '🌙 Late Night Spending';
+                    break;
+                case 'nightOut':
+                    filtered = out.filter(t => t.dims.pattern === 'Night Out');
+                    title = '🎉 Night Out Sessions';
+                    break;
+                case 'splurge':
+                    filtered = out.filter(t => t.dims.pattern === 'Splurge');
+                    title = '💸 Splurge Purchases';
+                    break;
+                case 'large':
+                    filtered = out.filter(t => t.isLarge);
+                    title = '•••• Large Purchases (500+ QAR)';
+                    break;
+                case 'subscription':
+                    filtered = out.filter(t => t.dims.pattern === 'Subscription');
+                    title = '📅 Detected Subscriptions';
+                    break;
+                case 'clear':
+                    closeFilteredModal();
+                    return;
+                default:
+                    return;
+            }
+
+            showFilteredResults(filtered, title);
+        }
+
+        function showFilteredResults(txns, title) {
+            const total = txns.reduce((s, t) => s + t.amount, 0);
+            const avg = txns.length > 0 ? total / txns.length : 0;
+
+            document.getElementById('filteredTitle').textContent = title;
+            document.getElementById('filteredSubtitle').textContent = `${txns.length} transactions`;
+            document.getElementById('filteredTotal').textContent = `QAR ${formatNum(total)}`;
+            document.getElementById('filteredCount').textContent = txns.length;
+            document.getElementById('filteredAvg').textContent = `QAR ${formatNum(avg)}`;
+
+            document.getElementById('filteredList').innerHTML = txns.map(t => renderTxnRowEnhanced(t)).join('');
+
+            document.getElementById('filteredModal').classList.remove('hidden');
+        }
+
+        function closeFilteredModal() {
+            document.getElementById('filteredModal').classList.add('hidden');
+        }
+
+        function renderTxnRowEnhanced(t) {
+            const isOut = t.direction === 'OUT';
+            const color = getTypeColor(t.merchantType);
+            const icon = MERCHANT_TYPES[t.merchantType]?.icon || '📋';
+            const patternBadge = t.dims.pattern !== 'Normal' ?
+                `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">${PATTERNS[t.dims.pattern]?.icon || ''} ${t.dims.pattern}</span>` : '';
+
+            return `
+                <div class="txn-row p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:${color}20">${icon}</div>
+                        <div class="min-w-0">
+                            <div class="font-medium text-sm truncate">${t.display}</div>
+                            <div class="flex items-center gap-2 text-[10px] text-fact-muted dark:text-fact-dark-muted">
+                                <span>${t.date.format('MMM D, HH:mm')}</span>
+                                <span>·</span>
+                                <span>${t.dims.when.join(', ')}</span>
+                                ${patternBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">${isOut ? '' : '+'}${formatNum(t.amount)}</div>
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.dims.size}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============== UTILS ==============
+
         function formatNum(n) {
             return Math.round(n).toLocaleString();
         }
@@ -2006,6 +2617,14 @@
             let t;
             return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
         }
+
+        // Simple markdown parser fallback (if marked.js not loaded)
+        const marked = window.marked || {
+            parse: (text) => text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>')
+        };
     </script>
 </body>
 </html>
