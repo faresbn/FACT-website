@@ -648,6 +648,97 @@
         /* Focus Mode Indicator */
         .focus-mode .hide-in-focus { display: none !important; }
         .focus-mode .main-metric { font-size: 3rem !important; }
+
+        /* Achievement Celebration */
+        .celebration-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .celebration-box {
+            background: linear-gradient(135deg, #F4C44E 0%, #FFD700 50%, #F4C44E 100%);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            max-width: 320px;
+            animation: celebrationPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes celebrationPop {
+            0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(2deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        .celebration-icon {
+            font-size: 64px;
+            animation: bounce 0.6s ease infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Achievement Badge */
+        .achievement-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            background: #F9F9F9;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        @media (prefers-color-scheme: dark) {
+            .achievement-badge { background: #2A2A2A; }
+        }
+        .achievement-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .achievement-badge.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+        .achievement-badge .badge-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .achievement-badge.locked .badge-icon {
+            filter: blur(2px);
+        }
+
+        /* Generosity Budget */
+        .generosity-card {
+            background: linear-gradient(135deg, #B593C6 0%, #9B7BB0 100%);
+            color: white;
+        }
+        .generosity-meter {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .generosity-meter-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
     </style>
 </head>
 
@@ -658,6 +749,29 @@
     <!-- Confirmation Modal (dynamic) -->
     <div id="confirmModal" class="hidden">
         <!-- Rendered dynamically by showConfirm() -->
+    </div>
+
+    <!-- Celebration Overlay (dynamic) -->
+    <div id="celebrationOverlay" class="hidden">
+        <!-- Rendered dynamically by celebrate() -->
+    </div>
+
+    <!-- ACHIEVEMENTS MODAL -->
+    <div id="achievementsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box card rounded-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">Achievements</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="achievementProgress">0 of 0 unlocked</p>
+                </div>
+                <button onclick="closeAchievements()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="achievementsList" class="p-5 grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
+                <!-- Populated by JS -->
+            </div>
+        </div>
     </div>
 
     <!-- LOGIN SCREEN -->
@@ -1876,6 +1990,11 @@
                 // Show success toast (only after initial load)
                 if (STATE.hasLoaded && typeof showToast === 'function') {
                     showToast(`Synced ${STATE.allTxns.length} transactions`, 'success');
+                }
+
+                // Check for achievements after data loads
+                if (typeof checkAchievements === 'function') {
+                    setTimeout(() => checkAchievements(), 1000);
                 }
 
             } catch (err) {
@@ -3773,6 +3892,9 @@
                 const answer = data.answer;
                 responseDiv.innerHTML = sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'));
 
+                // Track AI usage achievement
+                trackAchievement('fact_asked_ai');
+
             } catch (err) {
                 responseDiv.innerHTML = `<p class="text-fact-red">Error: ${err.message}</p>`;
             }
@@ -4358,6 +4480,7 @@
                 isListening = true;
                 document.getElementById('voiceBtn').classList.add('listening');
                 document.getElementById('voiceStatus').classList.remove('hidden');
+                trackAchievement('fact_used_voice');
                 document.getElementById('aiChatInput').value = '';
             }
         }
@@ -4379,6 +4502,7 @@
             { id: 'period-month', icon: '📅', label: 'This Month', action: () => { closeCmdPalette(); setPeriod('thisMonth'); } },
             { id: 'period-last', icon: '📅', label: 'Last Month', action: () => { closeCmdPalette(); setPeriod('lastMonth'); } },
             { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
+            { id: 'achievements', icon: '🏆', label: 'Achievements', shortcut: 'W', action: () => { closeCmdPalette(); openAchievements(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -4618,6 +4742,7 @@
         function openHeatmap() {
             renderHeatmap();
             document.getElementById('heatmapModal').classList.remove('hidden');
+            trackAchievement('fact_viewed_heatmap');
         }
 
         function closeHeatmap() {
@@ -4848,6 +4973,7 @@
                 URL.revokeObjectURL(url);
 
                 showToast(`Exported ${rows.length} transactions`, 'success');
+                trackAchievement('fact_exported');
             } catch (err) {
                 showToast('Export failed: ' + err.message, 'error');
             } finally {
@@ -4924,6 +5050,129 @@
                 openShortcuts();
             }
         });
+
+        // ============== ACHIEVEMENTS SYSTEM ==============
+
+        const ACHIEVEMENTS = {
+            'first-login': { icon: '🚀', name: 'First Steps', desc: 'Opened FACT/Flow for the first time', check: () => true },
+            'first-categorize': { icon: '🏷️', name: 'Organizer', desc: 'Categorized your first transaction', check: () => Object.keys(STATE.localMappings || {}).length > 0 },
+            'ten-categorize': { icon: '📋', name: 'Sorting Pro', desc: 'Categorized 10 transactions', check: () => Object.keys(STATE.localMappings || {}).length >= 10 },
+            'first-goal': { icon: '🎯', name: 'Goal Setter', desc: 'Set your first budget goal', check: () => getGoals().length > 0 },
+            'three-goals': { icon: '🎪', name: 'Triple Threat', desc: 'Set 3 budget goals', check: () => getGoals().length >= 3 },
+            'streak-3': { icon: '🔥', name: 'On Fire', desc: '3-day under-budget streak', check: () => getStreakData().longestStreak >= 3 },
+            'streak-7': { icon: '⚡', name: 'Week Warrior', desc: '7-day under-budget streak', check: () => getStreakData().longestStreak >= 7 },
+            'streak-30': { icon: '💎', name: 'Diamond Discipline', desc: '30-day under-budget streak', check: () => getStreakData().longestStreak >= 30 },
+            'ask-ai': { icon: '🤖', name: 'AI Explorer', desc: 'Asked AI for spending advice', check: () => localStorage.getItem('fact_asked_ai') === 'true' },
+            'voice-input': { icon: '🎤', name: 'Voice Commander', desc: 'Used voice input', check: () => localStorage.getItem('fact_used_voice') === 'true' },
+            'dark-mode': { icon: '🌙', name: 'Night Owl', desc: 'Switched to dark mode', check: () => localStorage.getItem('fact_dark_mode') === 'true' },
+            'export-data': { icon: '📊', name: 'Data Analyst', desc: 'Exported your data to CSV', check: () => localStorage.getItem('fact_exported') === 'true' },
+            'under-budget-day': { icon: '✅', name: 'Budget Boss', desc: 'Stayed under daily budget', check: () => checkDailyBudget().status === 'safe' },
+            'heatmap-view': { icon: '🗓️', name: 'Pattern Seeker', desc: 'Viewed the spending heatmap', check: () => localStorage.getItem('fact_viewed_heatmap') === 'true' },
+            'generosity-set': { icon: '💜', name: 'Generous Heart', desc: 'Set a generosity budget', check: () => localStorage.getItem(`fact_generosity_${STATE.currentUser}`) !== null }
+        };
+
+        function getUnlockedAchievements() {
+            try {
+                return JSON.parse(localStorage.getItem(`fact_achievements_${STATE.currentUser}`)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveUnlockedAchievements(achievements) {
+            localStorage.setItem(`fact_achievements_${STATE.currentUser}`, JSON.stringify(achievements));
+        }
+
+        function checkAchievements() {
+            const unlocked = getUnlockedAchievements();
+            const newUnlocks = [];
+
+            Object.entries(ACHIEVEMENTS).forEach(([id, achievement]) => {
+                if (!unlocked.includes(id) && achievement.check()) {
+                    unlocked.push(id);
+                    newUnlocks.push({ id, ...achievement });
+                }
+            });
+
+            if (newUnlocks.length > 0) {
+                saveUnlockedAchievements(unlocked);
+                // Celebrate the first new unlock
+                setTimeout(() => celebrate(newUnlocks[0]), 500);
+            }
+
+            return unlocked;
+        }
+
+        function celebrate(achievement) {
+            const overlay = document.getElementById('celebrationOverlay');
+
+            // Generate confetti
+            const confettiColors = ['#F4C44E', '#75B876', '#B593C6', '#E57373', '#64B5F6'];
+            let confettiHtml = '';
+            for (let i = 0; i < 50; i++) {
+                const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                const left = Math.random() * 100;
+                const delay = Math.random() * 2;
+                const size = 5 + Math.random() * 10;
+                confettiHtml += `<div class="confetti" style="left: ${left}%; background: ${color}; width: ${size}px; height: ${size}px; animation-delay: ${delay}s; border-radius: ${Math.random() > 0.5 ? '50%' : '0'}"></div>`;
+            }
+
+            overlay.innerHTML = `
+                <div class="celebration-overlay" onclick="closeCelebration()">
+                    ${confettiHtml}
+                    <div class="celebration-box" onclick="event.stopPropagation()">
+                        <div class="celebration-icon">${achievement.icon}</div>
+                        <h2 class="font-display font-bold text-xl text-fact-ink mt-2">Achievement Unlocked!</h2>
+                        <h3 class="font-display font-semibold text-lg text-fact-ink mt-1">${achievement.name}</h3>
+                        <p class="text-sm text-fact-ink/70 mt-2">${achievement.desc}</p>
+                        <button onclick="closeCelebration()" class="mt-4 px-6 py-2 bg-fact-ink text-white rounded-full font-medium">
+                            Awesome! 🎉
+                        </button>
+                    </div>
+                </div>
+            `;
+            overlay.classList.remove('hidden');
+
+            // Auto close after 5 seconds
+            setTimeout(closeCelebration, 5000);
+        }
+
+        function closeCelebration() {
+            const overlay = document.getElementById('celebrationOverlay');
+            overlay.classList.add('hidden');
+            overlay.innerHTML = '';
+        }
+
+        function openAchievements() {
+            const unlocked = getUnlockedAchievements();
+            const container = document.getElementById('achievementsList');
+
+            document.getElementById('achievementProgress').textContent =
+                `${unlocked.length} of ${Object.keys(ACHIEVEMENTS).length} unlocked`;
+
+            container.innerHTML = Object.entries(ACHIEVEMENTS).map(([id, a]) => {
+                const isUnlocked = unlocked.includes(id);
+                return `
+                    <div class="achievement-badge ${isUnlocked ? '' : 'locked'}">
+                        <div class="badge-icon">${a.icon}</div>
+                        <div class="text-xs font-medium">${a.name}</div>
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">${isUnlocked ? a.desc : '???'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('achievementsModal').classList.remove('hidden');
+        }
+
+        function closeAchievements() {
+            document.getElementById('achievementsModal').classList.add('hidden');
+        }
+
+        // Track specific actions for achievements
+        function trackAchievement(key) {
+            localStorage.setItem(key, 'true');
+            setTimeout(checkAchievements, 100);
+        }
 
         // ============== CONFIRMATION DIALOG ==============
 
