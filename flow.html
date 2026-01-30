@@ -756,7 +756,7 @@
             STORAGE_KEY: 'qnb_tracker_v4',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
             // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
-            GAS_URL: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
+            https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
         };
 
         // Get user from URL parameter
@@ -995,7 +995,7 @@
 
             try {
                 // Secure POST-based authentication
-                const response = await fetch(CONFIG.GAS_URL, {
+                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
@@ -1082,7 +1082,7 @@
             document.getElementById('mainContent').classList.add('hidden');
 
             try {
-                const response = await fetch(CONFIG.GAS_URL, {
+                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
@@ -2731,7 +2731,7 @@
 
             // Sync to MerchantMap via GAS (fire and forget, but log errors)
             try {
-                const response = await fetch(CONFIG.GAS_URL, {
+                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
@@ -2812,8 +2812,8 @@
             const query = question || document.getElementById('aiQueryInput').value.trim();
             if (!query) return;
 
-            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
-                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in flow.html with your deployed GAS URL</p>';
+            if (CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec in flow.html with your deployed GAS URL</p>';
                 return;
             }
 
@@ -2825,7 +2825,7 @@
 
             try {
                 // Secure POST-based AI query
-                const response = await fetch(CONFIG.GAS_URL, {
+                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
@@ -2892,10 +2892,10 @@
             `;
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+            if (CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
                 document.getElementById(loadingId).innerHTML = `
                     <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
-                        <p class="text-sm text-fact-red">Please set CONFIG.GAS_URL</p>
+                        <p class="text-sm text-fact-red">Please set CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec</p>
                     </div>
                 `;
                 return;
@@ -2911,7 +2911,7 @@
                 const fullContext = `Transaction Data:\n${txnSummary}\n\nConversation:\n${historyContext}`;
 
                 // Secure POST-based AI query
-                const response = await fetch(CONFIG.GAS_URL, {
+                const response = await fetch(CONFIG.https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
