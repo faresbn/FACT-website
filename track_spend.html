@@ -995,7 +995,7 @@
 
             try {
                 const [ledger, map, fx] = await Promise.all([
-                    fetchCSV(url('RawLedger')),
+                    fetchCSV(url('RawLedge')),
                     fetchCSV(url('MerchantMap')),
                     fetchCSV(url('FXRates'))
                 ]);
@@ -1383,15 +1383,15 @@
             let labels, data, colors;
 
             if (STATE.viewMode === 'parent') {
-                // Group by parent category
+                // Group by summary group (dimension-based)
                 const parentSpend = {};
                 out.forEach(t => {
-                    const parent = getParentCategory(t.category);
+                    const parent = getSummaryGroup(t.category);
                     parentSpend[parent] = (parentSpend[parent] || 0) + t.amount;
                 });
 
-                // Sort by priority order
-                const parentOrder = ['Essentials', 'Lifestyle', 'Growth', 'Financial', 'Other'];
+                // Sort by priority order (matches SUMMARY_GROUPS)
+                const parentOrder = ['Essentials', 'Food & Drinks', 'Shopping & Fun', 'Family', 'Other'];
                 labels = parentOrder.filter(p => parentSpend[p] > 0);
                 data = labels.map(p => parentSpend[p]);
                 colors = labels.map(l => CAT_COLORS[l] || '#999');
