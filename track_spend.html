@@ -783,7 +783,7 @@
             STORAGE_KEY: 'qnb_tracker_v4',
             DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
             // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
-            GAS_URL: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbzyEuhcHVz0JZejwyGT2fjYfI6UAntZ5T0M0EX9eXDnHxvPW4y5Yo5WYC1jp2FdOfH0/exec'
         };
 
         // Get user from URL parameter
@@ -2366,7 +2366,7 @@
             const query = question || document.getElementById('aiQueryInput').value.trim();
             if (!query) return;
 
-            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+            if (CONFIG.GAS_URL === '') {
                 document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in track_spend.html with your deployed GAS URL</p>';
                 return;
             }
