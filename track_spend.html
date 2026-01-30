@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,990 +6,985 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>QNB Tracker — FACT</title>
-
-```
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js"></script>
-
-<script>
-    dayjs.extend(dayjs_plugin_isBetween);
     
-    tailwind.config = {
-        darkMode: 'media',
-        theme: {
-            extend: {
-                colors: {
-                    fact: {
-                        bg: '#F3F3F3',
-                        card: '#FFFFFF',
-                        ink: '#111111',
-                        muted: '#666666',
-                        border: '#E5E5E5',
-                        yellow: '#F4C44E',
-                        green: '#75B876',
-                        purple: '#B593C6',
-                        'yellow-t': '#FBF3DC',
-                        'green-t': '#E8F5E9',
-                        'purple-t': '#F3EBF6',
-                        // Dark mode
-                        'dark-bg': '#0F0F0F',
-                        'dark-card': '#1A1A1A',
-                        'dark-ink': '#F3F3F3',
-                        'dark-muted': '#888888',
-                        'dark-border': '#2A2A2A',
-                        'dark-yellow-t': '#3D3020',
-                        'dark-green-t': '#1A2E1A',
-                        'dark-purple-t': '#2A2030',
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js"></script>
+    
+    <script>
+        dayjs.extend(dayjs_plugin_isBetween);
+        
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        fact: {
+                            bg: '#F3F3F3',
+                            card: '#FFFFFF',
+                            ink: '#111111',
+                            muted: '#666666',
+                            border: '#E5E5E5',
+                            yellow: '#F4C44E',
+                            green: '#75B876',
+                            purple: '#B593C6',
+                            'yellow-t': '#FBF3DC',
+                            'green-t': '#E8F5E9',
+                            'purple-t': '#F3EBF6',
+                            // Dark mode
+                            'dark-bg': '#0F0F0F',
+                            'dark-card': '#1A1A1A',
+                            'dark-ink': '#F3F3F3',
+                            'dark-muted': '#888888',
+                            'dark-border': '#2A2A2A',
+                            'dark-yellow-t': '#3D3020',
+                            'dark-green-t': '#1A2E1A',
+                            'dark-purple-t': '#2A2030',
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Noto Sans Display', 'Noto Sans', 'system-ui', 'sans-serif'],
+                        body: ['Noto Sans', 'system-ui', 'sans-serif'],
                     }
-                },
-                fontFamily: {
-                    display: ['Noto Sans Display', 'Noto Sans', 'system-ui', 'sans-serif'],
-                    body: ['Noto Sans', 'system-ui', 'sans-serif'],
                 }
             }
         }
-    }
-</script>
-
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Display:wght@500;600;700&display=swap');
+    </script>
     
-    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-    
-    body {
-        font-family: 'Noto Sans', system-ui, sans-serif;
-        background-color: #F3F3F3;
-        background-image: radial-gradient(#D1D1D1 1px, transparent 1px);
-        background-size: 20px 20px;
-        min-height: 100vh;
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-    
-    @media (prefers-color-scheme: dark) {
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Display:wght@500;600;700&display=swap');
+        
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        
         body {
-            background-color: #0F0F0F;
-            background-image: radial-gradient(#2A2A2A 1px, transparent 1px);
+            font-family: 'Noto Sans', system-ui, sans-serif;
+            background-color: #F3F3F3;
+            background-image: radial-gradient(#D1D1D1 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
         }
-    }
-    
-    .font-display { font-family: 'Noto Sans Display', 'Noto Sans', system-ui, sans-serif; }
-    
-    /* Card styling */
-    .card {
-        background: white;
-        border: 1px solid #E5E5E5;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    
-    @media (prefers-color-scheme: dark) {
+        
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0F0F0F;
+                background-image: radial-gradient(#2A2A2A 1px, transparent 1px);
+            }
+        }
+        
+        .font-display { font-family: 'Noto Sans Display', 'Noto Sans', system-ui, sans-serif; }
+        
+        /* Card styling */
         .card {
-            background: #1A1A1A;
-            border-color: #2A2A2A;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            background: white;
+            border: 1px solid #E5E5E5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
-    }
-    
-    /* Period pill */
-    .period-btn {
-        transition: all 0.15s ease;
-    }
-    .period-btn:hover {
-        background: #F4C44E;
-        color: #111;
-    }
-    .period-btn.active {
-        background: #111;
-        color: white;
-    }
-    
-    @media (prefers-color-scheme: dark) {
-        .period-btn.active {
-            background: #F3F3F3;
+        
+        @media (prefers-color-scheme: dark) {
+            .card {
+                background: #1A1A1A;
+                border-color: #2A2A2A;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+        }
+        
+        /* Period pill */
+        .period-btn {
+            transition: all 0.15s ease;
+        }
+        .period-btn:hover {
+            background: #F4C44E;
             color: #111;
         }
-    }
-    
-    /* Category bar */
-    .cat-bar {
-        height: 8px;
-        border-radius: 4px;
-        transition: all 0.3s ease;
-    }
-    .cat-row:hover .cat-bar {
-        height: 12px;
-    }
-    
-    /* Transaction row */
-    .txn-row {
-        transition: background 0.15s ease;
-    }
-    .txn-row:hover {
-        background: #FAFAFA;
-    }
-    .txn-row.uncat {
-        background: #FEF3E2;
-    }
-    .txn-row.uncat:hover {
-        background: #FDE9CC;
-    }
-    
-    @media (prefers-color-scheme: dark) {
+        .period-btn.active {
+            background: #111;
+            color: white;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .period-btn.active {
+                background: #F3F3F3;
+                color: #111;
+            }
+        }
+        
+        /* Category bar */
+        .cat-bar {
+            height: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .cat-row:hover .cat-bar {
+            height: 12px;
+        }
+        
+        /* Transaction row */
+        .txn-row {
+            transition: background 0.15s ease;
+        }
         .txn-row:hover {
-            background: #222;
+            background: #FAFAFA;
         }
         .txn-row.uncat {
-            background: #3D3020;
+            background: #FEF3E2;
         }
         .txn-row.uncat:hover {
-            background: #4D4030;
+            background: #FDE9CC;
         }
-    }
-    
-    /* Modal */
-    .modal-backdrop {
-        background: rgba(17, 17, 17, 0.4);
-        backdrop-filter: blur(4px);
-    }
-    .modal-box {
-        animation: modalIn 0.2s ease-out;
-    }
-    @keyframes modalIn {
-        from { opacity: 0; transform: translateY(10px) scale(0.98); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    
-    @media (prefers-color-scheme: dark) {
+        
+        @media (prefers-color-scheme: dark) {
+            .txn-row:hover {
+                background: #222;
+            }
+            .txn-row.uncat {
+                background: #3D3020;
+            }
+            .txn-row.uncat:hover {
+                background: #4D4030;
+            }
+        }
+        
+        /* Modal */
         .modal-backdrop {
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(17, 17, 17, 0.4);
+            backdrop-filter: blur(4px);
         }
-    }
-    
-    /* Skeleton */
-    .skeleton {
-        background: linear-gradient(90deg, #E5E5E5 25%, #F0F0F0 50%, #E5E5E5 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 6px;
-    }
-    
-    @media (prefers-color-scheme: dark) {
+        .modal-box {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .modal-backdrop {
+                background: rgba(0, 0, 0, 0.6);
+            }
+        }
+        
+        /* Skeleton */
         .skeleton {
-            background: linear-gradient(90deg, #2A2A2A 25%, #333 50%, #2A2A2A 75%);
+            background: linear-gradient(90deg, #E5E5E5 25%, #F0F0F0 50%, #E5E5E5 75%);
             background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
         }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #D1D1D1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #B0B0B0; }
-    
-    @media (prefers-color-scheme: dark) {
-        ::-webkit-scrollbar-thumb { background: #444; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-    }
-    
-    /* Corner marks (FACT brand element) */
-    .corner-mark {
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        border: 2px solid #111;
-    }
-    .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
-    .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
-    .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
-    .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
-    
-    @media (prefers-color-scheme: dark) {
+        
+        @media (prefers-color-scheme: dark) {
+            .skeleton {
+                background: linear-gradient(90deg, #2A2A2A 25%, #333 50%, #2A2A2A 75%);
+                background-size: 200% 100%;
+            }
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D1D1D1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #B0B0B0; }
+        
+        @media (prefers-color-scheme: dark) {
+            ::-webkit-scrollbar-thumb { background: #444; }
+            ::-webkit-scrollbar-thumb:hover { background: #555; }
+        }
+        
+        /* Corner marks (FACT brand element) */
         .corner-mark {
-            border-color: #F3F3F3;
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #111;
         }
-    }
-</style>
-```
-
+        .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        
+        @media (prefers-color-scheme: dark) {
+            .corner-mark {
+                border-color: #F3F3F3;
+            }
+        }
+    </style>
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
-
-```
-<div class="max-w-4xl mx-auto px-4 py-6 md:py-10">
     
-    <!-- HEADER -->
-    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-fact-ink dark:bg-fact-dark-ink rounded flex items-center justify-center">
-                <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">Q</span>
-            </div>
-            <div>
-                <h1 class="font-display font-bold text-xl tracking-tight">QNB Tracker</h1>
-                <p class="text-fact-muted dark:text-fact-dark-muted text-xs">Personal Finance · FACT</p>
-            </div>
-        </div>
+    <div class="max-w-4xl mx-auto px-4 py-6 md:py-10">
         
-        <!-- Period Selector -->
-        <div class="flex items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
-            <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">This Month</button>
-            <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last Month</button>
-            <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90 Days</button>
-            <button onclick="setPeriod('thisYear')" data-period="thisYear" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Year</button>
-        </div>
-    </header>
-    
-    <!-- LOADING STATE -->
-    <div id="loadingState" class="space-y-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="skeleton h-24"></div>
-            <div class="skeleton h-24"></div>
-            <div class="skeleton h-24"></div>
-            <div class="skeleton h-24"></div>
-        </div>
-        <div class="skeleton h-64"></div>
-    </div>
-    
-    <!-- MAIN CONTENT -->
-    <div id="mainContent" class="hidden space-y-6">
-        
-        <!-- KEY METRICS -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            
-            <!-- Income -->
-            <div class="card rounded-xl p-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-fact-green"></div>
-                    <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Income</span>
-                </div>
-                <div class="font-display font-bold text-2xl" id="metricIncome">--</div>
-            </div>
-            
-            <!-- Spent -->
-            <div class="card rounded-xl p-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-fact-yellow"></div>
-                    <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Spent</span>
-                </div>
-                <div class="font-display font-bold text-2xl" id="metricSpent">--</div>
-            </div>
-            
-            <!-- Net -->
-            <div class="card rounded-xl p-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2 h-2 rounded-full" id="netDot"></div>
-                    <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</span>
-                </div>
-                <div class="font-display font-bold text-2xl" id="metricNet">--</div>
-            </div>
-            
-            <!-- Daily Budget -->
-            <div class="card rounded-xl p-4">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-fact-purple"></div>
-                    <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Daily Budget</span>
-                </div>
-                <div class="font-display font-bold text-2xl" id="metricDaily">--</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1" id="metricDaysLeft">-- days left</div>
-            </div>
-        </div>
-        
-        <!-- UNCATEGORIZED ALERT -->
-        <div id="uncatAlert" class="hidden card rounded-xl p-4 border-l-4 border-fact-yellow bg-fact-yellow-t dark:bg-fact-dark-yellow-t cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-fact-yellow flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="font-display font-semibold text-sm"><span id="uncatCount">0</span> transactions need categorizing</div>
-                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Tap to fix · <span id="uncatAmount">QAR 0</span> untracked</div>
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </div>
-        </div>
-        
-        <!-- SPENDING BY CATEGORY -->
-        <div class="card rounded-xl overflow-hidden relative">
-            <div class="corner-mark corner-tl"></div>
-            <div class="corner-mark corner-tr"></div>
-            <div class="corner-mark corner-bl"></div>
-            <div class="corner-mark corner-br"></div>
-            
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                <h2 class="font-display font-semibold">Spending by Category</h2>
-                <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="catTotalLabel">13 categories</span>
-            </div>
-            
-            <div id="catList" class="divide-y divide-fact-border">
-                <!-- JS populated -->
-            </div>
-        </div>
-        
-        <!-- RECURRING -->
-        <details class="card rounded-xl overflow-hidden">
-            <summary class="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50 dark:hover:bg-fact-dark-border transition">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-fact-purple-t dark:bg-fact-dark-purple-t flex items-center justify-center">
-                        <svg class="w-4 h-4 text-fact-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="font-display font-semibold text-sm">Recurring Payments</div>
-                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted"><span id="recurringTotal">QAR 0</span>/month detected</div>
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </summary>
-            <div id="recurringList" class="border-t border-fact-border dark:border-fact-dark-border divide-y divide-fact-border">
-                <!-- JS populated -->
-            </div>
-        </details>
-        
-        <!-- TRANSACTIONS -->
-        <div class="card rounded-xl overflow-hidden">
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex flex-col sm:flex-row sm:items-center gap-3">
-                <h2 class="font-display font-semibold flex-shrink-0">Transactions</h2>
-                <div class="flex-1 flex gap-2">
-                    <div class="relative flex-1">
-                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <input type="text" id="txnSearch" placeholder="Search..." class="w-full bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow focus:border-transparent">
-                    </div>
-                    <select id="catFilter" class="bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
-                        <option value="">All</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div id="txnList" class="max-h-96 overflow-y-auto">
-                <!-- JS populated -->
-            </div>
-            
-            <div class="p-3 border-t border-fact-border dark:border-fact-dark-border flex items-center justify-between bg-fact-bg dark:bg-fact-dark-bg">
-                <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">0 transactions</span>
-                <button onclick="loadMore()" id="loadMoreBtn" class="text-xs font-medium text-fact-purple hover:underline">Load more</button>
-            </div>
-        </div>
-        
-        <!-- FOOTER -->
-        <footer class="text-center py-6">
-            <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Last synced: <span id="lastSync">--</span></p>
-            <button onclick="syncData()" class="mt-2 text-xs font-medium text-fact-ink hover:text-fact-purple transition">
-                <svg class="w-3 h-3 inline mr-1" id="syncIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Refresh
-            </button>
-        </footer>
-    </div>
-</div>
-
-<!-- UNCATEGORIZED MODAL -->
-<div id="uncatModal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-backdrop absolute inset-0" onclick="closeUncatModal()"></div>
-    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md">
-        <div class="modal-box card rounded-2xl overflow-hidden h-full sm:h-auto sm:max-h-[80vh] flex flex-col">
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between flex-shrink-0">
-                <h3 class="font-display font-semibold">Uncategorized</h3>
-                <button onclick="closeUncatModal()" class="w-8 h-8 rounded-full hover:bg-fact-bg dark:bg-fact-dark-bg flex items-center justify-center transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div id="uncatList" class="flex-1 overflow-y-auto divide-y divide-fact-border">
-                <!-- JS populated -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CATEGORIZE MODAL -->
-<div id="catModal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-backdrop absolute inset-0" onclick="closeCatModal()"></div>
-    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm flex items-center justify-center">
-        <div class="modal-box card rounded-2xl overflow-hidden w-full">
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
-                <h3 class="font-display font-semibold">Categorize Transaction</h3>
-            </div>
-            <div class="p-4 space-y-4">
-                <div class="p-3 bg-fact-bg dark:bg-fact-dark-bg rounded-lg">
-                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">Original</div>
-                    <div class="text-sm font-medium break-all" id="catModalRaw">--</div>
+        <!-- HEADER -->
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-fact-ink dark:bg-fact-dark-ink rounded flex items-center justify-center">
+                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">Q</span>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Display Name</label>
-                    <input type="text" id="catModalName" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" placeholder="e.g., Starbucks">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Category</label>
-                    <select id="catModalCat" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
-                        <!-- JS populated -->
-                    </select>
+                    <h1 class="font-display font-bold text-xl tracking-tight">QNB Tracker</h1>
+                    <p class="text-fact-muted dark:text-fact-dark-muted text-xs">Personal Finance · FACT</p>
                 </div>
             </div>
-            <div class="p-4 border-t border-fact-border dark:border-fact-dark-border flex gap-2">
-                <button onclick="closeCatModal()" class="flex-1 px-4 py-2.5 text-sm font-medium text-fact-muted dark:text-fact-dark-muted hover:bg-fact-bg dark:bg-fact-dark-bg rounded-lg transition">Cancel</button>
-                <button onclick="saveCategorization()" class="flex-1 px-4 py-2.5 text-sm font-medium bg-fact-ink text-white rounded-lg hover:bg-gray-800 transition">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // ============================================
-    // CONFIG
-    // ============================================
-    const CONFIG = {
-        SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
-        STORAGE_KEY: 'qnb_tracker_v2',
-        DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
-    };
-
-    // ============================================
-    // STATE
-    // ============================================
-    const STATE = {
-        allTxns: [],
-        filtered: [],
-        merchantMap: [],
-        categories: new Set(),
-        fxRates: { ...CONFIG.DEFAULT_FX },
-        localMappings: {},
-        period: 'thisMonth',
-        dateRange: { start: dayjs().startOf('month'), end: dayjs() },
-        txnLimit: 30,
-        catTarget: null
-    };
-
-    // ============================================
-    // CATEGORY COLORS
-    // ============================================
-    const CAT_COLORS = {
-        'Groceries': '#75B876',
-        'Delivery': '#F4C44E',
-        'Dining': '#E67E22',
-        'Bars & Hotels': '#9B59B6',
-        'Shopping': '#3498DB',
-        'Hobbies': '#E91E63',
-        'Bills': '#607D8B',
-        'Transport': '#00BCD4',
-        'Travel': '#FF5722',
-        'Health': '#4CAF50',
-        'Family': '#8E44AD',
-        'Transfers': '#95A5A6',
-        'Other': '#BDC3C7',
-        'Uncategorized': '#E74C3C'
-    };
-
-    // ============================================
-    // INIT
-    // ============================================
-    document.addEventListener('DOMContentLoaded', () => {
-        loadLocalData();
-        syncData();
-        
-        document.getElementById('txnSearch').addEventListener('input', debounce(filterTxns, 200));
-        document.getElementById('catFilter').addEventListener('change', filterTxns);
-        
-        // Set initial period button
-        updatePeriodButtons();
-    });
-
-    function loadLocalData() {
-        try {
-            const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
-            if (stored) {
-                const data = JSON.parse(stored);
-                STATE.localMappings = data.mappings || {};
-            }
-        } catch (e) { console.warn('localStorage error', e); }
-    }
-
-    function saveLocalData() {
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
-            mappings: STATE.localMappings
-        }));
-    }
-
-    // ============================================
-    // DATA FETCHING
-    // ============================================
-    async function syncData() {
-        showLoading(true);
-        const icon = document.getElementById('syncIcon');
-        if (icon) icon.classList.add('animate-spin');
-
-        const SHEET_GIDS = {
-            'RawLedger': '0',
-            'MerchantMap': '614038315',
-            'FXRates': '990676259'
-        };
-        
-        const url = (sheet) => {
-            const gid = SHEET_GIDS[sheet];
-            const u = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${gid}&_=${Date.now()}`;
-            console.log('Fetching:', sheet, 'gid:', gid);
-            return u;
-        };
-
-        try {
-            const [ledger, map, fx] = await Promise.all([
-                fetchCSV(url('RawLedger')),
-                fetchCSV(url('MerchantMap')),
-                fetchCSV(url('FXRates'))
-            ]);
-
-            processFX(fx);
-            processMerchantMap(map);
-            processTxns(ledger);
-
-            document.getElementById('lastSync').textContent = dayjs().format('HH:mm');
             
-            showLoading(false);
-            filterData();
-
-        } catch (err) {
-            console.error('Sync error:', err);
-            showLoading(false);
-            alert('Sync failed. Check connection and try again.');
-        } finally {
-            if (icon) icon.classList.remove('animate-spin');
-        }
-    }
-
-    function fetchCSV(url) {
-        return new Promise((resolve, reject) => {
-            Papa.parse(url, {
-                download: true,
-                header: false,
-                skipEmptyLines: true,
-                complete: res => resolve(res.data),
-                error: err => reject(err)
-            });
-        });
-    }
-
-    function showLoading(show) {
-        document.getElementById('loadingState').classList.toggle('hidden', !show);
-        document.getElementById('mainContent').classList.toggle('hidden', show);
-    }
-
-    // ============================================
-    // DATA PROCESSING
-    // ============================================
-    function processFX(rows) {
-        rows.forEach(r => {
-            const cur = clean(r[0]);
-            const rate = parseFloat(r[1]);
-            if (cur && !isNaN(rate)) STATE.fxRates[cur] = rate;
-        });
-    }
-
-    function processMerchantMap(rows) {
-        console.log('MerchantMap raw rows:', rows.length);
-        console.log('First 5 rows:', JSON.stringify(rows.slice(0, 5)));
-        console.log('Last 5 rows:', JSON.stringify(rows.slice(-5)));
-        if (rows.length && rows[0][0]?.toLowerCase().includes('pattern')) rows.shift();
-
-        STATE.merchantMap = [];
-        STATE.categories.clear();
-
-        rows.forEach(r => {
-            const pattern = clean(r[0]).toLowerCase();
-            const display = clean(r[1]);
-            const consolidated = clean(r[2]) || display;
-            const category = clean(r[3]);
-
-            if (pattern && category) {
-                STATE.merchantMap.push({ pattern, display, consolidated, category });
-                STATE.categories.add(category);
-            }
-        });
-
-        console.log('Parsed patterns:', STATE.merchantMap.length);
-        console.log('Categories found:', Array.from(STATE.categories));
-        STATE.categories.add('Uncategorized');
-        updateCatDropdowns();
-    }
-
-    function processTxns(rows) {
-        const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
-
-        STATE.allTxns = data.map(r => {
-            const raw = clean(r[3]);
-            const currency = clean(r[2]) || 'QAR';
-            const amount = parseFloat(r[1]);
-            const rate = STATE.fxRates[currency] || 1;
-            const amtQAR = currency === 'QAR' ? amount : amount * rate;
-            const meta = categorize(raw);
-
-            return {
-                date: dayjs(clean(r[0])),
-                amount: amtQAR,
-                currency,
-                raw,
-                display: meta.display,
-                consolidated: meta.consolidated,
-                category: meta.category,
-                direction: clean(r[5]),
-                type: clean(r[6])
-            };
-        }).sort((a, b) => b.date - a.date);
-    }
-
-    function categorize(raw) {
-        const lower = raw.toLowerCase();
-
-        if (STATE.localMappings[lower]) {
-            return STATE.localMappings[lower];
-        }
-
-        const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
-        if (match) {
-            return { display: match.display, consolidated: match.consolidated, category: match.category };
-        }
-
-        console.log('No match for:', raw);
-        return { display: raw, consolidated: raw, category: 'Uncategorized' };
-    }
-
-    function clean(str) {
-        return str ? str.toString().replace(/^"|"$/g, '').trim() : '';
-    }
-
-    // ============================================
-    // FILTERING
-    // ============================================
-    function filterData() {
-        const { start, end } = STATE.dateRange;
-        STATE.filtered = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
-        STATE.txnLimit = 30;
-        updateAll();
-    }
-
-    function filterTxns() {
-        const search = document.getElementById('txnSearch').value.toLowerCase();
-        const cat = document.getElementById('catFilter').value;
-
-        let txns = STATE.filtered;
-        if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search));
-        if (cat) txns = txns.filter(t => t.category === cat);
-
-        renderTxnList(txns);
-    }
-
-    // ============================================
-    // UI UPDATES
-    // ============================================
-    function updateAll() {
-        updateMetrics();
-        updateCategories();
-        updateRecurring();
-        updateTxnList();
-        updateUncatAlert();
-    }
-
-    function updateMetrics() {
-        const out = STATE.filtered.filter(t => t.direction === 'OUT');
-        const inc = STATE.filtered.filter(t => t.direction === 'IN');
-
-        const totalSpend = out.reduce((s, t) => s + t.amount, 0);
-        const totalIncome = inc.reduce((s, t) => s + t.amount, 0);
-        const net = totalIncome - totalSpend;
-
-        // Days calculation
-        const daysTotal = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
-        const daysPassed = dayjs().diff(STATE.dateRange.start, 'day') + 1;
-        const daysLeft = Math.max(0, daysTotal - daysPassed);
-        const dailyBudget = daysLeft > 0 ? Math.max(0, net) / daysLeft : 0;
-
-        document.getElementById('metricIncome').textContent = formatNum(totalIncome);
-        document.getElementById('metricSpent').textContent = formatNum(totalSpend);
-        document.getElementById('metricNet').textContent = (net >= 0 ? '+' : '') + formatNum(net);
-        document.getElementById('metricNet').className = `font-display font-bold text-2xl ${net >= 0 ? 'text-fact-green' : 'text-red-500'}`;
-        document.getElementById('netDot').className = `w-2 h-2 rounded-full ${net >= 0 ? 'bg-fact-green' : 'bg-red-500'}`;
-        document.getElementById('metricDaily').textContent = formatNum(dailyBudget);
-        document.getElementById('metricDaysLeft').textContent = `${daysLeft} days left`;
-    }
-
-    function updateCategories() {
-        const out = STATE.filtered.filter(t => t.direction === 'OUT');
-        const catSpend = {};
-        out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+            <!-- Period Selector -->
+            <div class="flex items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
+                <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">This Month</button>
+                <button onclick="setPeriod('lastMonth')" data-period="lastMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Last Month</button>
+                <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90 Days</button>
+                <button onclick="setPeriod('thisYear')" data-period="thisYear" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Year</button>
+            </div>
+        </header>
         
-        const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
-        const total = sorted.reduce((s, c) => s + c[1], 0);
-
-        console.log('Category spend breakdown:', sorted);
-
-        document.getElementById('catTotalLabel').textContent = `${sorted.length} categories · QAR ${formatNum(total)}`;
-
-        const container = document.getElementById('catList');
-        container.innerHTML = sorted.map(([cat, amount]) => {
-            const pct = total > 0 ? (amount / total * 100) : 0;
-            const color = CAT_COLORS[cat] || '#BDC3C7';
-            const count = out.filter(t => t.category === cat).length;
-
-            return `
-                <div class="cat-row p-4 hover:bg-gray-50 dark:hover:bg-fact-dark-border transition cursor-pointer" onclick="filterByCategory('${cat}')">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded" style="background:${color}"></div>
-                            <span class="font-medium text-sm">${cat}</span>
-                            <span class="text-xs text-fact-muted dark:text-fact-dark-muted">(${count})</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-display font-semibold">${formatNum(amount)}</span>
-                            <span class="text-xs text-fact-muted dark:text-fact-dark-muted ml-1">${pct.toFixed(0)}%</span>
-                        </div>
+        <!-- LOADING STATE -->
+        <div id="loadingState" class="space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div>
+            </div>
+            <div class="skeleton h-64"></div>
+        </div>
+        
+        <!-- MAIN CONTENT -->
+        <div id="mainContent" class="hidden space-y-6">
+            
+            <!-- KEY METRICS -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                
+                <!-- Income -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-green"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Income</span>
                     </div>
-                    <div class="w-full bg-fact-bg dark:bg-fact-dark-bg rounded-full overflow-hidden">
-                        <div class="cat-bar" style="width:${pct}%;background:${color}"></div>
-                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricIncome">--</div>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function updateRecurring() {
-        const out = STATE.allTxns.filter(t => t.direction === 'OUT'); // Use all time for recurring detection
-        const byMerch = {};
-        out.forEach(t => {
-            if (!byMerch[t.consolidated]) byMerch[t.consolidated] = [];
-            byMerch[t.consolidated].push(t);
-        });
-
-        const subs = [];
-        Object.entries(byMerch).forEach(([name, arr]) => {
-            if (arr.length < 2) return;
-            arr.sort((a, b) => a.date - b.date);
-            const intervals = [];
-            for (let i = 1; i < arr.length; i++) {
-                intervals.push(arr[i].date.diff(arr[i-1].date, 'day'));
-            }
-            const avg = intervals.reduce((s, i) => s + i, 0) / intervals.length;
-            if (avg >= 25 && avg <= 35) {
-                const avgAmount = arr.reduce((s, t) => s + t.amount, 0) / arr.length;
-                subs.push({ name, amount: avgAmount, count: arr.length, cat: arr[0].category });
-            }
-        });
-
-        const monthlyTotal = subs.reduce((s, sub) => s + sub.amount, 0);
-        document.getElementById('recurringTotal').textContent = `QAR ${formatNum(monthlyTotal)}`;
-
-        const container = document.getElementById('recurringList');
-        if (!subs.length) {
-            container.innerHTML = '<div class="p-4 text-sm text-fact-muted dark:text-fact-dark-muted text-center">No recurring payments detected</div>';
-            return;
-        }
-
-        container.innerHTML = subs.sort((a, b) => b.amount - a.amount).map(s => {
-            const color = CAT_COLORS[s.cat] || '#BDC3C7';
-            return `
-                <div class="p-4 flex items-center justify-between">
+                
+                <!-- Spent -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-yellow"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Spent</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricSpent">--</div>
+                </div>
+                
+                <!-- Net -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full" id="netDot"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricNet">--</div>
+                </div>
+                
+                <!-- Daily Budget -->
+                <div class="card rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-fact-purple"></div>
+                        <span class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Daily Budget</span>
+                    </div>
+                    <div class="font-display font-bold text-2xl" id="metricDaily">--</div>
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1" id="metricDaysLeft">-- days left</div>
+                </div>
+            </div>
+            
+            <!-- UNCATEGORIZED ALERT -->
+            <div id="uncatAlert" class="hidden card rounded-xl p-4 border-l-4 border-fact-yellow bg-fact-yellow-t dark:bg-fact-dark-yellow-t cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
+                        <div class="w-8 h-8 rounded-full bg-fact-yellow flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
                         <div>
-                            <div class="font-medium text-sm">${s.name}</div>
-                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${s.cat} · ${s.count} payments</div>
+                            <div class="font-display font-semibold text-sm"><span id="uncatCount">0</span> transactions need categorizing</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Tap to fix · <span id="uncatAmount">QAR 0</span> untracked</div>
                         </div>
                     </div>
-                    <div class="font-display font-semibold">${formatNum(s.amount)}</div>
+                    <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function updateTxnList() {
-        renderTxnList(STATE.filtered);
-    }
-
-    function renderTxnList(txns) {
-        const show = txns.slice(0, STATE.txnLimit);
-        document.getElementById('txnCountLabel').textContent = `${show.length} of ${txns.length} transactions`;
-        document.getElementById('loadMoreBtn').style.display = show.length < txns.length ? 'block' : 'none';
-
-        const container = document.getElementById('txnList');
-        container.innerHTML = show.map(t => {
-            const isOut = t.direction === 'OUT';
-            const isUncat = t.category === 'Uncategorized';
-            const color = CAT_COLORS[t.category] || '#BDC3C7';
-
-            return `
-                <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center gap-3 cursor-pointer" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
-                    <div class="w-1 h-8 rounded-full flex-shrink-0" style="background:${color}"></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-sm truncate">${t.display}</div>
-                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')} · ${t.category}</div>
+            </div>
+            
+            <!-- SPENDING BY CATEGORY -->
+            <div class="card rounded-xl overflow-hidden relative">
+                <div class="corner-mark corner-tl"></div>
+                <div class="corner-mark corner-tr"></div>
+                <div class="corner-mark corner-bl"></div>
+                <div class="corner-mark corner-br"></div>
+                
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                    <h2 class="font-display font-semibold">Spending by Category</h2>
+                    <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="catTotalLabel">13 categories</span>
+                </div>
+                
+                <div id="catList" class="divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
+            </div>
+            
+            <!-- RECURRING -->
+            <details class="card rounded-xl overflow-hidden">
+                <summary class="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50 dark:hover:bg-fact-dark-border transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-fact-purple-t dark:bg-fact-dark-purple-t flex items-center justify-center">
+                            <svg class="w-4 h-4 text-fact-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-display font-semibold text-sm">Recurring Payments</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted"><span id="recurringTotal">QAR 0</span>/month detected</div>
+                        </div>
                     </div>
-                    <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">
-                        ${isOut ? '-' : '+'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    <svg class="w-5 h-5 text-fact-muted dark:text-fact-dark-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </summary>
+                <div id="recurringList" class="border-t border-fact-border dark:border-fact-dark-border divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
+            </details>
+            
+            <!-- TRANSACTIONS -->
+            <div class="card rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex flex-col sm:flex-row sm:items-center gap-3">
+                    <h2 class="font-display font-semibold flex-shrink-0">Transactions</h2>
+                    <div class="flex-1 flex gap-2">
+                        <div class="relative flex-1">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-fact-muted dark:text-fact-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="txnSearch" placeholder="Search..." class="w-full bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow focus:border-transparent">
+                        </div>
+                        <select id="catFilter" class="bg-fact-bg dark:bg-fact-dark-bg border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                            <option value="">All</option>
+                        </select>
                     </div>
                 </div>
-            `;
-        }).join('');
-    }
+                
+                <div id="txnList" class="max-h-96 overflow-y-auto">
+                    <!-- JS populated -->
+                </div>
+                
+                <div class="p-3 border-t border-fact-border dark:border-fact-dark-border flex items-center justify-between bg-fact-bg dark:bg-fact-dark-bg">
+                    <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="txnCountLabel">0 transactions</span>
+                    <button onclick="loadMore()" id="loadMoreBtn" class="text-xs font-medium text-fact-purple hover:underline">Load more</button>
+                </div>
+            </div>
+            
+            <!-- FOOTER -->
+            <footer class="text-center py-6">
+                <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Last synced: <span id="lastSync">--</span></p>
+                <button onclick="syncData()" class="mt-2 text-xs font-medium text-fact-ink hover:text-fact-purple transition">
+                    <svg class="w-3 h-3 inline mr-1" id="syncIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- UNCATEGORIZED MODAL -->
+    <div id="uncatModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeUncatModal()"></div>
+        <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md">
+            <div class="modal-box card rounded-2xl overflow-hidden h-full sm:h-auto sm:max-h-[80vh] flex flex-col">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between flex-shrink-0">
+                    <h3 class="font-display font-semibold">Uncategorized</h3>
+                    <button onclick="closeUncatModal()" class="w-8 h-8 rounded-full hover:bg-fact-bg dark:bg-fact-dark-bg flex items-center justify-center transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="uncatList" class="flex-1 overflow-y-auto divide-y divide-fact-border">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CATEGORIZE MODAL -->
+    <div id="catModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeCatModal()"></div>
+        <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm flex items-center justify-center">
+            <div class="modal-box card rounded-2xl overflow-hidden w-full">
+                <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+                    <h3 class="font-display font-semibold">Categorize Transaction</h3>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div class="p-3 bg-fact-bg dark:bg-fact-dark-bg rounded-lg">
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">Original</div>
+                        <div class="text-sm font-medium break-all" id="catModalRaw">--</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Display Name</label>
+                        <input type="text" id="catModalName" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" placeholder="e.g., Starbucks">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1.5">Category</label>
+                        <select id="catModalCat" class="w-full bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                            <!-- JS populated -->
+                        </select>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-fact-border dark:border-fact-dark-border flex gap-2">
+                    <button onclick="closeCatModal()" class="flex-1 px-4 py-2.5 text-sm font-medium text-fact-muted dark:text-fact-dark-muted hover:bg-fact-bg dark:bg-fact-dark-bg rounded-lg transition">Cancel</button>
+                    <button onclick="saveCategorization()" class="flex-1 px-4 py-2.5 text-sm font-medium bg-fact-ink text-white rounded-lg hover:bg-gray-800 transition">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function loadMore() {
-        STATE.txnLimit += 30;
-        filterTxns();
-    }
+    <script>
+        // ============================================
+        // CONFIG
+        // ============================================
+        const CONFIG = {
+            SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
+            STORAGE_KEY: 'qnb_tracker_v2',
+            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
+        };
 
-    function updateUncatAlert() {
-        const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
-        const alert = document.getElementById('uncatAlert');
-        
-        if (uncat.length > 0) {
-            alert.classList.remove('hidden');
-            document.getElementById('uncatCount').textContent = uncat.length;
-            document.getElementById('uncatAmount').textContent = `QAR ${formatNum(uncat.reduce((s, t) => s + t.amount, 0))}`;
-        } else {
-            alert.classList.add('hidden');
-        }
-    }
+        // ============================================
+        // STATE
+        // ============================================
+        const STATE = {
+            allTxns: [],
+            filtered: [],
+            merchantMap: [],
+            categories: new Set(),
+            fxRates: { ...CONFIG.DEFAULT_FX },
+            localMappings: {},
+            period: 'thisMonth',
+            dateRange: { start: dayjs().startOf('month'), end: dayjs() },
+            txnLimit: 30,
+            catTarget: null
+        };
 
-    // ============================================
-    // PERIOD
-    // ============================================
-    function setPeriod(period) {
-        STATE.period = period;
-        const now = dayjs();
+        // ============================================
+        // CATEGORY COLORS
+        // ============================================
+        const CAT_COLORS = {
+            'Groceries': '#75B876',
+            'Delivery': '#F4C44E',
+            'Dining': '#E67E22',
+            'Bars & Hotels': '#9B59B6',
+            'Shopping': '#3498DB',
+            'Hobbies': '#E91E63',
+            'Bills': '#607D8B',
+            'Transport': '#00BCD4',
+            'Travel': '#FF5722',
+            'Health': '#4CAF50',
+            'Family': '#8E44AD',
+            'Transfers': '#95A5A6',
+            'Other': '#BDC3C7',
+            'Uncategorized': '#E74C3C'
+        };
 
-        switch (period) {
-            case 'thisMonth':
-                STATE.dateRange = { start: now.startOf('month'), end: now };
-                break;
-            case 'lastMonth':
-                STATE.dateRange = { start: now.subtract(1, 'month').startOf('month'), end: now.subtract(1, 'month').endOf('month') };
-                break;
-            case 'last90':
-                STATE.dateRange = { start: now.subtract(90, 'day'), end: now };
-                break;
-            case 'thisYear':
-                STATE.dateRange = { start: now.startOf('year'), end: now };
-                break;
-        }
-
-        updatePeriodButtons();
-        filterData();
-    }
-
-    function updatePeriodButtons() {
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.period === STATE.period);
+        // ============================================
+        // INIT
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            syncData();
+            
+            document.getElementById('txnSearch').addEventListener('input', debounce(filterTxns, 200));
+            document.getElementById('catFilter').addEventListener('change', filterTxns);
+            
+            // Set initial period button
+            updatePeriodButtons();
         });
-    }
 
-    // ============================================
-    // CATEGORIZATION
-    // ============================================
-    function openUncatModal() {
-        const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
-        const container = document.getElementById('uncatList');
-
-        if (!uncat.length) {
-            container.innerHTML = '<div class="p-8 text-center"><div class="text-fact-green text-3xl mb-2">✓</div><div class="font-medium">All categorized!</div></div>';
-        } else {
-            container.innerHTML = uncat.slice(0, 30).map(t => `
-                <div class="p-4 flex items-center justify-between hover:bg-fact-bg dark:hover:bg-fact-dark-border cursor-pointer transition" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-sm truncate">${t.raw}</div>
-                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')}</div>
-                    </div>
-                    <div class="font-display font-semibold ml-3">${formatNum(t.amount)}</div>
-                </div>
-            `).join('');
+        function loadLocalData() {
+            try {
+                const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    STATE.localMappings = data.mappings || {};
+                }
+            } catch (e) { console.warn('localStorage error', e); }
         }
 
-        document.getElementById('uncatModal').classList.remove('hidden');
-    }
-
-    function closeUncatModal() {
-        document.getElementById('uncatModal').classList.add('hidden');
-    }
-
-    function openCatModal(raw) {
-        STATE.catTarget = raw;
-        document.getElementById('catModalRaw').textContent = raw;
-        document.getElementById('catModalName').value = '';
-        document.getElementById('catModal').classList.remove('hidden');
-    }
-
-    function closeCatModal() {
-        document.getElementById('catModal').classList.add('hidden');
-    }
-
-    function saveCategorization() {
-        const raw = STATE.catTarget;
-        const name = document.getElementById('catModalName').value || raw;
-        const cat = document.getElementById('catModalCat').value;
-
-        if (!cat) {
-            alert('Please select a category');
-            return;
+        function saveLocalData() {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({
+                mappings: STATE.localMappings
+            }));
         }
 
-        STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
-        saveLocalData();
+        // ============================================
+        // DATA FETCHING
+        // ============================================
+        async function syncData() {
+            showLoading(true);
+            const icon = document.getElementById('syncIcon');
+            if (icon) icon.classList.add('animate-spin');
 
-        // Re-categorize all matching transactions
-        STATE.allTxns.forEach(t => {
-            if (t.raw.toLowerCase() === raw.toLowerCase()) {
-                t.display = name;
-                t.consolidated = name;
-                t.category = cat;
+            const SHEET_GIDS = {
+                'RawLedger': '0',
+                'MerchantMap': '614038315',
+                'FXRates': '990676259'
+            };
+            
+            const url = (sheet) => {
+                const gid = SHEET_GIDS[sheet];
+                // Try pub format which handles data more cleanly
+                const u = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/pub?gid=${gid}&single=true&output=csv&_=${Date.now()}`;
+                console.log('Fetching:', sheet, 'gid:', gid);
+                return u;
+            };
+
+            try {
+                const [ledger, map, fx] = await Promise.all([
+                    fetchCSV(url('RawLedger')),
+                    fetchCSV(url('MerchantMap')),
+                    fetchCSV(url('FXRates'))
+                ]);
+
+                processFX(fx);
+                processMerchantMap(map);
+                processTxns(ledger);
+
+                document.getElementById('lastSync').textContent = dayjs().format('HH:mm');
+                
+                showLoading(false);
+                filterData();
+
+            } catch (err) {
+                console.error('Sync error:', err);
+                showLoading(false);
+                alert('Sync failed. Check connection and try again.');
+            } finally {
+                if (icon) icon.classList.remove('animate-spin');
             }
-        });
+        }
 
-        closeCatModal();
-        filterData();
-    }
+        function fetchCSV(url) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(url, {
+                    download: true,
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: res => resolve(res.data),
+                    error: err => reject(err)
+                });
+            });
+        }
 
-    function updateCatDropdowns() {
-        const cats = Array.from(STATE.categories).filter(c => c !== 'Uncategorized').sort();
-        
-        document.getElementById('catModalCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        document.getElementById('catFilter').innerHTML = '<option value="">All</option>' + Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
-    }
+        function showLoading(show) {
+            document.getElementById('loadingState').classList.toggle('hidden', !show);
+            document.getElementById('mainContent').classList.toggle('hidden', show);
+        }
 
-    function filterByCategory(cat) {
-        document.getElementById('catFilter').value = cat;
-        filterTxns();
-        
-        // Scroll to transactions
-        document.getElementById('txnList').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+        // ============================================
+        // DATA PROCESSING
+        // ============================================
+        function processFX(rows) {
+            rows.forEach(r => {
+                const cur = clean(r[0]);
+                const rate = parseFloat(r[1]);
+                if (cur && !isNaN(rate)) STATE.fxRates[cur] = rate;
+            });
+        }
 
-    // ============================================
-    // UTILS
-    // ============================================
-    function formatNum(n) {
-        return Math.round(n).toLocaleString();
-    }
+        function processMerchantMap(rows) {
+            console.log('MerchantMap raw rows:', rows.length);
+            console.log('First 5 rows:', JSON.stringify(rows.slice(0, 5)));
+            console.log('Last 5 rows:', JSON.stringify(rows.slice(-5)));
+            if (rows.length && rows[0][0]?.toLowerCase().includes('pattern')) rows.shift();
 
-    function debounce(fn, wait) {
-        let t;
-        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
-    }
-</script>
-```
+            STATE.merchantMap = [];
+            STATE.categories.clear();
 
+            rows.forEach(r => {
+                const pattern = clean(r[0]).toLowerCase();
+                const display = clean(r[1]);
+                const consolidated = clean(r[2]) || display;
+                const category = clean(r[3]);
+
+                if (pattern && category) {
+                    STATE.merchantMap.push({ pattern, display, consolidated, category });
+                    STATE.categories.add(category);
+                }
+            });
+
+            console.log('Parsed patterns:', STATE.merchantMap.length);
+            console.log('Categories found:', Array.from(STATE.categories));
+            STATE.categories.add('Uncategorized');
+            updateCatDropdowns();
+        }
+
+        function processTxns(rows) {
+            const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
+
+            STATE.allTxns = data.map(r => {
+                const raw = clean(r[3]);
+                const currency = clean(r[2]) || 'QAR';
+                const amount = parseFloat(r[1]);
+                const rate = STATE.fxRates[currency] || 1;
+                const amtQAR = currency === 'QAR' ? amount : amount * rate;
+                const meta = categorize(raw);
+
+                return {
+                    date: dayjs(clean(r[0])),
+                    amount: amtQAR,
+                    currency,
+                    raw,
+                    display: meta.display,
+                    consolidated: meta.consolidated,
+                    category: meta.category,
+                    direction: clean(r[5]),
+                    type: clean(r[6])
+                };
+            }).sort((a, b) => b.date - a.date);
+        }
+
+        function categorize(raw) {
+            const lower = raw.toLowerCase();
+
+            if (STATE.localMappings[lower]) {
+                return STATE.localMappings[lower];
+            }
+
+            const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
+            if (match) {
+                return { display: match.display, consolidated: match.consolidated, category: match.category };
+            }
+
+            console.log('No match for:', raw);
+            return { display: raw, consolidated: raw, category: 'Uncategorized' };
+        }
+
+        function clean(str) {
+            return str ? str.toString().replace(/^"|"$/g, '').trim() : '';
+        }
+
+        // ============================================
+        // FILTERING
+        // ============================================
+        function filterData() {
+            const { start, end } = STATE.dateRange;
+            STATE.filtered = STATE.allTxns.filter(t => t.date.isBetween(start, end, 'day', '[]'));
+            STATE.txnLimit = 30;
+            updateAll();
+        }
+
+        function filterTxns() {
+            const search = document.getElementById('txnSearch').value.toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+
+            let txns = STATE.filtered;
+            if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search));
+            if (cat) txns = txns.filter(t => t.category === cat);
+
+            renderTxnList(txns);
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateAll() {
+            updateMetrics();
+            updateCategories();
+            updateRecurring();
+            updateTxnList();
+            updateUncatAlert();
+        }
+
+        function updateMetrics() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const inc = STATE.filtered.filter(t => t.direction === 'IN');
+
+            const totalSpend = out.reduce((s, t) => s + t.amount, 0);
+            const totalIncome = inc.reduce((s, t) => s + t.amount, 0);
+            const net = totalIncome - totalSpend;
+
+            // Days calculation
+            const daysTotal = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
+            const daysPassed = dayjs().diff(STATE.dateRange.start, 'day') + 1;
+            const daysLeft = Math.max(0, daysTotal - daysPassed);
+            const dailyBudget = daysLeft > 0 ? Math.max(0, net) / daysLeft : 0;
+
+            document.getElementById('metricIncome').textContent = formatNum(totalIncome);
+            document.getElementById('metricSpent').textContent = formatNum(totalSpend);
+            document.getElementById('metricNet').textContent = (net >= 0 ? '+' : '') + formatNum(net);
+            document.getElementById('metricNet').className = `font-display font-bold text-2xl ${net >= 0 ? 'text-fact-green' : 'text-red-500'}`;
+            document.getElementById('netDot').className = `w-2 h-2 rounded-full ${net >= 0 ? 'bg-fact-green' : 'bg-red-500'}`;
+            document.getElementById('metricDaily').textContent = formatNum(dailyBudget);
+            document.getElementById('metricDaysLeft').textContent = `${daysLeft} days left`;
+        }
+
+        function updateCategories() {
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+            const catSpend = {};
+            out.forEach(t => catSpend[t.category] = (catSpend[t.category] || 0) + t.amount);
+            
+            const sorted = Object.entries(catSpend).sort((a, b) => b[1] - a[1]);
+            const total = sorted.reduce((s, c) => s + c[1], 0);
+
+            console.log('Category spend breakdown:', sorted);
+
+            document.getElementById('catTotalLabel').textContent = `${sorted.length} categories · QAR ${formatNum(total)}`;
+
+            const container = document.getElementById('catList');
+            container.innerHTML = sorted.map(([cat, amount]) => {
+                const pct = total > 0 ? (amount / total * 100) : 0;
+                const color = CAT_COLORS[cat] || '#BDC3C7';
+                const count = out.filter(t => t.category === cat).length;
+
+                return `
+                    <div class="cat-row p-4 hover:bg-gray-50 dark:hover:bg-fact-dark-border transition cursor-pointer" onclick="filterByCategory('${cat}')">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded" style="background:${color}"></div>
+                                <span class="font-medium text-sm">${cat}</span>
+                                <span class="text-xs text-fact-muted dark:text-fact-dark-muted">(${count})</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-display font-semibold">${formatNum(amount)}</span>
+                                <span class="text-xs text-fact-muted dark:text-fact-dark-muted ml-1">${pct.toFixed(0)}%</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-fact-bg dark:bg-fact-dark-bg rounded-full overflow-hidden">
+                            <div class="cat-bar" style="width:${pct}%;background:${color}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateRecurring() {
+            const out = STATE.allTxns.filter(t => t.direction === 'OUT'); // Use all time for recurring detection
+            const byMerch = {};
+            out.forEach(t => {
+                if (!byMerch[t.consolidated]) byMerch[t.consolidated] = [];
+                byMerch[t.consolidated].push(t);
+            });
+
+            const subs = [];
+            Object.entries(byMerch).forEach(([name, arr]) => {
+                if (arr.length < 2) return;
+                arr.sort((a, b) => a.date - b.date);
+                const intervals = [];
+                for (let i = 1; i < arr.length; i++) {
+                    intervals.push(arr[i].date.diff(arr[i-1].date, 'day'));
+                }
+                const avg = intervals.reduce((s, i) => s + i, 0) / intervals.length;
+                if (avg >= 25 && avg <= 35) {
+                    const avgAmount = arr.reduce((s, t) => s + t.amount, 0) / arr.length;
+                    subs.push({ name, amount: avgAmount, count: arr.length, cat: arr[0].category });
+                }
+            });
+
+            const monthlyTotal = subs.reduce((s, sub) => s + sub.amount, 0);
+            document.getElementById('recurringTotal').textContent = `QAR ${formatNum(monthlyTotal)}`;
+
+            const container = document.getElementById('recurringList');
+            if (!subs.length) {
+                container.innerHTML = '<div class="p-4 text-sm text-fact-muted dark:text-fact-dark-muted text-center">No recurring payments detected</div>';
+                return;
+            }
+
+            container.innerHTML = subs.sort((a, b) => b.amount - a.amount).map(s => {
+                const color = CAT_COLORS[s.cat] || '#BDC3C7';
+                return `
+                    <div class="p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
+                            <div>
+                                <div class="font-medium text-sm">${s.name}</div>
+                                <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${s.cat} · ${s.count} payments</div>
+                            </div>
+                        </div>
+                        <div class="font-display font-semibold">${formatNum(s.amount)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTxnList() {
+            renderTxnList(STATE.filtered);
+        }
+
+        function renderTxnList(txns) {
+            const show = txns.slice(0, STATE.txnLimit);
+            document.getElementById('txnCountLabel').textContent = `${show.length} of ${txns.length} transactions`;
+            document.getElementById('loadMoreBtn').style.display = show.length < txns.length ? 'block' : 'none';
+
+            const container = document.getElementById('txnList');
+            container.innerHTML = show.map(t => {
+                const isOut = t.direction === 'OUT';
+                const isUncat = t.category === 'Uncategorized';
+                const color = CAT_COLORS[t.category] || '#BDC3C7';
+
+                return `
+                    <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center gap-3 cursor-pointer" onclick="openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div class="w-1 h-8 rounded-full flex-shrink-0" style="background:${color}"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${t.display}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')} · ${t.category}</div>
+                        </div>
+                        <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">
+                            ${isOut ? '-' : '+'}${t.amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadMore() {
+            STATE.txnLimit += 30;
+            filterTxns();
+        }
+
+        function updateUncatAlert() {
+            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const alert = document.getElementById('uncatAlert');
+            
+            if (uncat.length > 0) {
+                alert.classList.remove('hidden');
+                document.getElementById('uncatCount').textContent = uncat.length;
+                document.getElementById('uncatAmount').textContent = `QAR ${formatNum(uncat.reduce((s, t) => s + t.amount, 0))}`;
+            } else {
+                alert.classList.add('hidden');
+            }
+        }
+
+        // ============================================
+        // PERIOD
+        // ============================================
+        function setPeriod(period) {
+            STATE.period = period;
+            const now = dayjs();
+
+            switch (period) {
+                case 'thisMonth':
+                    STATE.dateRange = { start: now.startOf('month'), end: now };
+                    break;
+                case 'lastMonth':
+                    STATE.dateRange = { start: now.subtract(1, 'month').startOf('month'), end: now.subtract(1, 'month').endOf('month') };
+                    break;
+                case 'last90':
+                    STATE.dateRange = { start: now.subtract(90, 'day'), end: now };
+                    break;
+                case 'thisYear':
+                    STATE.dateRange = { start: now.startOf('year'), end: now };
+                    break;
+            }
+
+            updatePeriodButtons();
+            filterData();
+        }
+
+        function updatePeriodButtons() {
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === STATE.period);
+            });
+        }
+
+        // ============================================
+        // CATEGORIZATION
+        // ============================================
+        function openUncatModal() {
+            const uncat = STATE.filtered.filter(t => t.category === 'Uncategorized' && t.direction === 'OUT');
+            const container = document.getElementById('uncatList');
+
+            if (!uncat.length) {
+                container.innerHTML = '<div class="p-8 text-center"><div class="text-fact-green text-3xl mb-2">✓</div><div class="font-medium">All categorized!</div></div>';
+            } else {
+                container.innerHTML = uncat.slice(0, 30).map(t => `
+                    <div class="p-4 flex items-center justify-between hover:bg-fact-bg dark:hover:bg-fact-dark-border cursor-pointer transition" onclick="closeUncatModal(); openCatModal('${t.raw.replace(/'/g, "\\'")}')">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${t.raw}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D')}</div>
+                        </div>
+                        <div class="font-display font-semibold ml-3">${formatNum(t.amount)}</div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('uncatModal').classList.remove('hidden');
+        }
+
+        function closeUncatModal() {
+            document.getElementById('uncatModal').classList.add('hidden');
+        }
+
+        function openCatModal(raw) {
+            STATE.catTarget = raw;
+            document.getElementById('catModalRaw').textContent = raw;
+            document.getElementById('catModalName').value = '';
+            document.getElementById('catModal').classList.remove('hidden');
+        }
+
+        function closeCatModal() {
+            document.getElementById('catModal').classList.add('hidden');
+        }
+
+        function saveCategorization() {
+            const raw = STATE.catTarget;
+            const name = document.getElementById('catModalName').value || raw;
+            const cat = document.getElementById('catModalCat').value;
+
+            if (!cat) {
+                alert('Please select a category');
+                return;
+            }
+
+            STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
+            saveLocalData();
+
+            // Re-categorize all matching transactions
+            STATE.allTxns.forEach(t => {
+                if (t.raw.toLowerCase() === raw.toLowerCase()) {
+                    t.display = name;
+                    t.consolidated = name;
+                    t.category = cat;
+                }
+            });
+
+            closeCatModal();
+            filterData();
+        }
+
+        function updateCatDropdowns() {
+            const cats = Array.from(STATE.categories).filter(c => c !== 'Uncategorized').sort();
+            
+            document.getElementById('catModalCat').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('catFilter').innerHTML = '<option value="">All</option>' + Array.from(STATE.categories).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function filterByCategory(cat) {
+            document.getElementById('catFilter').value = cat;
+            filterTxns();
+            
+            // Scroll to transactions
+            document.getElementById('txnList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ============================================
+        // UTILS
+        // ============================================
+        function formatNum(n) {
+            return Math.round(n).toLocaleString();
+        }
+
+        function debounce(fn, wait) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+        }
+    </script>
 </body>
 </html>
