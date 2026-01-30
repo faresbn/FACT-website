@@ -645,6 +645,58 @@
             box-shadow: 0 2px 8px rgba(244, 196, 78, 0.3);
         }
 
+        /* Generosity Budget Section */
+        .generosity-card {
+            background: linear-gradient(135deg, #F8F4FF 0%, #F3E8FF 100%);
+            border: 1px solid #DDD6FE;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-card {
+                background: linear-gradient(135deg, #2D2340 0%, #352850 100%);
+                border-color: #4C3D70;
+            }
+        }
+        body.dark-mode .generosity-card {
+            background: linear-gradient(135deg, #2D2340 0%, #352850 100%);
+            border-color: #4C3D70;
+        }
+        .generosity-meter {
+            height: 10px;
+            background: #E9D5FF;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-meter { background: #4C3D70; }
+        }
+        body.dark-mode .generosity-meter { background: #4C3D70; }
+        .generosity-meter-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-out;
+            background: linear-gradient(90deg, #B593C6 0%, #9F7AEA 100%);
+        }
+        .generosity-meter-fill.over {
+            background: linear-gradient(90deg, #E57373 0%, #EF5350 100%);
+        }
+        .heart-pulse {
+            animation: heartPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .generosity-amount {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-weight: 700;
+            color: #9F7AEA;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-amount { color: #C4B5FD; }
+        }
+        body.dark-mode .generosity-amount { color: #C4B5FD; }
+
         /* Focus Mode Indicator */
         .focus-mode .hide-in-focus { display: none !important; }
         .focus-mode .main-metric { font-size: 3rem !important; }
@@ -963,6 +1015,89 @@
                     <button onclick="dismissImpulseBanner()" class="text-white/80 hover:text-white">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
+                </div>
+            </div>
+
+            <!-- GENEROSITY BUDGET - For those who give generously -->
+            <div id="generosityCard" class="generosity-card rounded-xl p-4 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl heart-pulse">💜</span>
+                        <h2 class="font-display font-semibold text-sm">Generosity Budget</h2>
+                    </div>
+                    <button onclick="openGenerositySettings()" class="text-fact-purple hover:text-fact-purple/80 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-fact-muted dark:text-fact-dark-muted">Given this month</span>
+                        <span class="generosity-amount" id="generositySpent">QAR 0</span>
+                    </div>
+                    <div class="generosity-meter">
+                        <div class="generosity-meter-fill" id="generosityMeterFill" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="generosityStatus">You can still give!</span>
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">Budget: <span id="generosityBudget">QAR 0</span></span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2">Recent giving:</div>
+                    <div id="recentGenerosity" class="space-y-1 max-h-24 overflow-y-auto">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- GENEROSITY SETTINGS MODAL -->
+            <div id="generosityModal" class="modal-backdrop hidden" onclick="if(event.target === this) closeGenerositySettings()">
+                <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-display font-semibold text-lg flex items-center gap-2">
+                            <span class="heart-pulse">💜</span> Generosity Budget
+                        </h3>
+                        <button onclick="closeGenerositySettings()" class="text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-fact-muted dark:text-fact-dark-muted mb-4">
+                        It's wonderful to be generous! Setting a giving budget helps you be intentionally generous without guilt or financial strain.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium mb-1 block">Monthly Generosity Budget (QAR)</label>
+                            <input type="number" id="generosityBudgetInput" placeholder="e.g., 500" min="0" step="50"
+                                class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium mb-2 block">What counts as "generosity"?</label>
+                            <div id="generosityCategories" class="space-y-2 text-sm">
+                                <!-- Checkboxes rendered by JS -->
+                            </div>
+                        </div>
+
+                        <div class="bg-fact-purple/10 rounded-lg p-3">
+                            <div class="text-xs font-medium text-fact-purple mb-1">💡 Why set a giving budget?</div>
+                            <ul class="text-xs text-fact-muted dark:text-fact-dark-muted space-y-1">
+                                <li>• Give without guilt (you planned for it!)</li>
+                                <li>• Say "not this time" without feeling bad</li>
+                                <li>• Be generous sustainably, not impulsively</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="closeGenerositySettings()" class="flex-1 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg text-sm font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="saveGenerositySettings()" class="flex-1 py-2 bg-fact-purple text-white rounded-lg text-sm font-medium">
+                            Save Budget
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -2587,6 +2722,11 @@
             // Update streak
             updateStreak();
             renderStreakBadge();
+
+            // Update generosity budget (if enabled)
+            if (typeof renderGenerosityBudget === 'function') {
+                renderGenerosityBudget();
+            }
         }
 
         // Check for impulse bursts and show warning
@@ -4503,6 +4643,7 @@
             { id: 'period-last', icon: '📅', label: 'Last Month', action: () => { closeCmdPalette(); setPeriod('lastMonth'); } },
             { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
             { id: 'achievements', icon: '🏆', label: 'Achievements', shortcut: 'W', action: () => { closeCmdPalette(); openAchievements(); } },
+            { id: 'generosity', icon: '💜', label: 'Generosity Budget', shortcut: 'Y', action: () => { closeCmdPalette(); openGenerositySettings(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -5422,6 +5563,199 @@
                     </div>
                 `;
             }
+        }
+
+        // ============== GENEROSITY BUDGET SYSTEM ==============
+
+        // Categories that count as "generosity" - user can customize
+        const DEFAULT_GENEROSITY_CATEGORIES = [
+            { id: 'gifts', name: 'Gifts & Presents', default: true },
+            { id: 'charity', name: 'Charity & Donations', default: true },
+            { id: 'treats', name: 'Treating Others (meals, drinks)', default: true },
+            { id: 'social', name: 'Social Outings (I paid for everyone)', default: false },
+            { id: 'family', name: 'Family Support', default: false },
+            { id: 'loans', name: 'Loans to Friends', default: false }
+        ];
+
+        function getGenerositySettings() {
+            try {
+                const stored = localStorage.getItem(`fact_generosity_${STATE.currentUser}`);
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveGenerositySettings() {
+            const budgetInput = document.getElementById('generosityBudgetInput');
+            const budget = parseFloat(budgetInput.value) || 0;
+
+            // Get selected categories
+            const selectedCategories = [];
+            document.querySelectorAll('#generosityCategories input[type="checkbox"]:checked').forEach(cb => {
+                selectedCategories.push(cb.value);
+            });
+
+            const settings = {
+                budget: budget,
+                categories: selectedCategories,
+                enabled: budget > 0
+            };
+
+            localStorage.setItem(`fact_generosity_${STATE.currentUser}`, JSON.stringify(settings));
+
+            // Trigger achievement check
+            if (typeof checkAchievements === 'function') {
+                setTimeout(() => checkAchievements(), 500);
+            }
+
+            closeGenerositySettings();
+            renderGenerosityBudget();
+            showToast('Generosity budget saved! 💜', 'success');
+        }
+
+        function openGenerositySettings() {
+            const settings = getGenerositySettings() || { budget: 0, categories: ['gifts', 'charity', 'treats'], enabled: false };
+
+            // Set budget input
+            document.getElementById('generosityBudgetInput').value = settings.budget || '';
+
+            // Render category checkboxes
+            const container = document.getElementById('generosityCategories');
+            container.innerHTML = DEFAULT_GENEROSITY_CATEGORIES.map(cat => {
+                const checked = settings.categories?.includes(cat.id) || (!settings.categories && cat.default);
+                return `
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="${cat.id}" ${checked ? 'checked' : ''}
+                            class="w-4 h-4 rounded border-fact-border text-fact-purple focus:ring-fact-purple">
+                        <span>${cat.name}</span>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('generosityModal').classList.remove('hidden');
+        }
+
+        function closeGenerositySettings() {
+            document.getElementById('generosityModal').classList.add('hidden');
+        }
+
+        function calcGenerositySpending() {
+            const settings = getGenerositySettings();
+            if (!settings || !settings.enabled) return { spent: 0, budget: 0, transactions: [] };
+
+            // Get current month's transactions
+            const now = dayjs();
+            const monthStart = now.startOf('month');
+            const monthEnd = now.endOf('month');
+
+            // Keywords that indicate generosity based on selected categories
+            const categoryKeywords = {
+                'gifts': ['gift', 'present', 'birthday', 'anniversary', 'wedding'],
+                'charity': ['charity', 'donation', 'donate', 'zakat', 'sadaqah', 'ngo', 'red cross', 'unicef'],
+                'treats': ['coffee', 'starbucks', 'costa', 'restaurant', 'cafe', 'dinner', 'lunch'],
+                'social': ['night out', 'club', 'bar', 'pub', 'party'],
+                'family': ['transfer', 'family', 'mom', 'dad', 'sister', 'brother', 'parent'],
+                'loans': ['loan', 'lend', 'borrow']
+            };
+
+            // Build keywords list based on selected categories
+            let keywords = [];
+            settings.categories.forEach(catId => {
+                if (categoryKeywords[catId]) {
+                    keywords = keywords.concat(categoryKeywords[catId]);
+                }
+            });
+
+            // Also check for "Gifts" or "Social" category assignments
+            const generosityCategories = ['Gifts', 'Charity', 'Social'];
+
+            const generosityTxns = STATE.txns.filter(txn => {
+                const txnDate = dayjs(txn.date);
+                if (!txnDate.isBetween(monthStart, monthEnd, 'day', '[]')) return false;
+
+                // Check if category matches
+                if (generosityCategories.some(c => txn.category?.toLowerCase().includes(c.toLowerCase()))) {
+                    return true;
+                }
+
+                // Check if description contains generosity keywords
+                const desc = (txn.description || '').toLowerCase();
+                const merchant = (txn.merchant || '').toLowerCase();
+                return keywords.some(kw => desc.includes(kw) || merchant.includes(kw));
+            });
+
+            const spent = generosityTxns.reduce((sum, txn) => sum + Math.abs(txn.qar), 0);
+
+            return {
+                spent: spent,
+                budget: settings.budget,
+                transactions: generosityTxns.slice(0, 5), // Last 5 for display
+                percentage: settings.budget > 0 ? Math.min((spent / settings.budget) * 100, 100) : 0,
+                remaining: Math.max(settings.budget - spent, 0),
+                over: spent > settings.budget
+            };
+        }
+
+        function renderGenerosityBudget() {
+            const settings = getGenerositySettings();
+            const card = document.getElementById('generosityCard');
+
+            if (!settings || !settings.enabled) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            card.classList.remove('hidden');
+
+            const data = calcGenerositySpending();
+
+            // Update spent amount
+            document.getElementById('generositySpent').textContent = `QAR ${Math.round(data.spent).toLocaleString()}`;
+
+            // Update budget display
+            document.getElementById('generosityBudget').textContent = `QAR ${Math.round(data.budget).toLocaleString()}`;
+
+            // Update meter
+            const fill = document.getElementById('generosityMeterFill');
+            fill.style.width = `${data.percentage}%`;
+            fill.className = `generosity-meter-fill ${data.over ? 'over' : ''}`;
+
+            // Update status message
+            const status = document.getElementById('generosityStatus');
+            if (data.over) {
+                status.textContent = `Over budget by QAR ${Math.round(data.spent - data.budget).toLocaleString()}`;
+                status.className = 'text-xs text-fact-red';
+            } else if (data.percentage >= 80) {
+                status.textContent = `QAR ${Math.round(data.remaining).toLocaleString()} left to give`;
+                status.className = 'text-xs text-fact-yellow';
+            } else {
+                status.textContent = `QAR ${Math.round(data.remaining).toLocaleString()} left to give 💜`;
+                status.className = 'text-xs text-fact-muted dark:text-fact-dark-muted';
+            }
+
+            // Render recent generosity transactions
+            const recentDiv = document.getElementById('recentGenerosity');
+            if (data.transactions.length === 0) {
+                recentDiv.innerHTML = '<div class="text-xs text-fact-muted dark:text-fact-dark-muted italic">No giving this month yet</div>';
+            } else {
+                recentDiv.innerHTML = data.transactions.map(txn => `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="truncate flex-1">${escapeHtml(txn.merchant || txn.description)}</span>
+                        <span class="text-fact-purple font-medium ml-2">QAR ${Math.abs(txn.qar).toFixed(0)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Add generosity budget to command palette
+        function addGenerosityToCommandPalette() {
+            const cmdInput = document.getElementById('cmdInput');
+            if (!cmdInput) return;
+
+            // The command palette already listens for input
+            // We'll add generosity as a command in the existing handler
         }
 
         // ============== INIT ENHANCEMENTS ==============
