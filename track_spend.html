@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Pulse — FACT</title>
+    <title>FACT Finance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -88,11 +88,11 @@
             transition: all 0.15s ease;
         }
         .period-btn:hover {
-            background: #F4C44E;
+            background: linear-gradient(135deg, #F4C44E 0%, #75B876 100%);
             color: #111;
         }
         .period-btn.active {
-            background: #111;
+            background: linear-gradient(135deg, #F4C44E 0%, #75B876 50%, #B593C6 100%);
             color: white;
         }
         
@@ -220,13 +220,18 @@
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="card rounded-2xl p-8 w-full max-w-sm">
+        <div class="card rounded-2xl p-8 w-full max-w-sm relative overflow-hidden">
+            <!-- Brand color accent bar -->
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fact-yellow via-fact-green to-fact-purple"></div>
+
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-fact-ink dark:bg-fact-dark-ink rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-2xl">P</span>
+                <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 relative" style="background: conic-gradient(from 0deg, #F4C44E 0deg 120deg, #75B876 120deg 240deg, #B593C6 240deg 360deg);">
+                    <div class="w-14 h-14 bg-white dark:bg-fact-dark-card rounded-lg flex items-center justify-center">
+                        <span class="font-display font-bold text-xl bg-gradient-to-br from-fact-yellow via-fact-green to-fact-purple bg-clip-text text-transparent">F</span>
+                    </div>
                 </div>
-                <h1 class="font-display font-bold text-2xl">Pulse</h1>
-                <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Tracker</p>
+                <h1 class="font-display font-bold text-2xl">FACT Finance</h1>
+                <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Intelligence</p>
             </div>
 
             <div class="space-y-4">
@@ -243,13 +248,13 @@
                         onkeypress="if(event.key==='Enter')attemptLogin()">
                 </div>
                 <button onclick="attemptLogin()" id="loginBtn"
-                    class="w-full py-3 bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg rounded-lg font-medium hover:opacity-90 transition">
+                    class="w-full py-3 bg-gradient-to-r from-fact-yellow via-fact-green to-fact-purple text-white rounded-lg font-medium hover:opacity-90 transition shadow-sm">
                     Sign In
                 </button>
                 <p id="loginError" class="text-center text-sm text-fact-red hidden">Invalid credentials</p>
             </div>
 
-            <p class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted mt-6">FACT · Secure Login</p>
+            <p class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted mt-6">FACT · Secure Access</p>
         </div>
     </div>
 
@@ -260,13 +265,15 @@
         <!-- HEADER -->
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-fact-ink dark:bg-fact-dark-ink rounded flex items-center justify-center">
-                    <span class="text-white dark:text-fact-dark-bg font-display font-bold text-lg">P</span>
+                <div class="w-10 h-10 rounded flex items-center justify-center relative" style="background: conic-gradient(from 0deg, #F4C44E 0deg 120deg, #75B876 120deg 240deg, #B593C6 240deg 360deg);">
+                    <div class="w-8 h-8 bg-white dark:bg-fact-dark-card rounded flex items-center justify-center">
+                        <span class="font-display font-bold text-sm bg-gradient-to-br from-fact-yellow via-fact-green to-fact-purple bg-clip-text text-transparent">F</span>
+                    </div>
                 </div>
                 <div>
-                    <h1 class="font-display font-bold text-xl tracking-tight">Pulse</h1>
+                    <h1 class="font-display font-bold text-xl tracking-tight">FACT <span class="text-fact-muted font-normal text-sm">Finance</span></h1>
                     <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
-                        <span id="currentUserDisplay">Personal Finance</span> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
+                        <span id="currentUserDisplay">Personal Intelligence</span> · <button onclick="logout()" class="hover:text-fact-red">Logout</button>
                     </p>
                 </div>
             </div>
@@ -371,7 +378,7 @@
                     </div>
 
                     <!-- Donut Chart -->
-                    <div class="relative h-48 flex items-center justify-center">
+                    <div class="relative h-44 flex items-center justify-center">
                         <canvas id="donutChart"></canvas>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="text-center">
@@ -381,16 +388,26 @@
                         </div>
                     </div>
 
+                    <!-- INSIGHTS (between donut and categories) -->
+                    <div id="insightsSection" class="mt-3 py-2 border-t border-b border-fact-border dark:border-fact-dark-border">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[10px] font-semibold text-fact-muted dark:text-fact-dark-muted uppercase tracking-wide">Patterns</span>
+                            <div class="flex-1 h-px bg-fact-border dark:bg-fact-dark-border"></div>
+                        </div>
+                        <div id="insightsTags" class="flex flex-wrap gap-1.5">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
                     <!-- Category List (expanded breakdown) -->
-                    <div class="flex-1 mt-4 pt-4 border-t border-fact-border dark:border-fact-dark-border overflow-y-auto">
+                    <div class="flex-1 mt-3 overflow-y-auto">
                         <div id="categoryBreakdown" class="space-y-2">
                             <!-- Populated by JS -->
                         </div>
                     </div>
 
-                    <!-- Quick filters -->
+                    <!-- Quick dimension filters -->
                     <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
-                        <div id="quickInsightsCompact" class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2"></div>
                         <div class="flex flex-wrap gap-1.5">
                             <button onclick="filterByDimension('workHours')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">💼 Work</button>
                             <button onclick="filterByDimension('lateNight')" class="dim-filter px-2 py-1 text-[10px] rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-fact-yellow hover:border-fact-yellow hover:text-fact-ink transition">🌙 Night</button>
@@ -409,7 +426,7 @@
                         <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                             <div>
                                 <h2 class="font-display font-semibold text-sm">Ask AI</h2>
-                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-4.1-mini</span></p>
+                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-5</span></p>
                             </div>
                             <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
                         </div>
@@ -1333,12 +1350,49 @@
             return { salaries, avgInterval };
         }
 
-        // Get projected next salary date
+        // Get projected next salary date - detects day-of-month pattern from history
         function getNextSalaryDate() {
             const { salaries, avgInterval } = detectSalary();
             if (salaries.length === 0) return dayjs().add(30, 'day');
 
             const lastSalary = salaries[0].date;
+
+            // Analyze salary dates to detect day-of-month pattern
+            if (salaries.length >= 2) {
+                const daysOfMonth = salaries.slice(0, 6).map(s => s.date.date());
+
+                // Check if salaries consistently fall on similar days (within 3 days)
+                // This accounts for weekend adjustments
+                const avgDay = Math.round(daysOfMonth.reduce((a, b) => a + b, 0) / daysOfMonth.length);
+                const allNearAvg = daysOfMonth.every(d => Math.abs(d - avgDay) <= 3);
+
+                if (allNearAvg) {
+                    // Day-of-month pattern detected (e.g., always around 28th)
+                    let nextDate = dayjs().date(avgDay);
+
+                    // If this month's date has passed, move to next month
+                    if (nextDate.isBefore(dayjs(), 'day')) {
+                        nextDate = nextDate.add(1, 'month');
+                    }
+
+                    // Handle end-of-month edge cases (e.g., avgDay=30 in Feb)
+                    if (avgDay > 28) {
+                        const daysInMonth = nextDate.daysInMonth();
+                        if (avgDay > daysInMonth) {
+                            nextDate = nextDate.date(daysInMonth);
+                        }
+                    }
+
+                    // Adjust for Qatar weekend (Fri=5, Sat=6) - move to Thursday
+                    const dow = nextDate.day();
+                    if (dow === 5) nextDate = nextDate.subtract(1, 'day'); // Fri → Thu
+                    if (dow === 6) nextDate = nextDate.subtract(2, 'day'); // Sat → Thu
+
+                    return nextDate;
+                }
+            }
+
+            // Fallback: interval-based calculation
             return lastSalary.add(avgInterval, 'day');
         }
 
@@ -2902,16 +2956,33 @@
                 });
             }
 
-            // Update compact insights in header
-            const compactContainer = document.getElementById('quickInsightsCompact');
+            // Render insights as styled tags in the insights section
+            const tagsContainer = document.getElementById('insightsTags');
+            const insightsSection = document.getElementById('insightsSection');
+
             if (insights.length === 0) {
-                compactContainer.innerHTML = '<span class="text-fact-muted dark:text-fact-dark-muted">No patterns detected</span>';
+                insightsSection.classList.add('hidden');
             } else {
-                // Show top 2 insights compactly
-                const topInsights = insights.slice(0, 2);
-                compactContainer.innerHTML = topInsights.map(i =>
-                    `<span class="inline-flex items-center gap-1 cursor-pointer hover:text-fact-yellow transition" onclick="filterByDimension('${i.filter}')">${i.icon} ${i.text}</span>`
-                ).join('<span class="mx-2 text-fact-muted">·</span>');
+                insightsSection.classList.remove('hidden');
+
+                // Color mapping for different insight types
+                const colorMap = {
+                    'nightOut': 'bg-fact-purple/15 text-fact-purple border-fact-purple/30',
+                    'workHours': 'bg-fact-yellow/15 text-fact-ink border-fact-yellow/50',
+                    'splurge': 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
+                    'subscription': 'bg-fact-green/15 text-fact-green border-fact-green/30',
+                    'lateNight': 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
+                    'large': 'bg-gray-100 dark:bg-gray-800 text-fact-ink dark:text-fact-dark-ink border-fact-border dark:border-fact-dark-border'
+                };
+
+                tagsContainer.innerHTML = insights.map(i => {
+                    const colors = colorMap[i.filter] || 'bg-gray-100 dark:bg-gray-800 text-fact-muted border-fact-border';
+                    return `<button onclick="filterByDimension('${i.filter}')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-full border ${colors} hover:scale-105 transition-transform cursor-pointer">
+                        <span>${i.icon}</span>
+                        <span>${i.text}</span>
+                    </button>`;
+                }).join('');
             }
         }
 
