@@ -675,31 +675,36 @@
         }
 
         // CATEGORY HIERARCHY: Parent categories with subcategories
-        // Priority-based structure: Essentials > Lifestyle > Growth > Financial > Other
+        // Priority-based structure: Essentials > Lifestyle > Family > Financial > Other
         const CATEGORY_HIERARCHY = {
             'Essentials': {
                 color: '#75B876',
                 icon: '🏠',
+                description: 'Must-pay expenses for basic functioning',
                 subcategories: ['Groceries', 'Bills', 'Health', 'Transport']
             },
             'Lifestyle': {
                 color: '#F4C44E',
                 icon: '✨',
-                subcategories: ['Dining', 'Delivery', 'Bars & Hotels', 'Shopping']
+                description: 'Discretionary quality-of-life spending',
+                subcategories: ['Dining', 'Delivery', 'Bars & Hotels', 'Shopping', 'Hobbies', 'Travel']
             },
-            'Growth': {
-                color: '#3498DB',
-                icon: '📈',
-                subcategories: ['Hobbies', 'Travel', 'Family']
+            'Family': {
+                color: '#E91E63',
+                icon: '👨‍👩‍👧‍👦',
+                description: 'Money flow between family members',
+                subcategories: ['Family Transfers']
             },
             'Financial': {
                 color: '#9B59B6',
                 icon: '💸',
-                subcategories: ['Transfers']
+                description: 'Non-family money movement & fees',
+                subcategories: ['Transfers', 'Fees']
             },
             'Other': {
                 color: '#95A5A6',
                 icon: '📦',
+                description: 'Uncategorized or miscellaneous',
                 subcategories: ['Other', 'Uncategorized']
             }
         };
@@ -717,21 +722,22 @@
             // Parent categories
             'Essentials': '#75B876',
             'Lifestyle': '#F4C44E',
-            'Growth': '#3498DB',
+            'Family': '#E91E63',
             'Financial': '#9B59B6',
             'Other': '#95A5A6',
-            // Subcategories (legacy support + drilldown coloring)
+            // Subcategories
             'Groceries': '#4CAF50',
             'Delivery': '#FFA726',
             'Dining': '#E67E22',
             'Bars & Hotels': '#AB47BC',
             'Shopping': '#42A5F5',
-            'Hobbies': '#E91E63',
+            'Hobbies': '#EC407A',
             'Bills': '#78909C',
             'Transport': '#26C6DA',
             'Travel': '#FF7043',
             'Health': '#66BB6A',
-            'Family': '#7E57C2',
+            'Family Transfers': '#E91E63',
+            'Fees': '#8D6E63',
             'Transfers': '#8D6E63',
             'Uncategorized': '#E74C3C'
         };
@@ -870,6 +876,11 @@
         }
 
         function processTxns(rows) {
+            // Detect schema: old (8 cols) vs enhanced (12 cols)
+            const headers = rows[0] || [];
+            const hasEnhancedSchema = headers.length >= 10 &&
+                (clean(headers[7]) === 'Category' || clean(headers[8]) === 'Category');
+
             const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
 
             STATE.allTxns = data.map(r => {
@@ -878,7 +889,27 @@
                 const amount = parseFloat(r[1]);
                 const rate = STATE.fxRates[currency] || 1;
                 const amtQAR = currency === 'QAR' ? amount : amount * rate;
-                const meta = categorize(raw);
+
+                // Try to get AI-assigned category from enhanced schema
+                let aiCategory = null;
+                let aiSubcategory = null;
+                let confidence = null;
+                let context = null;
+
+                if (hasEnhancedSchema) {
+                    // Enhanced schema: cols 7=Category, 8=Subcategory, 9=Confidence, 10=Context
+                    aiCategory = clean(r[7]) || null;
+                    aiSubcategory = clean(r[8]) || null;
+                    confidence = clean(r[9]) || null;
+                    try {
+                        context = r[10] ? JSON.parse(clean(r[10])) : null;
+                    } catch (e) {
+                        context = null;
+                    }
+                }
+
+                // Use AI category if available, otherwise fall back to local categorization
+                const meta = categorize(raw, aiSubcategory);
 
                 return {
                     date: dayjs(clean(r[0])),
@@ -888,19 +919,29 @@
                     display: meta.display,
                     consolidated: meta.consolidated,
                     category: meta.category,
+                    parentCategory: getParentCategory(meta.category),
                     direction: clean(r[5]),
-                    type: clean(r[6])
+                    type: clean(r[6]),
+                    confidence,
+                    context
                 };
             }).sort((a, b) => b.date - a.date);
         }
 
-        function categorize(raw) {
+        function categorize(raw, aiCategory = null) {
             const lower = raw.toLowerCase();
 
+            // Priority 1: Local user overrides
             if (STATE.localMappings[lower]) {
                 return STATE.localMappings[lower];
             }
 
+            // Priority 2: AI-assigned category (if provided)
+            if (aiCategory && aiCategory !== 'Uncategorized') {
+                return { display: raw, consolidated: raw, category: aiCategory };
+            }
+
+            // Priority 3: MerchantMap patterns
             const match = STATE.merchantMap.find(m => lower.includes(m.pattern));
             if (match) {
                 return { display: match.display, consolidated: match.consolidated, category: match.category };

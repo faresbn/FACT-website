@@ -1,219 +1,254 @@
-# Multi-User Setup Guide for QNB Tracker
+# QNB Tracker Enhanced Setup Guide
 
-This document explains how to set up multi-user access for the QNB spending tracker.
-
-## Overview
-
-The multi-user system works by:
-1. Each user has their own Google Sheet with their financial data
-2. Users access their dashboard via URL parameter: `track_spend.html?u=username`
-3. The iOS Shortcut sends data to the GAS which routes it to the correct user's sheet
-4. Local categorizations are stored per-user in the browser
+This document explains the enhanced QNB spending tracker with:
+- Multi-user support
+- AI-powered contextual categorization (GPT-4.1/5.1)
+- Pattern learning from user corrections
+- Weekly insights generation
+- Hierarchical category structure
 
 ---
 
-## Frontend Changes (Already Implemented)
+## Architecture Overview
 
-The `track_spend.html` file now supports:
-
-```javascript
-// Users are mapped to their Google Sheet IDs
-USER_SHEETS: {
-    'fares': '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
-    'alice': 'SHEET_ID_FOR_ALICE',
-    'bob': 'SHEET_ID_FOR_BOB',
-    // Add more users as needed
-}
 ```
-
-- Access via: `https://www.fact.qa/track_spend.html?u=fares`
-- Each user's local mappings are stored separately
-- Default (no parameter) uses the original sheet
-
----
-
-## Google Apps Script Changes Required
-
-### Option A: Single GAS Deployment (Recommended)
-
-Update your existing GAS to route based on user parameter:
-
-```javascript
-// Add at the top of your GAS file
-const USER_SHEET_IDS = {
-  'fares': '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
-  'alice': 'ALICE_SHEET_ID_HERE',
-  'bob': 'BOB_SHEET_ID_HERE'
-  // Add more users as needed
-};
-
-// Modify the doPost function to accept user parameter
-function doPost(e) {
-  const debugLog = [];
-  const log_ = (msg, data) => {
-    debugLog.push({ step: debugLog.length + 1, msg, data: data ?? null, ts: new Date().toISOString() });
-  };
-
-  log_("doPost started");
-
-  const lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) {
-    log_("Failed to acquire lock");
-    return json_({ result: "error", error: "Server busy", debug: debugLog });
-  }
-
-  log_("Lock acquired");
-
-  try {
-    if (!e || !e.postData?.contents) {
-      log_("No POST body contents");
-      return json_({ result: "error", error: "Missing POST body", debug: debugLog });
-    }
-
-    let payload;
-    try {
-      payload = JSON.parse(e.postData.contents);
-      log_("Payload parsed", { keys: Object.keys(payload), hasUser: !!payload.user });
-    } catch (parseErr) {
-      return json_({ result: "error", error: "Invalid JSON: " + parseErr.message, debug: debugLog });
-    }
-
-    // NEW: Get user-specific sheet ID
-    const userId = (payload.user || 'fares').toLowerCase();
-    const SHEET_ID = USER_SHEET_IDS[userId];
-
-    if (!SHEET_ID) {
-      log_("Unknown user", { userId });
-      return json_({ result: "error", error: "Unknown user: " + userId, debug: debugLog });
-    }
-
-    log_("User identified", { userId, sheetId: SHEET_ID.slice(0, 10) + '...' });
-
-    // ... rest of the existing code, using SHEET_ID variable ...
+┌─────────────────┐      ┌──────────────────────┐      ┌─────────────────┐
+│   iOS Shortcut  │──────│  Google Apps Script  │──────│  Google Sheets  │
+│  (SMS trigger)  │ POST │  (gas_enhanced.js)   │      │  (per-user)     │
+└─────────────────┘      └──────────────────────┘      └─────────────────┘
+                                   │
+                                   │ AI Analysis
+                                   ▼
+                         ┌──────────────────────┐
+                         │   OpenAI GPT-4.1     │
+                         │ - Extract txn data   │
+                         │ - Categorize context │
+                         │ - Confidence scoring │
+                         └──────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       track_spend.html                                   │
+│  - Multi-user via ?u=username                                           │
+│  - Hierarchical categories (5 groups, 13 subcategories)                 │
+│  - Merchant analysis (count + total)                                    │
+│  - AI confidence indicators                                             │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
-
-### iOS Shortcut Update
-
-Update your iOS Shortcut to include the user parameter:
-
-```json
-{
-  "user": "fares",
-  "sms": "Your credit card has been used...",
-  "timestamp": "2025-01-30T10:30:00Z"
-}
-```
-
----
-
-## Google Sheets Setup
-
-For each new user:
-
-### 1. Create Their Sheet
-
-1. Create a new Google Spreadsheet
-2. Create a sheet named `RawLedger` with headers:
-   ```
-   Timestamp | Amount | Currency | Counterparty | Card | Direction | TxnType | RawText
-   ```
-3. Create a sheet named `MerchantMap` with headers:
-   ```
-   Pattern | DisplayName | ConsolidatedName | Category
-   ```
-4. Create a sheet named `FXRates` with:
-   ```
-   USD | 3.65
-   EUR | 3.95
-   GBP | 4.60
-   SAR | 0.97
-   ```
-
-### 2. Set Sharing Permissions
-
-**Important for privacy:** Each user's sheet should be:
-- Shared with the GAS service account (for write access)
-- Published to web as CSV (for read access from the dashboard)
-- NOT shared with other users
-
-To publish as CSV:
-1. File > Share > Publish to web
-2. Select each sheet (RawLedger, MerchantMap, FXRates)
-3. Choose CSV format
-4. Publish
-
-### 3. Add to Configuration
-
-Add the new user's sheet ID to both:
-- `track_spend.html` → `USER_SHEETS` object
-- Your GAS → `USER_SHEET_IDS` object
-
----
-
-## Security Considerations
-
-### Current Model (URL-based access)
-- Simple but not secure for sensitive data
-- Anyone with the URL parameter can view the data
-- Suitable for personal use where URL is kept private
-
-### Enhanced Security Options
-
-#### Option 1: Password Protection
-Add a simple password check:
-```javascript
-const USER_PASSWORDS = {
-  'fares': 'hashedPassword123',
-  'alice': 'hashedPasswordABC'
-};
-
-function checkAccess() {
-  const user = getCurrentUser();
-  const storedAuth = localStorage.getItem(`auth_${user}`);
-  if (!storedAuth || storedAuth !== USER_PASSWORDS[user]) {
-    // Show login modal
-    return false;
-  }
-  return true;
-}
-```
-
-#### Option 2: Google Sign-In
-Integrate Google OAuth for proper authentication. This requires:
-- Setting up Google Cloud project
-- Implementing OAuth flow
-- Checking email matches authorized users
 
 ---
 
 ## Category Structure
 
-The tracker now uses a hierarchical category system:
+| Parent | Purpose | Subcategories |
+|--------|---------|---------------|
+| **Essentials** | Must-pay expenses | Groceries, Bills, Health, Transport |
+| **Lifestyle** | Discretionary spending | Dining, Delivery, Bars & Hotels, Shopping, Hobbies, Travel |
+| **Family** | Inter-family money flow | Family Transfers |
+| **Financial** | Non-family money movement | Transfers, Fees |
+| **Other** | Catch-all | Other, Uncategorized |
 
-| Parent Category | Subcategories |
-|----------------|---------------|
-| **Essentials** | Groceries, Bills, Health, Transport |
-| **Lifestyle** | Dining, Delivery, Bars & Hotels, Shopping |
-| **Growth** | Hobbies, Travel, Family |
-| **Financial** | Transfers |
-| **Other** | Other, Uncategorized |
+---
 
-Update your `MerchantMap` sheet categories to use these subcategories. The parent grouping happens automatically in the UI.
+## AI Contextual Categorization
+
+The enhanced GAS (`gas_enhanced.js`) uses GPT to intelligently categorize transactions based on:
+
+### Signals Analyzed
+
+| Signal | How It's Used |
+|--------|---------------|
+| **Merchant name** | "STARBUCKS" → Dining, "CARREFOUR" → Groceries |
+| **Amount** | <50 QAR = likely coffee/transport, >1000 = likely travel/electronics |
+| **Time of day** | 7am = breakfast, 8pm Friday = social |
+| **Day of week** | Weekend evening = higher likelihood of entertainment |
+| **Month timing** | Start of month = watch for rent/subscriptions |
+| **Counterparty name** | Check against family member list for Family Transfers |
+| **Historical patterns** | MerchantMap patterns from past categorizations |
+
+### Confidence Levels
+
+- **High**: Clear merchant match, known pattern, obvious category
+- **Medium**: Reasonable inference but could be wrong
+- **Low**: Limited info, educated guess
+
+### Model Selection
+
+In `gas_enhanced.js`, configure your preferred model:
+
+```javascript
+const CONFIG = {
+  AI_MODEL: 'gpt-4.1',  // Options: gpt-4.1-nano, gpt-4.1-mini, gpt-4.1, gpt-5.1, o3, o4-mini
+  // ...
+};
+```
+
+**Recommendations:**
+- `gpt-4.1-mini`: Fast, cheap, good for most transactions
+- `gpt-4.1`: Better accuracy, recommended for production
+- `gpt-5.1` / `o3`: Cutting-edge, use if cost is not a concern
+
+---
+
+## Enhanced Sheet Schema
+
+The enhanced GAS writes 12 columns instead of 8:
+
+| Column | Description |
+|--------|-------------|
+| Timestamp | ISO timestamp |
+| Amount | Numeric amount |
+| Currency | QAR, USD, etc. |
+| Counterparty | Merchant or recipient name |
+| Card | VISA2, MDEBIT2, TRANSFER, FAMILY |
+| Direction | IN or OUT |
+| TxnType | Purchase, Fawran, Transfer, Received, Fee, Salary |
+| Category | Parent category (Essentials, Lifestyle, Family, Financial, Other) |
+| Subcategory | Specific subcategory (Dining, Groceries, etc.) |
+| Confidence | high, medium, low |
+| Context | JSON with reasoning and time context |
+| RawText | Original SMS (200 chars) |
+
+The frontend automatically handles both old (8-col) and new (12-col) schemas.
+
+---
+
+## Setup Instructions
+
+### 1. Deploy Enhanced GAS
+
+1. Go to [script.google.com](https://script.google.com)
+2. Create a new project or open your existing one
+3. Replace the code with contents of `gas_enhanced.js`
+4. Configure:
+   - Set `OPENAI_API_KEY` in Project Settings > Script Properties
+   - Update `USER_SHEETS` with your sheet IDs
+   - Update `FAMILY_PATTERNS` with family member names
+
+5. Deploy:
+   - Deploy > New deployment > Web app
+   - Execute as: Me
+   - Who has access: Anyone
+   - Copy the deployment URL
+
+### 2. Update iOS Shortcut
+
+Your shortcut should POST to the GAS URL with:
+
+```json
+{
+  "user": "fares",
+  "sms": "Your credit card has been used for a purchase...",
+  "timestamp": "2025-01-30T10:30:00Z"
+}
+```
+
+### 3. Configure Frontend
+
+In `track_spend.html`, update `USER_SHEETS`:
+
+```javascript
+USER_SHEETS: {
+    'fares': '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
+    'alice': 'SHEET_ID_FOR_ALICE',
+},
+```
+
+Access via: `https://www.fact.qa/track_spend.html?u=fares`
+
+---
+
+## AI-Powered Features
+
+### 1. Smart Initial Categorization
+
+Every incoming SMS is analyzed with context:
+
+```
+SMS: "Your credit card has been used for a purchase. Amount: QAR 85 Location: STARBUCKS COFFEE"
+Time: Friday 8pm
+
+AI Analysis:
+- Merchant: STARBUCKS = coffee shop
+- Amount: 85 QAR = typical coffee shop spend
+- Time: Friday evening = social occasion
+→ Category: Lifestyle > Dining
+→ Confidence: High
+→ Reasoning: "Coffee shop purchase on weekend evening"
+```
+
+### 2. Family Transfer Detection
+
+Configure family patterns per user:
+
+```javascript
+FAMILY_PATTERNS: {
+  'fares': ['ahmed', 'fatima', 'mom', 'dad', 'baba', 'mama']
+}
+```
+
+When a Fawran/Transfer mentions a family name:
+→ Automatically categorized as **Family > Family Transfers**
+
+### 3. Pattern Learning
+
+When you manually recategorize a transaction in the UI, call:
+
+```javascript
+learnFromRecategorization('STARBUCKS COFFEE', 'Lifestyle', 'Dining');
+```
+
+This updates your MerchantMap so future transactions auto-categorize correctly.
+
+### 4. Weekly Insights (Optional)
+
+Set up a time-based trigger to run `analyzeRecentTransactions()` weekly:
+
+1. In GAS, go to Triggers (clock icon)
+2. Add trigger:
+   - Function: `analyzeRecentTransactions`
+   - Event source: Time-driven
+   - Type: Week timer
+   - Day: Sunday
+   - Time: 9am-10am
+
+This generates AI insights saved to an "Insights" sheet:
+- Spending patterns and trends
+- Unusual transactions
+- Category breakdown
+- Saving suggestions
+- Recurring payments detected
 
 ---
 
 ## Troubleshooting
 
-### "Unknown user" error
-- Verify the user exists in both `USER_SHEETS` (frontend) and `USER_SHEET_IDS` (GAS)
-- Check the URL parameter: `?u=username` (lowercase)
+### Low confidence categorizations
 
-### Data not syncing
-- Verify the sheet is published to web
-- Check the sheet ID is correct
-- Ensure the sheet names are exactly: `RawLedger`, `MerchantMap`, `FXRates`
+If many transactions are marked "low confidence":
+1. Add more patterns to your MerchantMap sheet
+2. Check that merchant names are being extracted correctly
+3. Consider upgrading to a better AI model
 
-### SMS not being logged
-- Check the GAS execution logs
-- Verify the iOS Shortcut includes `"user": "username"` in the JSON
-- Ensure the GAS has access to the user's sheet
+### Family transfers not detected
+
+- Ensure family names are in `FAMILY_PATTERNS`
+- Check that names match what appears in SMS (exact match, lowercase)
+
+### Schema mismatch
+
+If you see errors after upgrading:
+1. The GAS will auto-add new columns to existing sheets
+2. If issues persist, manually add headers: Category, Subcategory, Confidence, Context
+
+---
+
+## Future Enhancements
+
+Possible additions:
+- [ ] Budget targets per category with alerts
+- [ ] Email/push notifications for anomalies
+- [ ] Voice input via Siri for manual transactions
+- [ ] Receipt photo OCR integration
+- [ ] Shared family expense tracking
+- [ ] Investment tracking integration
