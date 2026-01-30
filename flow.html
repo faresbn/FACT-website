@@ -411,6 +411,79 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Spending Velocity Ring */
+        .velocity-ring {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+        .velocity-pulse {
+            animation: velocityPulse 2s ease-in-out infinite;
+        }
+        @keyframes velocityPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: relative;
+            width: 32px;
+            height: 18px;
+            background: #E5E5E5;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .theme-toggle.dark { background: #4A5568; }
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .theme-toggle.dark::after {
+            transform: translateX(14px);
+            background: #F4C44E;
+        }
+
+        /* Manual dark mode override */
+        body.dark-mode {
+            --fact-bg: var(--fact-dark-bg);
+            --fact-card: var(--fact-dark-card);
+            --fact-ink: var(--fact-dark-ink);
+            --fact-muted: var(--fact-dark-muted);
+            --fact-border: var(--fact-dark-border);
+            background: var(--fact-dark-bg);
+            color: var(--fact-dark-ink);
+        }
+        body.dark-mode .card {
+            background: var(--fact-dark-card);
+            border-color: var(--fact-dark-border);
+        }
+
+        /* Export button animation */
+        .export-spin { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Forecast dashed line */
+        .forecast-line {
+            stroke-dasharray: 4 4;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash { to { stroke-dashoffset: -8; } }
     </style>
 </head>
 
@@ -477,8 +550,24 @@
                 </div>
             </div>
 
-            <!-- Period Selector + Date Range -->
-            <div class="flex flex-col items-end gap-1">
+            <!-- Period Selector + Controls -->
+            <div class="flex flex-col items-end gap-2">
+                <div class="flex items-center gap-2">
+                    <!-- Export Button -->
+                    <button onclick="exportCSV()" title="Export CSV" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        <svg id="exportIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                    </button>
+                    <!-- Dark Mode Toggle -->
+                    <div id="themeToggle" onclick="toggleDarkMode()" class="theme-toggle" title="Toggle dark mode"></div>
+                    <!-- Sync Button -->
+                    <button onclick="syncData()" title="Sync data" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
                 <div class="flex flex-wrap items-center gap-1 bg-white dark:bg-fact-dark-card border border-fact-border dark:border-fact-dark-border rounded-lg p-1">
                     <button onclick="setSalaryPeriod()" data-period="salary" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Salary</button>
                     <button onclick="setPeriod('thisMonth')" data-period="thisMonth" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Month</button>
@@ -486,7 +575,10 @@
                     <button onclick="setPeriod('last90')" data-period="last90" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">90d</button>
                     <button onclick="openDatePicker()" data-period="custom" class="period-btn px-3 py-1.5 text-xs font-medium rounded-md">Custom</button>
                 </div>
-                <span id="dateRangeDisplay" class="text-[10px] text-fact-muted dark:text-fact-dark-muted">--</span>
+                <div class="flex items-center gap-2">
+                    <span id="dateRangeDisplay" class="text-[10px] text-fact-muted dark:text-fact-dark-muted">--</span>
+                    <span id="lastSync" class="text-[10px] text-fact-muted dark:text-fact-dark-muted">--</span>
+                </div>
             </div>
         </header>
         
@@ -3972,6 +4064,8 @@
             { id: 'sync', icon: '🔄', label: 'Sync Data', shortcut: 'R', action: () => { closeCmdPalette(); syncData(); } },
             { id: 'goals', icon: '🎯', label: 'Budget Goals', shortcut: 'G', action: () => { closeCmdPalette(); openGoals(); } },
             { id: 'heatmap', icon: '📊', label: 'Spending Heatmap', shortcut: 'H', action: () => { closeCmdPalette(); openHeatmap(); } },
+            { id: 'export', icon: '📥', label: 'Export CSV', shortcut: 'E', action: () => { closeCmdPalette(); exportCSV(); } },
+            { id: 'darkmode', icon: '🌙', label: 'Toggle Dark Mode', shortcut: 'D', action: () => { closeCmdPalette(); toggleDarkMode(); } },
             { id: 'merchants', icon: '🏪', label: 'All Merchants', shortcut: 'M', action: () => { closeCmdPalette(); openMerchantModal(); } },
             { id: 'txns', icon: '📋', label: 'All Transactions', shortcut: 'T', action: () => { closeCmdPalette(); openTxnModal(); } },
             { id: 'uncat', icon: '❓', label: 'Uncategorized', shortcut: 'U', action: () => { closeCmdPalette(); openUncatModal(); } },
@@ -4365,11 +4459,111 @@
             initSwipeGestures();
         }
 
+        // ============== DARK MODE TOGGLE ==============
+
+        function initDarkMode() {
+            const saved = localStorage.getItem('fact_dark_mode');
+            const toggle = document.getElementById('themeToggle');
+
+            if (saved === 'true') {
+                document.body.classList.add('dark-mode');
+                toggle.classList.add('dark');
+            } else if (saved === 'false') {
+                document.body.classList.remove('dark-mode');
+                toggle.classList.remove('dark');
+            } else {
+                // Auto from system
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    toggle.classList.add('dark');
+                }
+            }
+        }
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const toggle = document.getElementById('themeToggle');
+
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                toggle.classList.remove('dark');
+                localStorage.setItem('fact_dark_mode', 'false');
+            } else {
+                body.classList.add('dark-mode');
+                toggle.classList.add('dark');
+                localStorage.setItem('fact_dark_mode', 'true');
+            }
+        }
+
+        // ============== CSV EXPORT ==============
+
+        function exportCSV() {
+            const icon = document.getElementById('exportIcon');
+            icon.classList.add('export-spin');
+
+            try {
+                // Prepare data
+                const headers = ['Date', 'Time', 'Amount', 'Currency', 'Merchant', 'Category', 'Direction', 'Pattern'];
+                const rows = STATE.filtered.map(t => [
+                    t.date.format('YYYY-MM-DD'),
+                    t.date.format('HH:mm'),
+                    t.amount.toFixed(2),
+                    t.currency,
+                    `"${t.display.replace(/"/g, '""')}"`,
+                    t.merchantType,
+                    t.direction,
+                    t.dims.pattern
+                ]);
+
+                const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `fact-flow-${STATE.dateRange.start.format('YYYY-MM-DD')}-to-${STATE.dateRange.end.format('YYYY-MM-DD')}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } finally {
+                setTimeout(() => icon.classList.remove('export-spin'), 500);
+            }
+        }
+
+        // ============== SPENDING FORECAST ==============
+
+        function calculateForecast() {
+            const proj = calculateBudgetProjection();
+            const out = STATE.filtered.filter(t => t.direction === 'OUT');
+
+            // Calculate daily spending trend
+            const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
+            const daysPassed = Math.min(periodDays, dayjs().diff(STATE.dateRange.start, 'day') + 1);
+            const avgDaily = daysPassed > 0 ? proj.expenses / daysPassed : 0;
+
+            // Project to end of period
+            const projectedTotal = avgDaily * periodDays;
+            const daysRemaining = Math.max(0, periodDays - daysPassed);
+            const projectedRemaining = avgDaily * daysRemaining;
+
+            return {
+                currentSpend: proj.expenses,
+                projectedTotal,
+                projectedRemaining,
+                avgDaily,
+                daysRemaining,
+                pace: proj.onTrack ? 'on-track' : 'over-budget'
+            };
+        }
+
         // ============== INIT ENHANCEMENTS ==============
 
-        // Initialize voice recognition on load
+        // Initialize all enhancements on load
         document.addEventListener('DOMContentLoaded', () => {
             initVoiceRecognition();
+            initDarkMode();
         });
     </script>
 </body>
