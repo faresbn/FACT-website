@@ -517,7 +517,6 @@
             <!-- FOOTER -->
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
-                <span id="aiStatus" class="ml-2"></span>
             </footer>
         </div>
     </div>
@@ -699,20 +698,11 @@
             <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                 <div>
                     <h3 class="font-display font-semibold">Ask AI About Your Spending</h3>
-                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by GPT</p>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by GPT via GAS</p>
                 </div>
                 <button onclick="closeAIQuery()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-            </div>
-
-            <!-- API Key Setup (shown if not configured) -->
-            <div id="aiKeySetup" class="p-5 border-b border-fact-border dark:border-fact-dark-border">
-                <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2">Enter your OpenAI API key (stored locally):</p>
-                <div class="flex gap-2">
-                    <input type="password" id="aiKeyInput" placeholder="sk-..." class="flex-1 px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
-                    <button onclick="saveAIKey()" class="px-4 py-2 bg-fact-yellow text-fact-ink rounded-lg text-sm font-medium">Save</button>
-                </div>
             </div>
 
             <!-- Quick Questions -->
@@ -791,7 +781,9 @@
             },
             DEFAULT_SHEET_ID: '1LLpl1sH7LHqD3u3ZU4JWZJtvcHD_SGFql76llyfAIBw',
             STORAGE_KEY: 'qnb_tracker_v4',
-            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 }
+            DEFAULT_FX: { USD: 3.65, EUR: 3.95, GBP: 4.60, SAR: 0.97 },
+            // GAS URL for AI proxy - UPDATE THIS after deploying gas_enhanced.js
+            GAS_URL: 'YOUR_GAS_DEPLOYMENT_URL_HERE'
         };
 
         // Get user from URL parameter
@@ -964,12 +956,6 @@
             const userDisplay = document.getElementById('currentUserDisplay');
             if (user && user !== 'default') {
                 userDisplay.textContent = user.charAt(0).toUpperCase() + user.slice(1);
-            }
-
-            // Check AI key status
-            const aiKey = localStorage.getItem('qnb_openai_key');
-            if (aiKey) {
-                document.getElementById('aiStatus').textContent = '🤖 AI Ready';
             }
 
             loadLocal();
@@ -2366,26 +2352,9 @@
             document.getElementById('txnModalList').innerHTML = txns.slice(0, 100).map(t => renderTxnRow(t)).join('');
         }
 
-        // ============== FRONTEND AI INTEGRATION ==============
-
-        function getAIKey() {
-            return localStorage.getItem('qnb_openai_key');
-        }
-
-        function saveAIKey() {
-            const key = document.getElementById('aiKeyInput').value.trim();
-            if (key && key.startsWith('sk-')) {
-                localStorage.setItem('qnb_openai_key', key);
-                document.getElementById('aiKeySetup').classList.add('hidden');
-                document.getElementById('aiStatus').textContent = '🤖 AI Ready';
-            } else {
-                alert('Please enter a valid OpenAI API key (starts with sk-)');
-            }
-        }
+        // ============== FRONTEND AI INTEGRATION (via GAS proxy) ==============
 
         function openAIQuery() {
-            const key = getAIKey();
-            document.getElementById('aiKeySetup').classList.toggle('hidden', !!key);
             document.getElementById('aiModal').classList.remove('hidden');
         }
 
@@ -2397,57 +2366,30 @@
             const query = question || document.getElementById('aiQueryInput').value.trim();
             if (!query) return;
 
-            const key = getAIKey();
-            if (!key) {
-                document.getElementById('aiKeySetup').classList.remove('hidden');
+            if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
+                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in track_spend.html with your deployed GAS URL</p>';
                 return;
             }
 
             const responseDiv = document.getElementById('aiResponse');
             responseDiv.innerHTML = '<p class="text-fact-muted animate-pulse">Analyzing your spending...</p>';
 
-            // Prepare transaction summary for AI
+            // Prepare transaction summary and encode it
             const txnSummary = prepareTransactionSummary();
+            const encodedData = btoa(unescape(encodeURIComponent(txnSummary)));
 
             try {
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${key}`
-                    },
-                    body: JSON.stringify({
-                        model: 'gpt-4.1-mini',
-                        messages: [
-                            {
-                                role: 'system',
-                                content: `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
-Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
-Identify patterns, anomalies, and actionable insights.
+                // Call GAS proxy endpoint
+                const url = `${CONFIG.GAS_URL}?action=ai&q=${encodeURIComponent(query)}&data=${encodeURIComponent(encodedData)}`;
 
-The data includes dimensions:
-- merchantType: what was purchased
-- dims.when: time context (Work Hours, Evening, Late Night, Weekend)
-- dims.size: amount tier (Micro, Small, Medium, Large, Major)
-- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription, Routine)`
-                            },
-                            {
-                                role: 'user',
-                                content: `Here is my spending data for the selected period:\n\n${txnSummary}\n\nQuestion: ${query}`
-                            }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 1000
-                    })
-                });
-
+                const response = await fetch(url);
                 const data = await response.json();
 
                 if (data.error) {
-                    throw new Error(data.error.message);
+                    throw new Error(data.error);
                 }
 
-                const answer = data.choices[0].message.content;
+                const answer = data.answer;
                 responseDiv.innerHTML = marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>');
 
             } catch (err) {

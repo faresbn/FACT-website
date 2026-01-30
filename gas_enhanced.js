@@ -8,6 +8,7 @@
  * - Pattern learning from MerchantMap
  * - Smarter category suggestions
  * - Transaction anomaly detection
+ * - Frontend AI proxy endpoint (doGet for queries)
  */
 
 // ============== CONFIGURATION ==============
@@ -16,6 +17,7 @@ const CONFIG = {
   // Model selection - upgrade as needed
   // Options: 'gpt-4.1-nano' (fast), 'gpt-4.1-mini' (balanced), 'gpt-4.1' (best), 'gpt-5.1' (cutting edge)
   AI_MODEL: 'gpt-4.1',
+  AI_MODEL_FRONTEND: 'gpt-4.1-mini', // Faster model for frontend queries
 
   // Multi-user sheet mapping
   USER_SHEETS: {
@@ -43,6 +45,95 @@ const CONFIG = {
 
 // Flatten categories for validation
 const ALL_CATEGORIES = Object.values(CONFIG.CATEGORIES).flat();
+
+// ============== GET ENDPOINT - AI QUERY PROXY ==============
+
+/**
+ * Frontend AI query proxy - called via GET request
+ * URL: YOUR_GAS_URL?action=ai&q=YOUR_QUESTION&data=ENCODED_TXN_SUMMARY
+ */
+function doGet(e) {
+  const action = e.parameter.action;
+
+  if (action === 'ai') {
+    return handleAIQuery(e);
+  }
+
+  // Default: return simple status
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'QNB Tracker GAS v5' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleAIQuery(e) {
+  const query = e.parameter.q || '';
+  const txnData = e.parameter.data || '';
+
+  if (!query) {
+    return json_({ error: 'Missing query parameter "q"' });
+  }
+
+  const apiKey = PropertiesService.getScriptProperties().getProperty("OPENAI_API_KEY");
+  if (!apiKey) {
+    return json_({ error: 'OpenAI API key not configured in GAS' });
+  }
+
+  try {
+    // Decode transaction data if provided
+    let decodedData = '';
+    if (txnData) {
+      try {
+        decodedData = Utilities.newBlob(Utilities.base64Decode(txnData)).getDataAsString();
+      } catch (decodeErr) {
+        decodedData = txnData; // Fallback to raw if not base64
+      }
+    }
+
+    const systemPrompt = `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
+Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
+Identify patterns, anomalies, and actionable insights.
+
+The data includes dimensions:
+- merchantType: what was purchased (Groceries, Dining, Bars & Nightlife, Coffee, Shopping, etc.)
+- dims.when: time context (Work Hours, Evening, Late Night, Weekend)
+- dims.size: amount tier (Micro, Small, Medium, Large, Major)
+- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)`;
+
+    const userPrompt = decodedData
+      ? `Here is my spending data for the selected period:\n\n${decodedData}\n\nQuestion: ${query}`
+      : query;
+
+    const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      payload: JSON.stringify({
+        model: CONFIG.AI_MODEL_FRONTEND,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      }),
+      muteHttpExceptions: true
+    });
+
+    const result = JSON.parse(response.getContentText());
+
+    if (result.error) {
+      return json_({ error: result.error.message });
+    }
+
+    const answer = result.choices[0].message.content;
+    return json_({ answer: answer });
+
+  } catch (err) {
+    return json_({ error: err.message });
+  }
+}
 
 // ============== MAIN ENTRY POINT ==============
 
