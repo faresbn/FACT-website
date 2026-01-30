@@ -15,6 +15,7 @@
 
 const CONFIG = {
   // ============== TIERED AI MODEL STRATEGY ==============
+  // Only using: gpt-4.1-mini, gpt-4.1, gpt-5-mini, gpt-5.1
   // SMS Parsing: gpt-4.1-mini (reliable, cost-effective for high volume)
   // Retry on low confidence: gpt-5-mini (upgrade when needed)
   // Ask AI default: gpt-5-mini (strong feel per dollar)
@@ -26,6 +27,14 @@ const CONFIG = {
   AI_MODEL_FRONTEND: 'gpt-5-mini',     // Ask AI default
   AI_MODEL_FRONTEND_DEEP: 'gpt-5.1',   // Ask AI for deep analysis queries
   AI_MODEL_INSIGHTS: 'gpt-5.1',        // Batch insights (best quality)
+
+  // Model capabilities - which models support custom temperature
+  MODEL_SUPPORTS_TEMPERATURE: {
+    'gpt-4.1-mini': true,
+    'gpt-4.1': true,
+    'gpt-5-mini': false,  // Only supports temperature=1
+    'gpt-5.1': false      // Only supports temperature=1
+  },
 
   // Keywords that trigger deep analysis mode
   DEEP_ANALYSIS_KEYWORDS: [
@@ -149,6 +158,14 @@ function doPost(e) {
         return handleLearnCategory_(payload);
       }
 
+      if (payload.action === 'remember') {
+        return handleRemember_(payload);
+      }
+
+      if (payload.action === 'context') {
+        return handleGetContext_(payload);
+      }
+
       // Default: SMS ingestion (existing behavior)
       return handleSMSIngestion_(e, payload);
 
@@ -230,10 +247,30 @@ function handleAIQueryPost_(payload) {
   }
 
   try {
-    // Smart model selection
+    // Check if this is a "remember" command via natural language
     const queryLower = query.toLowerCase();
+    const rememberPatterns = [
+      /^remember\s+that\s+(.+)/i,
+      /^note\s+that\s+(.+)/i,
+      /^(salary|income).+(?:arrives?|comes?|paid).+(?:on|day)\s+(\d+)/i,
+      /^(.+)\s+(?:is|handles?|books?)\s+(?:my\s+)?(.+)/i
+    ];
+
+    for (const pattern of rememberPatterns) {
+      const match = query.match(pattern);
+      if (match && queryLower.startsWith('remember')) {
+        // Extract and save the context
+        return handleRememberFromQuery_(session.sheetId, query);
+      }
+    }
+
+    // Smart model selection
     const isDeepAnalysis = CONFIG.DEEP_ANALYSIS_KEYWORDS.some(kw => queryLower.includes(kw));
     const selectedModel = isDeepAnalysis ? CONFIG.AI_MODEL_FRONTEND_DEEP : CONFIG.AI_MODEL_FRONTEND;
+
+    // Load user context for personalized responses
+    const userContext = getUserContext_(session.sheetId);
+    const contextPrompt = formatContextForPrompt_(userContext);
 
     const basePrompt = `You are a personal finance analyst. Analyze the user's spending data and answer their questions.
 Be concise but insightful. Use specific numbers from the data. Format your response with markdown.
@@ -243,7 +280,9 @@ The data includes dimensions:
 - merchantType: what was purchased (Groceries, Dining, Bars & Nightlife, Coffee, Shopping, etc.)
 - dims.when: time context (Work Hours, Evening, Late Night, Weekend)
 - dims.size: amount tier (Micro, Small, Medium, Large, Major)
-- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)`;
+- dims.pattern: detected pattern (Normal, Night Out, Work Expense, Splurge, Subscription)
+
+${contextPrompt ? '--- USER CONTEXT ---\n' + contextPrompt + '\n--- END CONTEXT ---\n' : ''}`;
 
     const deepPrompt = isDeepAnalysis
       ? `\n\nDEEP ANALYSIS MODE: Provide thorough, detailed analysis. Consider:
@@ -259,21 +298,28 @@ The data includes dimensions:
       ? `Here is my spending data for the selected period:\n\n${txnData}\n\nQuestion: ${query}`
       : query;
 
+    // Build request payload - conditionally include temperature based on model support
+    const requestPayload = {
+      model: selectedModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_completion_tokens: isDeepAnalysis ? 2000 : 1000
+    };
+
+    // Only include temperature if the model supports it
+    if (CONFIG.MODEL_SUPPORTS_TEMPERATURE[selectedModel]) {
+      requestPayload.temperature = isDeepAnalysis ? 0.5 : 0.7;
+    }
+
     const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + apiKey
       },
-      payload: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: isDeepAnalysis ? 0.5 : 0.7,
-        max_completion_tokens: isDeepAnalysis ? 2000 : 1000
-      }),
+      payload: JSON.stringify(requestPayload),
       muteHttpExceptions: true
     });
 
@@ -368,6 +414,267 @@ function handleLearnCategory_(payload) {
     // Add new pattern
     mapSheet.appendRow([counterpartyLower, counterparty, consolidated, merchantType]);
     return json_({ success: true, action: 'added' });
+
+  } catch (err) {
+    return json_({ error: 'Failed to save: ' + err.message });
+  }
+}
+
+/**
+ * Handle "remember" command - stores user context/corrections
+ * Types: income, payee, correction, preference
+ */
+function handleRemember_(payload) {
+  const token = payload.token;
+  const type = payload.type;       // 'income', 'payee', 'correction', 'preference'
+  const data = payload.data || {};
+
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  if (!type || !data) {
+    return json_({ error: 'Missing type or data' });
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(session.sheetId);
+    let ctxSheet = ss.getSheetByName("UserContext");
+
+    // Create UserContext sheet if it doesn't exist
+    if (!ctxSheet) {
+      ctxSheet = ss.insertSheet("UserContext");
+      ctxSheet.getRange(1, 1, 1, 6).setValues([[
+        "Type", "Key", "Value", "Details", "DateAdded", "Source"
+      ]]);
+      ctxSheet.setFrozenRows(1);
+    }
+
+    const timestamp = new Date().toISOString();
+    let rowData = [];
+
+    switch (type) {
+      case 'income':
+        // data: { type: 'Salary', day: 28, amount: 25000, notes: 'Main job' }
+        rowData = ['income', data.type || 'Salary', data.day || '', data.amount || '', timestamp, data.notes || ''];
+        break;
+
+      case 'payee':
+        // data: { name: 'Aleks', purpose: 'Flight bookings', category: 'Travel', isWorkExpense: true }
+        rowData = ['payee', data.name, data.purpose || '', data.category || '', timestamp, data.isWorkExpense ? 'work' : 'personal'];
+        break;
+
+      case 'correction':
+        // data: { original: 'Ooredoo is a splurge', corrected: 'Ooredoo is a telecom bill', context: 'monthly' }
+        rowData = ['correction', data.original || '', data.corrected || '', data.context || '', timestamp, 'user'];
+        break;
+
+      case 'preference':
+        // data: { key: 'telecom_essential', value: 'true', notes: 'Ooredoo, Vodafone are essential' }
+        rowData = ['preference', data.key || '', data.value || '', data.notes || '', timestamp, 'user'];
+        break;
+
+      default:
+        return json_({ error: 'Unknown type: ' + type });
+    }
+
+    ctxSheet.appendRow(rowData);
+
+    return json_({ success: true, type: type, message: 'Context saved' });
+
+  } catch (err) {
+    return json_({ error: 'Failed to save context: ' + err.message });
+  }
+}
+
+/**
+ * Get user context for AI prompts
+ */
+function handleGetContext_(payload) {
+  const token = payload.token;
+
+  const session = validateToken_(token);
+  if (!session) {
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  return json_({ success: true, context: getUserContext_(session.sheetId) });
+}
+
+/**
+ * Load user context from UserContext sheet
+ * Returns structured context for AI prompts
+ */
+function getUserContext_(sheetId) {
+  const context = {
+    income: [],
+    payees: [],
+    corrections: [],
+    preferences: []
+  };
+
+  try {
+    const ss = SpreadsheetApp.openById(sheetId);
+    const ctxSheet = ss.getSheetByName("UserContext");
+
+    if (!ctxSheet) return context;
+
+    const data = ctxSheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const type = row[0];
+
+      switch (type) {
+        case 'income':
+          context.income.push({
+            type: row[1],
+            day: row[2],
+            amount: row[3],
+            notes: row[5]
+          });
+          break;
+        case 'payee':
+          context.payees.push({
+            name: row[1],
+            purpose: row[2],
+            category: row[3],
+            isWorkExpense: row[5] === 'work'
+          });
+          break;
+        case 'correction':
+          context.corrections.push({
+            original: row[1],
+            corrected: row[2],
+            context: row[3]
+          });
+          break;
+        case 'preference':
+          context.preferences.push({
+            key: row[1],
+            value: row[2],
+            notes: row[3]
+          });
+          break;
+      }
+    }
+  } catch (err) {
+    // Return empty context on error
+  }
+
+  return context;
+}
+
+/**
+ * Format user context for inclusion in AI prompts
+ */
+function formatContextForPrompt_(context) {
+  const parts = [];
+
+  if (context.income.length > 0) {
+    parts.push("USER'S INCOME SCHEDULE:");
+    context.income.forEach(inc => {
+      parts.push(`- ${inc.type}: arrives on day ${inc.day} of month${inc.amount ? ', ~' + inc.amount + ' QAR' : ''}${inc.notes ? ' (' + inc.notes + ')' : ''}`);
+    });
+  }
+
+  if (context.payees.length > 0) {
+    parts.push("\nKNOWN PAYEES:");
+    context.payees.forEach(p => {
+      parts.push(`- ${p.name}: ${p.purpose} (${p.category})${p.isWorkExpense ? ' [WORK EXPENSE]' : ''}`);
+    });
+  }
+
+  if (context.corrections.length > 0) {
+    parts.push("\nPREVIOUS CORRECTIONS (learn from these):");
+    context.corrections.forEach(c => {
+      parts.push(`- Wrong: "${c.original}" → Correct: "${c.corrected}"`);
+    });
+  }
+
+  if (context.preferences.length > 0) {
+    parts.push("\nUSER PREFERENCES:");
+    context.preferences.forEach(p => {
+      parts.push(`- ${p.key}: ${p.value}${p.notes ? ' (' + p.notes + ')' : ''}`);
+    });
+  }
+
+  return parts.join('\n');
+}
+
+/**
+ * Parse natural language "remember" commands and store context
+ * Examples:
+ * - "Remember that Aleks handles my flight bookings"
+ * - "Remember that my salary arrives on day 28"
+ * - "Remember that Ooredoo is a telecom bill, not a splurge"
+ */
+function handleRememberFromQuery_(sheetId, query) {
+  const queryLower = query.toLowerCase();
+
+  try {
+    const ss = SpreadsheetApp.openById(sheetId);
+    let ctxSheet = ss.getSheetByName("UserContext");
+
+    if (!ctxSheet) {
+      ctxSheet = ss.insertSheet("UserContext");
+      ctxSheet.getRange(1, 1, 1, 6).setValues([[
+        "Type", "Key", "Value", "Details", "DateAdded", "Source"
+      ]]);
+      ctxSheet.setFrozenRows(1);
+    }
+
+    const timestamp = new Date().toISOString();
+    let saved = false;
+    let message = '';
+
+    // Pattern: salary/income arrives on day X
+    const incomeMatch = query.match(/(?:salary|income|pay).+(?:arrives?|comes?|paid|on)\s+(?:day\s+)?(\d+)/i);
+    if (incomeMatch) {
+      const day = parseInt(incomeMatch[1]);
+      ctxSheet.appendRow(['income', 'Salary', day, '', timestamp, query]);
+      saved = true;
+      message = `Got it! I'll remember your salary arrives on day ${day}.`;
+    }
+
+    // Pattern: [name] handles/books my [purpose]
+    const payeeMatch = query.match(/(?:remember\s+that\s+)?(\w+)\s+(?:handles?|books?|manages?|does)\s+(?:my\s+)?(.+)/i);
+    if (!saved && payeeMatch) {
+      const name = payeeMatch[1];
+      const purpose = payeeMatch[2].replace(/\.$/, '');
+      // Infer category from purpose
+      let category = 'Other';
+      let isWork = false;
+      if (/flight|travel|trip|booking/i.test(purpose)) {
+        category = 'Travel';
+        isWork = /work|business/i.test(query);
+      }
+      ctxSheet.appendRow(['payee', name, purpose, category, timestamp, isWork ? 'work' : 'personal']);
+      saved = true;
+      message = `Got it! I'll remember that ${name} ${purpose}.`;
+    }
+
+    // Pattern: [thing] is [correction], not [wrong]
+    const correctionMatch = query.match(/(\w+(?:\s+\w+)?)\s+is\s+(?:a\s+)?(.+?)(?:,\s*not\s+(?:a\s+)?(.+))?$/i);
+    if (!saved && correctionMatch) {
+      const subject = correctionMatch[1];
+      const correct = correctionMatch[2];
+      const wrong = correctionMatch[3] || '';
+      ctxSheet.appendRow(['correction', wrong ? `${subject} is ${wrong}` : subject, `${subject} is ${correct}`, '', timestamp, 'user']);
+      saved = true;
+      message = `Got it! I'll remember that ${subject} is ${correct}${wrong ? ', not ' + wrong : ''}.`;
+    }
+
+    // Generic remember - store as preference
+    if (!saved) {
+      const content = query.replace(/^remember\s+that\s+/i, '').replace(/^note\s+that\s+/i, '');
+      ctxSheet.appendRow(['preference', 'user_note', content, '', timestamp, 'user']);
+      saved = true;
+      message = "Got it! I've noted that for future reference.";
+    }
+
+    return json_({ success: true, remembered: true, message: message });
 
   } catch (err) {
     return json_({ error: 'Failed to save: ' + err.message });
@@ -1097,15 +1404,15 @@ function analyzeRecentTransactions() {
     return;
   }
 
-  // Generate insights using AI
-  const insights = generateInsights_(recentTxns);
+  // Generate insights using AI (pass sheetId for user context)
+  const insights = generateInsights_(recentTxns, SHEET_ID);
   Logger.log("Insights:\n" + insights);
 
   // Optionally save to a sheet or send via email
   saveInsights_(ss, insights);
 }
 
-function generateInsights_(transactions) {
+function generateInsights_(transactions, sheetId) {
   const apiKey = PropertiesService.getScriptProperties().getProperty("OPENAI_API_KEY");
   if (!apiKey) return "Missing API key";
 
@@ -1113,10 +1420,14 @@ function generateInsights_(transactions) {
     `${t.timestamp}: ${t.direction} ${t.amount} ${t.currency} @ ${t.counterparty} (${t.subcategory})`
   ).join('\n');
 
+  // Load user context for personalized insights
+  const userContext = sheetId ? getUserContext_(sheetId) : { income: [], payees: [], corrections: [], preferences: [] };
+  const contextPrompt = formatContextForPrompt_(userContext);
+
   // Premium insights prompt for batch analysis
   const prompt = `You are a senior financial analyst reviewing personal transaction data. Provide a comprehensive but actionable monthly financial review.
 
-## Transaction Data (Last 30 Days)
+${contextPrompt ? '## User Context (IMPORTANT - use this information)\n' + contextPrompt + '\n\n' : ''}## Transaction Data (Last 30 Days)
 ${txnSummary}
 
 ## Required Analysis
