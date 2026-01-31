@@ -1385,6 +1385,10 @@ function handleSMSIngestion_(e, payload) {
     const merchantPatterns = loadMerchantPatterns_(ss, log_);
     const familyPatterns = CONFIG.FAMILY_PATTERNS[userId] || [];
 
+    // Use spreadsheet timezone for consistent timestamps
+    const tz = ss.getSpreadsheetTimeZone ? ss.getSpreadsheetTimeZone() : Session.getScriptTimeZone();
+    const tzOffsetMinutes = getTimezoneOffsetMinutes_(tz);
+
     // Process entries
     let appended = 0, skipped = 0, errors = 0;
     const entryLogs = [];
@@ -1405,13 +1409,13 @@ function handleSMSIngestion_(e, payload) {
       }
 
       // Get timestamp with context
-      const ts = normaliseIso_(item?.timestamp);
+      const ts = normaliseIso_(item?.timestamp, tzOffsetMinutes);
       const txnContext = extractTimeContext_(ts);
       entryLog.timestamp = ts;
       entryLog.context = txnContext;
 
       // Idempotency check: hash of key fields
-      const idempotencyKey = generateIdempotencyKey_(sms, ts);
+      const idempotencyKey = generateIdempotencyKey_(sms, ts, tz);
       if (isDuplicateEntry_(sheet, idempotencyKey, log_)) {
         entryLog.fate = "skipped";
         entryLog.reason = "Duplicate (idempotency check)";
@@ -1531,14 +1535,25 @@ function handleSMSIngestion_(e, payload) {
 
 // ============== IDEMPOTENCY ==============
 
-function generateIdempotencyKey_(sms, timestamp) {
+function generateIdempotencyKey_(sms, timestamp, timeZone) {
   // Create a hash-like key from SMS content + timestamp (rounded to minute)
-  const tsMinute = timestamp.slice(0, 16); // YYYY-MM-DDTHH:MM
+  const tsMinute = normaliseMinute_(timestamp, timeZone);
   const content = sms.replace(/\s+/g, '').toLowerCase().slice(0, 100);
   return Utilities.base64Encode(Utilities.computeDigest(
     Utilities.DigestAlgorithm.MD5,
     content + tsMinute
   ));
+}
+
+function normaliseMinute_(timestamp, timeZone) {
+  try {
+    const tz = timeZone || Session.getScriptTimeZone();
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    if (!isNaN(date.getTime())) {
+      return Utilities.formatDate(date, tz, "yyyy-MM-dd'T'HH:mm");
+    }
+  } catch (_) {}
+  return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm");
 }
 
 function isDuplicateEntry_(sheet, idempotencyKey, log_) {
@@ -1957,12 +1972,10 @@ function findOrCreateSheet_(ss, sheetName, headers, log_) {
       const isOldSchema = oldHeaders.every((h, i) => String(row1[i] ?? "").trim() === h);
 
       if (isOldSchema) {
-        log_("Old schema detected - adding new columns");
-        // Add new columns: Category, Subcategory, Confidence, Context
+        log_("Old schema detected - inserting new columns before RawText");
+        // Insert new columns after TxnType (col 7) to keep RawText at the end
+        sheet.insertColumnsAfter(7, 4);
         sheet.getRange(1, 8, 1, 4).setValues([["Category", "Subcategory", "Confidence", "Context"]]);
-        // Move RawText to the end
-        // Actually, let's just append the new columns after RawText for backwards compatibility
-        sheet.getRange(1, 9, 1, 4).setValues([["Category", "Subcategory", "Confidence", "Context"]]);
       }
     }
     return sheet;
@@ -1983,15 +1996,61 @@ function alreadyLogged_(sheet, rawText200) {
   return !!finder.findNext();
 }
 
-function normaliseIso_(maybeTs) {
+function getTimezoneOffsetMinutes_(timeZone) {
   try {
+    const tz = timeZone || Session.getScriptTimeZone();
+    const offset = Utilities.formatDate(new Date(), tz, "Z"); // e.g. +0300
+    const sign = offset.startsWith("-") ? -1 : 1;
+    const hours = parseInt(offset.slice(1, 3), 10);
+    const minutes = parseInt(offset.slice(3, 5), 10);
+    return sign * (hours * 60 + minutes);
+  } catch (_) {
+    return 0;
+  }
+}
+
+function parseNaiveTimestamp_(value, tzOffsetMinutes) {
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (!m) return null;
+
+  const year = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10) - 1;
+  const day = parseInt(m[3], 10);
+  const hour = parseInt(m[4] || "0", 10);
+  const minute = parseInt(m[5] || "0", 10);
+  const second = parseInt(m[6] || "0", 10);
+
+  const offset = (tzOffsetMinutes || 0) * 60 * 1000;
+  const utcMs = Date.UTC(year, month, day, hour, minute, second) - offset;
+  return new Date(utcMs);
+}
+
+function hasTimezoneInfo_(value) {
+  return /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+}
+
+function normaliseIso_(maybeTs, tzOffsetMinutes) {
+  try {
+    if (maybeTs instanceof Date) return maybeTs;
+    if (typeof maybeTs === "number") return new Date(maybeTs);
+
     if (typeof maybeTs === "string" && maybeTs.trim()) {
-      const d = new Date(maybeTs);
-      if (!isNaN(d.getTime())) return d.toISOString().replace(/\.\d{3}Z$/, "");
-      return maybeTs.trim().slice(0, 32);
+      const s = maybeTs.trim();
+      if (hasTimezoneInfo_(s)) {
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      const naive = parseNaiveTimestamp_(s, tzOffsetMinutes);
+      if (naive && !isNaN(naive.getTime())) return naive;
+
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) return d;
+      return new Date();
     }
   } catch (_) {}
-  return new Date().toISOString().replace(/\.\d{3}Z$/, "");
+
+  return new Date();
 }
 
 function json_(obj) {
