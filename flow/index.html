@@ -2293,7 +2293,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Check if already logged in
             const session = getSession();
-            if (session && session.user && session.sheetId) {
+            if (session && session.user && session.token) {
                 showApp(session);
             } else {
                 // Show login screen
@@ -2308,6 +2308,8 @@
                 if (!stored) return null;
 
                 const session = JSON.parse(stored);
+                if (!session?.user || !session?.token) return null;
+
                 // Check if token expired
                 if (session.expiry && new Date(session.expiry) < new Date()) {
                     clearSession();
@@ -2673,17 +2675,21 @@
             const hasEnhancedSchema = headers.length >= 10 &&
                 (clean(headers[7]) === 'Category' || clean(headers[8]) === 'Category');
 
+            const cols = hasEnhancedSchema
+                ? { ts: 0, amount: 1, currency: 2, counterparty: 3, card: 4, direction: 5, txnType: 6, category: 7, subcategory: 8, confidence: 9, context: 10, raw: 11 }
+                : { ts: 0, amount: 1, currency: 2, counterparty: 3, card: 4, direction: 5, txnType: 6, raw: 7 };
+
             const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
 
             STATE.allTxns = data.map(r => {
-                const raw = clean(r[3]);
-                const counterparty = clean(r[4]) || '';
-                const card = clean(r[7]) || '';
-                const currency = clean(r[2]) || 'QAR';
-                const amount = parseFloat(r[1]);
+                const raw = clean(r[cols.raw]);
+                const counterparty = clean(r[cols.counterparty]) || '';
+                const card = clean(r[cols.card]) || '';
+                const currency = clean(r[cols.currency]) || 'QAR';
+                const amount = parseFloat(r[cols.amount]);
                 const rate = STATE.fxRates[currency] || 1;
                 const amtQAR = currency === 'QAR' ? amount : amount * rate;
-                const txnDate = parseDate(r[0]);
+                const txnDate = parseDate(r[cols.ts]);
 
                 // Try to get AI-assigned category from enhanced schema
                 let aiMerchantType = null;
@@ -2691,10 +2697,10 @@
                 let aiContext = null;
 
                 if (hasEnhancedSchema) {
-                    aiMerchantType = clean(r[8]) || clean(r[7]) || null;
-                    confidence = clean(r[9]) || null;
+                    aiMerchantType = clean(r[cols.subcategory]) || clean(r[cols.category]) || null;
+                    confidence = clean(r[cols.confidence]) || null;
                     try {
-                        aiContext = r[10] ? JSON.parse(clean(r[10])) : null;
+                        aiContext = r[cols.context] ? JSON.parse(clean(r[cols.context])) : null;
                     } catch (e) {
                         aiContext = null;
                     }
@@ -2704,7 +2710,8 @@
                 const meta = categorize(raw, aiMerchantType);
 
                 // Check if this is a salary transaction (check multiple fields)
-                const allText = `${raw} ${counterparty} ${card}`.toLowerCase();
+                const txnType = clean(r[cols.txnType]);
+                const allText = `${raw} ${counterparty} ${card} ${txnType}`.toLowerCase();
                 const isSalary = allText.includes('salary');
 
                 // COMPUTE DIMENSIONS
@@ -2726,8 +2733,8 @@
                     consolidated: meta.consolidated,
                     merchantType: meta.merchantType,
                     summaryGroup: getSummaryGroup(meta.merchantType),
-                    direction: clean(r[5]),
-                    txnType: clean(r[6]),
+                    direction: clean(r[cols.direction]),
+                    txnType: txnType,
                     confidence,
                     aiContext,
                     isSalary,
@@ -2904,9 +2911,42 @@
             return { salaries, avgInterval };
         }
 
+        function getIncomeDayFromContext() {
+            if (!STATE.userContext || !STATE.userContext.length) return null;
+
+            const incomeEntries = STATE.userContext.filter(c => c.type === 'income');
+            if (!incomeEntries.length) return null;
+
+            const preferred = incomeEntries.find(c => (c.key || '').toLowerCase().includes('salary')) || incomeEntries[0];
+            const day = parseInt(preferred.value, 10);
+            return isNaN(day) ? null : Math.min(Math.max(day, 1), 31);
+        }
+
         // Get projected next salary date - detects day-of-month pattern from history
         function getNextSalaryDate() {
             const { salaries, avgInterval } = detectSalary();
+            const incomeDay = getIncomeDayFromContext();
+            if (incomeDay) {
+                let nextDate = dayjs().date(incomeDay);
+
+                if (nextDate.isBefore(dayjs(), 'day')) {
+                    nextDate = nextDate.add(1, 'month');
+                }
+
+                // Handle end-of-month edge cases
+                const daysInMonth = nextDate.daysInMonth();
+                if (incomeDay > daysInMonth) {
+                    nextDate = nextDate.date(daysInMonth);
+                }
+
+                // Adjust for Qatar weekend (Fri=5, Sat=6) - move to Thursday
+                const dow = nextDate.day();
+                if (dow === 5) nextDate = nextDate.subtract(1, 'day');
+                if (dow === 6) nextDate = nextDate.subtract(2, 'day');
+
+                return nextDate;
+            }
+
             if (salaries.length === 0) return dayjs().add(30, 'day');
 
             const lastSalary = salaries[0].date;
@@ -2971,7 +3011,7 @@
             } else {
                 // No salary detected - fall back to last 60 days
                 STATE.dateRange = {
-                    start: dayjs().subtract(60, 'day'),
+                    start: dayjs().subtract(90, 'day'),
                     end: dayjs()
                 };
                 STATE.period = 'last90';
@@ -2989,7 +3029,9 @@
         function calculateBudgetProjection() {
             const { salaries, avgInterval } = detectSalary();
             const nextSalary = getNextSalaryDate();
-            const daysUntilSalary = Math.max(0, nextSalary.diff(dayjs(), 'day'));
+            const today = dayjs().startOf('day');
+            const nextSalaryDay = nextSalary.startOf('day');
+            const daysUntilSalary = Math.max(0, nextSalaryDay.diff(today, 'day'));
 
             const income = STATE.filtered.filter(t => t.direction === 'IN').reduce((s, t) => s + t.amount, 0);
             const expenses = STATE.filtered.filter(t => t.direction === 'OUT').reduce((s, t) => s + t.amount, 0);
@@ -3994,6 +4036,14 @@
             }
         }
 
+        function openMerchantDrilldownSafe(el) {
+            const nameData = el.dataset.name;
+            if (nameData) {
+                const name = decodeURIComponent(escape(atob(nameData)));
+                openMerchantDrilldown(name);
+            }
+        }
+
         // UNCATEGORIZED ALERT
         function renderUncatAlert() {
             const uncat = STATE.filtered.filter(t => t.merchantType === 'Uncategorized' && t.direction === 'OUT');
@@ -4341,13 +4391,15 @@
             document.getElementById('merchantModalList').innerHTML = merchants.slice(0, 50).map(m => {
                 const color = CAT_COLORS[m.category] || '#999';
                 const pct = (m.total / maxTotal * 100);
+                const safeName = escapeHtml(m.name);
+                const safeNameData = btoa(unescape(encodeURIComponent(m.name)));
 
                 return `
-                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" onclick="closeMerchantModal(); openMerchantDrilldown('${m.name.replace(/'/g, "\\'")}')">
+                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition" data-name="${safeNameData}" onclick="closeMerchantModal(); openMerchantDrilldownSafe(this)">
                         <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${color}"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="font-medium text-sm truncate">${m.name}</span>
+                                <span class="font-medium text-sm truncate">${safeName}</span>
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-fact-muted dark:text-fact-dark-muted">${m.count}x</span>
                                     <span class="font-display font-semibold text-sm w-20 text-right">${formatNum(m.total)}</span>
@@ -4579,7 +4631,7 @@
                 trackAchievement('fact_asked_ai');
 
             } catch (err) {
-                responseDiv.innerHTML = `<p class="text-fact-red">Error: ${err.message}</p>`;
+                responseDiv.innerHTML = `<p class="text-fact-red">Error: ${escapeHtml(err.message)}</p>`;
             }
 
             document.getElementById('aiQueryInput').value = '';
@@ -4723,7 +4775,7 @@
             } catch (err) {
                 document.getElementById(loadingId).innerHTML = `
                     <div class="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
-                        <p class="text-sm text-fact-red">Error: ${err.message}</p>
+                        <p class="text-sm text-fact-red">Error: ${escapeHtml(err.message)}</p>
                     </div>
                 `;
             }
@@ -4958,7 +5010,7 @@
 
             } catch (err) {
                 aiContainer.classList.remove('hidden');
-                aiList.innerHTML = `<div class="text-[11px] text-fact-red">Error: ${err.message}</div>`;
+                aiList.innerHTML = `<div class="text-[11px] text-fact-red">Error: ${escapeHtml(err.message)}</div>`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `
@@ -5036,19 +5088,20 @@
             const isOut = t.direction === 'OUT';
             const color = getTypeColor(t.merchantType);
             const icon = MERCHANT_TYPES[t.merchantType]?.icon || '📋';
+            const patternLabel = escapeHtml(t.dims.pattern);
             const patternBadge = t.dims.pattern !== 'Normal' ?
-                `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">${PATTERNS[t.dims.pattern]?.icon || ''} ${t.dims.pattern}</span>` : '';
+                `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">${PATTERNS[t.dims.pattern]?.icon || ''} ${patternLabel}</span>` : '';
 
             return `
                 <div class="txn-row p-3 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:${color}20">${icon}</div>
                         <div class="min-w-0">
-                            <div class="font-medium text-sm truncate">${t.display}</div>
+                            <div class="font-medium text-sm truncate">${escapeHtml(t.display)}</div>
                             <div class="flex items-center gap-2 text-[10px] text-fact-muted dark:text-fact-dark-muted">
                                 <span>${t.date.format('MMM D, HH:mm')}</span>
                                 <span>·</span>
-                                <span>${t.dims.when.join(', ')}</span>
+                                <span>${escapeHtml(t.dims.when.join(', '))}</span>
                                 ${patternBadge}
                             </div>
                         </div>
