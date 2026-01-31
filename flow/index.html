@@ -2870,16 +2870,28 @@
 
         // SALARY DETECTION - Find transactions with SALARY keyword
         function detectSalary() {
-            // Find transactions flagged as salary (checked in processTxns)
-            const salaries = STATE.allTxns.filter(t =>
+            // Find all transactions flagged as salary
+            const allSalaries = STATE.allTxns.filter(t =>
                 t.direction === 'IN' && t.isSalary
             ).sort((a, b) => b.date - a.date);
 
-            if (salaries.length === 0) {
+            if (allSalaries.length === 0) {
                 return { salaries: [], avgInterval: 30 };
             }
 
-            // Calculate average interval between salaries
+            // Find the most common (modal) salary amount to filter out advances/bonuses
+            const amounts = allSalaries.map(s => Math.round(s.amount / 100) * 100); // Round to nearest 100
+            const amountCounts = {};
+            amounts.forEach(a => amountCounts[a] = (amountCounts[a] || 0) + 1);
+            const mainSalaryAmount = Object.entries(amountCounts)
+                .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+            // Filter to only main salary amounts (within 10% tolerance)
+            const salaries = mainSalaryAmount
+                ? allSalaries.filter(s => Math.abs(s.amount - mainSalaryAmount) / mainSalaryAmount < 0.1)
+                : allSalaries;
+
+            // Calculate average interval between main salaries
             let avgInterval = 30;
             if (salaries.length >= 2) {
                 let totalInterval = 0;
@@ -4555,6 +4567,12 @@
                 }
 
                 const answer = data.answer;
+
+                // Validate we got an actual answer
+                if (!answer || answer.trim() === '') {
+                    throw new Error('No response received from AI. Please try again.');
+                }
+
                 responseDiv.innerHTML = sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'));
 
                 // Track AI usage achievement
@@ -4660,6 +4678,12 @@
                 }
 
                 const answer = data.answer;
+
+                // Validate we got an actual answer
+                if (!answer || answer.trim() === '') {
+                    throw new Error('No response received from AI. Please try again.');
+                }
+
                 aiChatHistory.push({ role: 'assistant', content: answer });
 
                 // Update model name and mode indicator

@@ -506,6 +506,20 @@ You MUST apply this context to your analysis. For example:
       return json_({ error: result.error.message });
     }
 
+    // Validate response structure
+    if (!result.choices || !result.choices[0] || !result.choices[0].message || !result.choices[0].message.content) {
+      log_('handleAIQueryPost_', 'Invalid API response structure', { result: JSON.stringify(result).substring(0, 500) });
+      logExit_('handleAIQueryPost_', { success: false, error: 'Invalid response from AI' });
+      return json_({ error: 'Invalid response from AI. Please try again.' });
+    }
+
+    const aiAnswer = result.choices[0].message.content;
+    if (!aiAnswer || aiAnswer.trim() === '') {
+      log_('handleAIQueryPost_', 'Empty AI response');
+      logExit_('handleAIQueryPost_', { success: false, error: 'Empty response' });
+      return json_({ error: 'AI returned an empty response. Please try again.' });
+    }
+
     // Include context stats so frontend can verify it's loaded
     const contextStats = {
       income: userContext.income.length,
@@ -519,13 +533,13 @@ You MUST apply this context to your analysis. For example:
     log_('handleAIQueryPost_', 'OpenAI API success', {
       model: selectedModel,
       mode: isDeepAnalysis ? 'deep' : 'standard',
-      answerLength: result.choices[0].message.content.length,
+      answerLength: aiAnswer.length,
       contextStats
     });
     logExit_('handleAIQueryPost_', { success: true, model: selectedModel });
 
     return json_({
-      answer: result.choices[0].message.content,
+      answer: aiAnswer,
       model: selectedModel,
       mode: isDeepAnalysis ? 'deep' : 'standard',
       contextLoaded: contextStats
