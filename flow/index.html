@@ -2635,12 +2635,30 @@
             const num = parseFloat(cleaned);
             if (!isNaN(num) && num > 40000 && num < 60000) {
                 // Excel serial date: days since Dec 30, 1899
-                // Convert to JavaScript date
-                const excelEpoch = new Date(1899, 11, 30);
+                // Excel dates are in local time, so we need to handle this carefully
+                // to avoid timezone offset issues
                 const days = Math.floor(num);
-                const fraction = num - days;
-                const ms = days * 24 * 60 * 60 * 1000 + fraction * 24 * 60 * 60 * 1000;
-                const parsed = dayjs(new Date(excelEpoch.getTime() + ms));
+                const timeFraction = num - days;
+
+                // Calculate date components directly to avoid timezone issues
+                // Excel epoch is Dec 30, 1899 (day 0)
+                const msPerDay = 24 * 60 * 60 * 1000;
+                const excelEpochMs = Date.UTC(1899, 11, 30); // Use UTC to avoid timezone
+                const dateMs = excelEpochMs + (days * msPerDay);
+
+                // Extract date parts in UTC
+                const utcDate = new Date(dateMs);
+                const year = utcDate.getUTCFullYear();
+                const month = utcDate.getUTCMonth();
+                const day = utcDate.getUTCDate();
+
+                // Calculate time from fraction
+                const totalMinutes = Math.round(timeFraction * 24 * 60);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+
+                // Create dayjs with explicit date/time (local timezone)
+                const parsed = dayjs(new Date(year, month, day, hours, minutes));
                 return parsed.isValid() ? parsed : dayjs();
             }
 
