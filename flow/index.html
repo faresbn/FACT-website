@@ -1146,7 +1146,7 @@
 
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 bg-[#0a0a0a]">
-                    <img src="flow-icon-512.png" alt="/" class="w-12 h-12 object-contain">
+                    <img src="icon-512.png" alt="/" class="w-12 h-12 object-contain">
                 </div>
                 <h1 class="font-display font-bold text-2xl">FACT/Flow</h1>
                 <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Intelligence</p>
@@ -1184,18 +1184,23 @@
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded flex items-center justify-center bg-[#0a0a0a]">
-                    <img src="flow-icon-512.png" alt="/" class="w-8 h-8 object-contain">
+                    <img src="icon-512.png" alt="/" class="w-8 h-8 object-contain">
                 </div>
                 <div>
                     <h1 class="font-display font-bold text-xl tracking-tight">FACT<span class="text-fact-yellow">/</span><span class="text-fact-muted font-normal text-sm">Flow</span></h1>
-                    <p class="text-fact-muted dark:text-fact-dark-muted text-xs">
-                        <span id="currentUserDisplay">Personal Intelligence</span> ·
-                        <button onclick="openGoals()" class="hover:text-fact-green">Goals</button> ·
-                        <button onclick="openHeatmap()" class="hover:text-fact-purple">Heatmap</button> ·
-                        <button onclick="openSettings()" class="hover:text-fact-yellow">Settings</button> ·
-                        <button onclick="logout()" class="hover:text-fact-red">Logout</button>
-                        <span class="hidden md:inline ml-2 text-[10px] opacity-50">(</span><kbd class="hidden md:inline text-[10px] opacity-50 px-1 rounded bg-gray-100 dark:bg-gray-800">⌘K</kbd><span class="hidden md:inline text-[10px] opacity-50">)</span>
-                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="currentUserDisplay" class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Personal Intelligence</span>
+                        <span class="text-fact-muted/50">·</span>
+                        <button onclick="openGoals()" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-fact-green/10 text-fact-green hover:bg-fact-green/20 transition">
+                            🎯 Goals
+                        </button>
+                        <button onclick="openHeatmap()" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-fact-purple/10 text-fact-purple hover:bg-fact-purple/20 transition">
+                            📊 Heatmap
+                        </button>
+                        <button onclick="openSettings()" class="text-[10px] text-fact-muted hover:text-fact-yellow transition">Settings</button>
+                        <button onclick="logout()" class="text-[10px] text-fact-muted hover:text-fact-red transition">Logout</button>
+                        <kbd class="hidden md:inline text-[9px] opacity-40 px-1 rounded bg-gray-100 dark:bg-gray-800">⌘K</kbd>
+                    </div>
                 </div>
             </div>
 
@@ -1511,6 +1516,16 @@
                         </div>
                         <div id="insightsTags" class="flex flex-wrap gap-1.5">
                             <!-- Populated by JS -->
+                        </div>
+                        <!-- AI-powered additional insights -->
+                        <div id="aiInsightsContainer" class="hidden mt-3 pt-3 border-t border-fact-border/50 dark:border-fact-dark-border/50">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-medium text-fact-purple">✨ AI Analysis</span>
+                                <button onclick="closeAiInsights()" class="text-[10px] text-fact-muted hover:text-fact-red transition">✕ Close</button>
+                            </div>
+                            <div id="aiInsightsList" class="space-y-1.5">
+                                <!-- AI insights added here -->
+                            </div>
                         </div>
                     </div>
 
@@ -2012,7 +2027,7 @@
     </div>
 
     <!-- ADD GOAL MODAL -->
-    <div id="addGoalModal" class="hidden fixed inset-0 z-60 flex items-center justify-center p-4 modal-backdrop">
+    <div id="addGoalModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
         <div class="modal-box card rounded-2xl w-full max-w-sm overflow-hidden">
             <div class="p-5 border-b border-fact-border dark:border-fact-dark-border">
                 <h3 class="font-display font-semibold">New Budget Goal</h3>
@@ -2071,7 +2086,7 @@
     <!-- PWA INSTALL BANNER -->
     <div id="installBanner" class="install-banner">
         <div class="flex items-center gap-3">
-            <img src="flow-icon-512.png" alt="FACT/Flow" class="w-10 h-10 rounded-lg">
+            <img src="icon-512.png" alt="FACT/Flow" class="w-10 h-10 rounded-lg">
             <div>
                 <div class="font-medium text-sm">Install FACT/Flow</div>
                 <div class="text-[11px] opacity-80">Add to home screen for quick access</div>
@@ -2166,30 +2181,30 @@
             'Normal': { color: '#95A5A6', icon: '○', description: 'Standard transaction' }
         };
 
-        // High-level groupings for summary view (simplified)
+        // High-level groupings for summary view (simplified) - FACT brand colors
         const SUMMARY_GROUPS = {
             'Essentials': {
-                color: '#75B876',
+                color: '#75B876', // FACT Green
                 icon: '🏠',
                 types: ['Groceries', 'Bills', 'Health', 'Transport']
             },
             'Food & Drinks': {
-                color: '#E67E22',
+                color: '#F4C44E', // FACT Yellow
                 icon: '🍽️',
                 types: ['Dining', 'Coffee', 'Delivery', 'Bars & Nightlife']
             },
             'Shopping & Fun': {
-                color: '#42A5F5',
+                color: '#9B8AC4', // FACT Purple (muted)
                 icon: '🛍️',
                 types: ['Shopping', 'Entertainment', 'Travel']
             },
             'Family': {
-                color: '#E91E63',
+                color: '#E8A4B8', // Soft pink
                 icon: '👨‍👩‍👧‍👦',
                 types: ['Family']
             },
             'Other': {
-                color: '#95A5A6',
+                color: '#A8B5C4', // Muted gray-blue
                 icon: '📋',
                 types: ['Transfer', 'Other', 'Uncategorized']
             }
@@ -2262,6 +2277,7 @@
             categories: new Set(),
             fxRates: { ...CONFIG.DEFAULT_FX },
             localMappings: {},
+            userContext: [], // User corrections and context from AI
             period: 'salary',
             dateRange: { start: dayjs().subtract(60, 'day'), end: dayjs() },
             catTarget: null,
@@ -2439,7 +2455,7 @@
                     body: JSON.stringify({
                         action: 'data',
                         token: getAuthToken(),
-                        sheets: ['RawLedger', 'MerchantMap', 'FXRates']
+                        sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext']
                     })
                 });
 
@@ -2461,6 +2477,7 @@
                 // Process each sheet (GAS returns arrays, same format as CSV)
                 if (data.FXRates) processFX(data.FXRates.slice(1)); // Skip header
                 if (data.MerchantMap) processMerchantMap(data.MerchantMap);
+                if (data.UserContext) processUserContext(data.UserContext);
                 if (data.RawLedger) processTxns(data.RawLedger);
 
                 document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
@@ -2544,6 +2561,86 @@
             updateCatDropdowns();
         }
 
+        // Process UserContext corrections (Type, Key, Value, Details, DateAdded, Source)
+        function processUserContext(rows) {
+            if (rows.length && rows[0][0]?.toLowerCase().includes('type')) rows.shift();
+
+            STATE.userContext = rows.map(r => ({
+                type: clean(r[0]),        // 'correction', 'preference', etc.
+                key: clean(r[1]),         // What the correction is about
+                value: clean(r[2]),       // The correction value
+                details: clean(r[3]),     // Additional details
+                dateAdded: clean(r[4]),   // When it was added
+                source: clean(r[5])       // 'user' or 'ai'
+            })).filter(c => c.type && c.value);
+
+            console.log('[Data] Loaded', STATE.userContext.length, 'user context entries');
+        }
+
+        // Check if a transaction matches any user context corrections
+        function getContextForTransaction(txn) {
+            const relevantContext = [];
+
+            for (const ctx of STATE.userContext) {
+                const keyLower = ctx.key.toLowerCase();
+                const valueLower = ctx.value.toLowerCase();
+
+                // Check if the key matches transaction details
+                const txnText = `${txn.raw} ${txn.counterparty} ${txn.display}`.toLowerCase();
+                const amountStr = `qar ${Math.round(txn.amount)}`;
+
+                if (txnText.includes(keyLower) ||
+                    amountStr === keyLower.replace(/\s+/g, ' ').trim() ||
+                    (keyLower.includes('to ') && txn.counterparty.toLowerCase().includes(keyLower.replace('to ', '')))) {
+                    relevantContext.push(ctx);
+                }
+            }
+
+            return relevantContext;
+        }
+
+        // Check if transaction should NOT be marked as splurge based on user context
+        function isExemptFromSplurge(txn) {
+            const context = getContextForTransaction(txn);
+
+            for (const ctx of context) {
+                const valueLower = ctx.value.toLowerCase();
+                // User said "not a splurge" or explained it's something else
+                if (valueLower.includes('not a splurge') ||
+                    valueLower.includes('not splurge') ||
+                    valueLower.includes('is my') ||
+                    valueLower.includes('is actually') ||
+                    valueLower.includes('bill') ||
+                    valueLower.includes('rent') ||
+                    valueLower.includes('subscription') ||
+                    valueLower.includes('regular')) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Parse date that might be ISO string or Excel serial number
+        function parseDate(value) {
+            const cleaned = clean(value);
+
+            // Check if it's a number (Excel serial date)
+            const num = parseFloat(cleaned);
+            if (!isNaN(num) && num > 40000 && num < 60000) {
+                // Excel serial date: days since Dec 30, 1899
+                // Convert to JavaScript date
+                const excelEpoch = new Date(1899, 11, 30);
+                const days = Math.floor(num);
+                const fraction = num - days;
+                const ms = days * 24 * 60 * 60 * 1000 + fraction * 24 * 60 * 60 * 1000;
+                return dayjs(new Date(excelEpoch.getTime() + ms));
+            }
+
+            // Otherwise parse as ISO string
+            return dayjs(cleaned);
+        }
+
         function processTxns(rows) {
             // Detect schema: old (8 cols) vs enhanced (12 cols)
             const headers = rows[0] || [];
@@ -2560,7 +2657,7 @@
                 const amount = parseFloat(r[1]);
                 const rate = STATE.fxRates[currency] || 1;
                 const amtQAR = currency === 'QAR' ? amount : amount * rate;
-                const txnDate = dayjs(clean(r[0]));
+                const txnDate = parseDate(r[0]);
 
                 // Try to get AI-assigned category from enhanced schema
                 let aiMerchantType = null;
@@ -2711,7 +2808,10 @@
             out.forEach(t => {
                 const avg = avgByType[t.merchantType]?.avg || 0;
                 if (avg > 0 && t.amount > avg * 3 && t.dims.pattern === 'Normal') {
-                    t.dims.pattern = 'Splurge';
+                    // Check if user has exempted this from splurge detection
+                    if (!isExemptFromSplurge(t)) {
+                        t.dims.pattern = 'Splurge';
+                    }
                 }
             });
 
@@ -3300,16 +3400,47 @@
                     datasets: [{
                         data,
                         backgroundColor: colors,
-                        borderWidth: 0,
-                        hoverOffset: 8
+                        borderWidth: 2,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#ffffff',
+                        hoverOffset: 12,
+                        hoverBorderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '65%',
+                    animation: {
+                        animateRotate: true,
+                        duration: 600
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(15, 15, 15, 0.95)',
+                            titleColor: '#F4C44E',
+                            bodyColor: '#ffffff',
+                            borderColor: '#F4C44E',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 12,
+                            displayColors: true,
+                            boxPadding: 6,
+                            caretSize: 8,
+                            caretPadding: 10,
+                            // Position tooltip above chart to avoid overlap
+                            yAlign: 'bottom',
+                            callbacks: {
+                                title: (items) => items[0]?.label || '',
+                                label: (ctx) => {
+                                    const value = ctx.raw;
+                                    const pct = ((value / total) * 100).toFixed(1);
+                                    return ` QAR ${formatNum(value)} (${pct}%)`;
+                                },
+                                afterLabel: () => 'Click to see details →'
+                            }
+                        }
                     },
                     onClick: (e, elements) => {
                         if (elements.length > 0) {
@@ -3320,6 +3451,9 @@
                                 openDrilldown(labels[idx]);
                             }
                         }
+                    },
+                    onHover: (e, elements) => {
+                        e.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
                     }
                 }
             });
@@ -4709,10 +4843,16 @@
             }
         }
 
-        // Refresh insights using AI with user context
+        // Close AI insights panel
+        function closeAiInsights() {
+            document.getElementById('aiInsightsContainer').classList.add('hidden');
+        }
+
+        // Refresh insights using AI with user context (adds to separate container, keeps original tags)
         async function refreshInsights() {
             const btn = document.getElementById('refreshInsightsBtn');
-            const tagsContainer = document.getElementById('insightsTags');
+            const aiContainer = document.getElementById('aiInsightsContainer');
+            const aiList = document.getElementById('aiInsightsList');
 
             // Show loading state
             btn.disabled = true;
@@ -4727,15 +4867,20 @@
                 // Prepare summary of current filtered transactions
                 const txnSummary = prepareTransactionSummary();
 
+                // Include user context in the prompt
+                const contextSummary = STATE.userContext.length > 0
+                    ? '\n\nUser corrections/context: ' + STATE.userContext.map(c => c.value).join('; ')
+                    : '';
+
                 const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         action: 'ai',
                         token: getAuthToken(),
-                        q: 'Give me 3-5 quick bullet-point insights about this spending data. Be specific with numbers. Focus on patterns, anomalies, and actionable observations. Use emojis for each point. Keep each insight to one short sentence.',
+                        q: 'Give me 3-5 quick bullet-point insights about this spending data. Be specific with numbers. Focus on patterns, anomalies, and actionable observations. Use emojis for each point. Keep each insight to one short sentence.' + contextSummary,
                         data: txnSummary,
-                        model: 'gpt-5.1' // Best model for insights analysis
+                        model: 'gpt-5.1'
                     })
                 });
 
@@ -4743,7 +4888,7 @@
 
                 if (data.error) throw new Error(data.error);
 
-                // Parse the AI response and display as insights
+                // Parse the AI response
                 const aiInsights = data.answer
                     .split('\n')
                     .filter(line => line.trim().length > 0)
@@ -4752,16 +4897,18 @@
                     .slice(0, 5);
 
                 if (aiInsights.length > 0) {
-                    document.getElementById('insightsCount').textContent = aiInsights.length;
-                    tagsContainer.innerHTML = aiInsights.map(insight => `
-                        <div class="w-full px-2.5 py-1.5 text-[11px] bg-gradient-to-r from-fact-yellow/10 to-fact-green/10 border border-fact-yellow/20 rounded-lg text-fact-ink dark:text-fact-dark-ink">
+                    // Show AI container and populate it (don't touch original tags)
+                    aiContainer.classList.remove('hidden');
+                    aiList.innerHTML = aiInsights.map(insight => `
+                        <div class="px-2.5 py-1.5 text-[11px] bg-gradient-to-r from-fact-purple/5 to-fact-yellow/5 border border-fact-purple/20 rounded-lg text-fact-ink dark:text-fact-dark-ink">
                             ${sanitizeHTML(insight)}
                         </div>
                     `).join('');
                 }
 
             } catch (err) {
-                tagsContainer.innerHTML = `<div class="text-[11px] text-fact-red">Error: ${err.message}</div>`;
+                aiContainer.classList.remove('hidden');
+                aiList.innerHTML = `<div class="text-[11px] text-fact-red">Error: ${err.message}</div>`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `
@@ -4888,7 +5035,7 @@
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/flow/sw.js')
                     .then(reg => console.log('[PWA] Service worker registered'))
                     .catch(err => console.log('[PWA] Service worker registration failed:', err));
             });
