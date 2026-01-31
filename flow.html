@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>FACT/Flow</title>
+    <meta name="description" content="FACT/Flow - Personal Finance Intelligence for ADHD-friendly budgeting and spending control">
+    <title>FACT/Flow - Personal Finance Intelligence</title>
 
     <!-- PWA & Favicons -->
     <link rel="manifest" href="manifest.json">
@@ -550,12 +551,592 @@
             #mainApp { display: block !important; }
             @page { margin: 1cm; }
         }
+
+        /* Accessibility - Focus indicators */
+        *:focus-visible {
+            outline: 3px solid #F4C44E;
+            outline-offset: 2px;
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 3px solid #F4C44E;
+            outline-offset: 2px;
+        }
+
+        /* Accessibility - Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .breathe { animation: none !important; }
+            .heart-pulse { animation: none !important; }
+        }
+
+        /* Skip to content link for screen readers */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #F4C44E;
+            color: #111;
+            padding: 8px 16px;
+            z-index: 1000;
+            transition: top 0.3s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid currentColor !important;
+            }
+            button {
+                border: 2px solid currentColor !important;
+            }
+            .budget-meter-fill, .generosity-meter-fill, .health-factor-fill {
+                border: 1px solid currentColor;
+            }
+        }
+
+        /* Confirmation Modal */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 250;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.15s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .confirm-box {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+            animation: scaleIn 0.2s ease-out;
+        }
+        @media (prefers-color-scheme: dark) {
+            .confirm-box { background: #1A1A1A; }
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Impulse Warning */
+        .impulse-banner {
+            background: linear-gradient(135deg, #E57373 0%, #EF5350 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+            animation: shakeIn 0.5s ease-out;
+        }
+        @keyframes shakeIn {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Daily Budget Meter */
+        .budget-meter {
+            height: 8px;
+            background: #E5E5E5;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        @media (prefers-color-scheme: dark) {
+            .budget-meter { background: #2A2A2A; }
+        }
+        .budget-meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-out, background 0.3s;
+        }
+        .budget-meter-fill.safe { background: #75B876; }
+        .budget-meter-fill.warning { background: #F4C44E; }
+        .budget-meter-fill.danger { background: #E57373; }
+
+        /* Pause Modal (for large purchases) */
+        .pause-modal {
+            text-align: center;
+        }
+        .pause-countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: #F4C44E;
+            margin: 16px 0;
+        }
+
+        /* Streak Badge */
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #F4C44E 0%, #FFD700 100%);
+            color: #111;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(244, 196, 78, 0.3);
+        }
+
+        /* Generosity Budget Section */
+        .generosity-card {
+            background: linear-gradient(135deg, #F8F4FF 0%, #F3E8FF 100%);
+            border: 1px solid #DDD6FE;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-card {
+                background: linear-gradient(135deg, #2D2340 0%, #352850 100%);
+                border-color: #4C3D70;
+            }
+        }
+        body.dark-mode .generosity-card {
+            background: linear-gradient(135deg, #2D2340 0%, #352850 100%);
+            border-color: #4C3D70;
+        }
+        .generosity-meter {
+            height: 10px;
+            background: #E9D5FF;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-meter { background: #4C3D70; }
+        }
+        body.dark-mode .generosity-meter { background: #4C3D70; }
+        .generosity-meter-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-out;
+            background: linear-gradient(90deg, #B593C6 0%, #9F7AEA 100%);
+        }
+        .generosity-meter-fill.over {
+            background: linear-gradient(90deg, #E57373 0%, #EF5350 100%);
+        }
+        .heart-pulse {
+            animation: heartPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .generosity-amount {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-weight: 700;
+            color: #9F7AEA;
+        }
+        @media (prefers-color-scheme: dark) {
+            .generosity-amount { color: #C4B5FD; }
+        }
+        body.dark-mode .generosity-amount { color: #C4B5FD; }
+
+        /* Focus Mode - ADHD-friendly simplified view */
+        .focus-mode .hide-in-focus { display: none !important; }
+        .focus-mode .main-metric { font-size: 3rem !important; }
+        .focus-mode #mainContent { max-width: 480px; margin: 0 auto; }
+        .focus-mode .card { border-radius: 16px; }
+
+        /* Focus mode hero - simplified single metric */
+        .focus-hero {
+            text-align: center;
+            padding: 32px 20px;
+            background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%);
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+        .focus-hero-number {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .focus-hero-number.positive { color: #75B876; }
+        .focus-hero-number.warning { color: #F4C44E; }
+        .focus-hero-number.danger { color: #E57373; }
+        .focus-hero-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .focus-hero { background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%); }
+            .focus-hero-label { color: #888; }
+        }
+        body.dark-mode .focus-hero { background: linear-gradient(135deg, #F4C44E10 0%, #75B87610 100%); }
+        body.dark-mode .focus-hero-label { color: #888; }
+
+        /* Focus mode toggle button */
+        .focus-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #F3F3F3;
+            border: 1px solid #E5E5E5;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .focus-toggle:hover { background: #E5E5E5; }
+        .focus-toggle.active {
+            background: #F4C44E;
+            border-color: #F4C44E;
+            color: #111;
+        }
+        @media (prefers-color-scheme: dark) {
+            .focus-toggle { background: #2A2A2A; border-color: #3A3A3A; color: #AAA; }
+            .focus-toggle:hover { background: #3A3A3A; }
+            .focus-toggle.active { background: #F4C44E; color: #111; }
+        }
+        body.dark-mode .focus-toggle { background: #2A2A2A; border-color: #3A3A3A; color: #AAA; }
+        body.dark-mode .focus-toggle:hover { background: #3A3A3A; }
+        body.dark-mode .focus-toggle.active { background: #F4C44E; color: #111; }
+
+        /* Quick insight cards - one action item */
+        .quick-insight {
+            background: #FFF9E6;
+            border: 1px solid #F4C44E40;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+        }
+        .quick-insight-icon { font-size: 20px; margin-right: 10px; }
+        @media (prefers-color-scheme: dark) {
+            .quick-insight { background: #2A2415; border-color: #4A3D2A; }
+        }
+        body.dark-mode .quick-insight { background: #2A2415; border-color: #4A3D2A; }
+
+        /* Collapsible sections for progressive disclosure */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 8px 0;
+            user-select: none;
+        }
+        .collapsible-header:hover { opacity: 0.8; }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 2000px;
+        }
+        .collapsible-chevron {
+            transition: transform 0.2s;
+        }
+        .collapsible-chevron.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Breathing animation for calm feel */
+        .breathe {
+            animation: breathe 4s ease-in-out infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Financial Health Score */
+        .health-score-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .health-score-ring svg {
+            transform: rotate(-90deg);
+        }
+        .health-score-ring .ring-bg {
+            fill: none;
+            stroke: #E5E5E5;
+            stroke-width: 10;
+        }
+        .health-score-ring .ring-progress {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-out, stroke 0.5s;
+        }
+        .health-score-ring .ring-progress.excellent { stroke: #75B876; }
+        .health-score-ring .ring-progress.good { stroke: #9ACD32; }
+        .health-score-ring .ring-progress.fair { stroke: #F4C44E; }
+        .health-score-ring .ring-progress.poor { stroke: #E57373; }
+        @media (prefers-color-scheme: dark) {
+            .health-score-ring .ring-bg { stroke: #2A2A2A; }
+        }
+        body.dark-mode .health-score-ring .ring-bg { stroke: #2A2A2A; }
+        .health-score-value {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .health-score-number {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .health-score-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-top: 4px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .health-score-label { color: #888; }
+        }
+        body.dark-mode .health-score-label { color: #888; }
+
+        .health-factor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #E5E5E5;
+        }
+        .health-factor:last-child { border-bottom: none; }
+        @media (prefers-color-scheme: dark) {
+            .health-factor { border-color: #2A2A2A; }
+        }
+        body.dark-mode .health-factor { border-color: #2A2A2A; }
+        .health-factor-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .health-factor-bar {
+            flex: 1;
+            height: 4px;
+            background: #E5E5E5;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        @media (prefers-color-scheme: dark) {
+            .health-factor-bar { background: #2A2A2A; }
+        }
+        body.dark-mode .health-factor-bar { background: #2A2A2A; }
+        .health-factor-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease-out;
+        }
+        .health-factor-fill.green { background: #75B876; }
+        .health-factor-fill.yellow { background: #F4C44E; }
+        .health-factor-fill.red { background: #E57373; }
+
+        /* Achievement Celebration */
+        .celebration-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .celebration-box {
+            background: linear-gradient(135deg, #F4C44E 0%, #FFD700 50%, #F4C44E 100%);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            max-width: 320px;
+            animation: celebrationPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes celebrationPop {
+            0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(2deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        .celebration-icon {
+            font-size: 64px;
+            animation: bounce 0.6s ease infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Achievement Badge */
+        .achievement-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            background: #F9F9F9;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        @media (prefers-color-scheme: dark) {
+            .achievement-badge { background: #2A2A2A; }
+        }
+        .achievement-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .achievement-badge.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+        .achievement-badge .badge-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .achievement-badge.locked .badge-icon {
+            filter: blur(2px);
+        }
+
+        /* Generosity Budget */
+        .generosity-card {
+            background: linear-gradient(135deg, #B593C6 0%, #9B7BB0 100%);
+            color: white;
+        }
+        .generosity-meter {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .generosity-meter-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
     </style>
 </head>
 
 <body class="text-fact-ink dark:text-fact-dark-ink">
+    <!-- Skip to main content for accessibility -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Confirmation Modal (dynamic) -->
+    <div id="confirmModal" class="hidden">
+        <!-- Rendered dynamically by showConfirm() -->
+    </div>
+
+    <!-- Celebration Overlay (dynamic) -->
+    <div id="celebrationOverlay" class="hidden">
+        <!-- Rendered dynamically by celebrate() -->
+    </div>
+
+    <!-- ACHIEVEMENTS MODAL -->
+    <div id="achievementsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+        <div class="modal-box card rounded-2xl w-full max-w-lg overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 id="achievementsTitle" class="font-display font-semibold">Achievements</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="achievementProgress">0 of 0 unlocked</p>
+                </div>
+                <button onclick="closeAchievements()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="achievementsList" class="p-5 grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FINANCIAL HEALTH SCORE MODAL -->
+    <div id="healthScoreModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" onclick="if(event.target === this) closeHealthScore()">
+        <div class="modal-box card rounded-2xl w-full max-w-md overflow-hidden">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="font-display font-semibold">Financial Health</h3>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Your personalized wellness score</p>
+                </div>
+                <button onclick="closeHealthScore()" class="text-fact-muted hover:text-fact-ink">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5">
+                <!-- Score Ring -->
+                <div class="flex justify-center mb-4">
+                    <div class="health-score-ring">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle class="ring-bg" cx="60" cy="60" r="50" />
+                            <circle id="healthRingProgress" class="ring-progress excellent" cx="60" cy="60" r="50"
+                                stroke-dasharray="314.16" stroke-dashoffset="314.16" />
+                        </svg>
+                        <div class="health-score-value">
+                            <div id="healthScoreNumber" class="health-score-number">--</div>
+                            <div class="health-score-label">Health Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Status -->
+                <div id="healthScoreStatus" class="text-center mb-4">
+                    <div class="font-display font-semibold text-lg" id="healthStatusLabel">Calculating...</div>
+                    <div class="text-sm text-fact-muted dark:text-fact-dark-muted" id="healthStatusDesc">Analyzing your spending patterns</div>
+                </div>
+
+                <!-- Factors Breakdown -->
+                <div class="border-t border-fact-border dark:border-fact-dark-border pt-4">
+                    <div class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-3">CONTRIBUTING FACTORS</div>
+                    <div id="healthFactors" class="space-y-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Actionable Insight -->
+                <div id="healthInsight" class="mt-4 bg-fact-yellow/10 border border-fact-yellow/30 rounded-lg p-3">
+                    <div class="flex items-start gap-2">
+                        <span class="text-lg">💡</span>
+                        <div>
+                            <div class="text-sm font-medium" id="healthInsightTitle">Loading insight...</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="healthInsightText">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
@@ -621,8 +1202,16 @@
             <!-- Period Selector + Controls -->
             <div class="flex flex-col items-end gap-2">
                 <div class="flex items-center gap-2">
+                    <!-- Focus Mode Toggle -->
+                    <button id="focusToggle" onclick="toggleFocusMode()" title="Focus Mode - simplified view" class="focus-toggle">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span>Focus</span>
+                    </button>
                     <!-- Export Button -->
-                    <button onclick="exportCSV()" title="Export CSV" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <button onclick="exportCSV()" title="Export CSV" class="w-8 h-8 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition hide-in-focus">
                         <svg id="exportIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
@@ -662,10 +1251,44 @@
         </div>
         
         <!-- MAIN CONTENT -->
-        <div id="mainContent" class="hidden space-y-4">
+        <main id="mainContent" class="hidden space-y-4" role="main" aria-label="Financial dashboard">
 
-            <!-- BUDGET HERO - Consolidated overview -->
-            <div class="card rounded-xl p-4">
+            <!-- FOCUS MODE HERO - Shows only in focus mode -->
+            <div id="focusHero" class="focus-hero hidden">
+                <div class="text-sm text-fact-muted dark:text-fact-dark-muted mb-2">
+                    You can spend today
+                </div>
+                <div id="focusHeroNumber" class="focus-hero-number positive breathe">
+                    QAR 150
+                </div>
+                <div class="focus-hero-label">remaining today</div>
+                <div class="mt-4 flex items-center justify-center gap-4 text-sm">
+                    <div class="text-center">
+                        <div id="focusDaysToSalary" class="font-display font-bold text-fact-purple">--</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">days to salary</div>
+                    </div>
+                    <div class="w-px h-8 bg-fact-border dark:bg-fact-dark-border"></div>
+                    <div class="text-center">
+                        <div id="focusStreak" class="font-display font-bold text-fact-yellow">--</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">day streak</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK INSIGHT - One actionable item (shows in focus mode) -->
+            <div id="quickInsight" class="quick-insight hidden">
+                <div class="flex items-center">
+                    <span class="quick-insight-icon">💡</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium" id="quickInsightText">You're doing great today!</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="quickInsightSubtext">Tap for more details</div>
+                    </div>
+                    <button onclick="toggleFocusMode()" class="text-xs text-fact-yellow hover:underline">See all →</button>
+                </div>
+            </div>
+
+            <!-- BUDGET HERO - Consolidated overview (hidden in focus mode) -->
+            <div class="card rounded-xl p-4 hide-in-focus">
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center">
                     <!-- Days until salary -->
                     <div class="flex items-center gap-3">
@@ -707,6 +1330,131 @@
                 </div>
             </div>
 
+            <!-- TODAY'S FOCUS - Simple daily view for ADHD -->
+            <div class="card rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <h2 class="font-display font-semibold text-sm">Today</h2>
+                        <div id="streakContainer">
+                            <!-- Streak badge rendered by JS -->
+                        </div>
+                    </div>
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="todayDate">--</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-fact-muted dark:text-fact-dark-muted">Spent today</span>
+                        <span class="font-display font-bold" id="todaySpent">--</span>
+                    </div>
+                    <div id="dailyBudgetMeter" class="budget-meter">
+                        <div class="budget-meter-fill safe" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="dailyBudgetLabel">-- left today</span>
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">Budget: <span id="todayBudget">--</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMPULSE WARNING BANNER (shown when burst detected) -->
+            <div id="impulseBanner" class="impulse-banner">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">⚡</span>
+                        <div>
+                            <div class="font-semibold text-sm">Impulse Alert</div>
+                            <div class="text-xs opacity-80" id="impulseMessage">Multiple purchases detected</div>
+                        </div>
+                    </div>
+                    <button onclick="dismissImpulseBanner()" class="text-white/80 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- GENEROSITY BUDGET - For those who give generously -->
+            <div id="generosityCard" class="generosity-card rounded-xl p-4 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl heart-pulse">💜</span>
+                        <h2 class="font-display font-semibold text-sm">Generosity Budget</h2>
+                    </div>
+                    <button onclick="openGenerositySettings()" class="text-fact-purple hover:text-fact-purple/80 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-fact-muted dark:text-fact-dark-muted">Given this month</span>
+                        <span class="generosity-amount" id="generositySpent">QAR 0</span>
+                    </div>
+                    <div class="generosity-meter">
+                        <div class="generosity-meter-fill" id="generosityMeterFill" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="generosityStatus">You can still give!</span>
+                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">Budget: <span id="generosityBudget">QAR 0</span></span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-fact-border dark:border-fact-dark-border">
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted mb-2">Recent giving:</div>
+                    <div id="recentGenerosity" class="space-y-1 max-h-24 overflow-y-auto">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- GENEROSITY SETTINGS MODAL -->
+            <div id="generosityModal" class="modal-backdrop hidden" onclick="if(event.target === this) closeGenerositySettings()">
+                <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-display font-semibold text-lg flex items-center gap-2">
+                            <span class="heart-pulse">💜</span> Generosity Budget
+                        </h3>
+                        <button onclick="closeGenerositySettings()" class="text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-fact-muted dark:text-fact-dark-muted mb-4">
+                        It's wonderful to be generous! Setting a giving budget helps you be intentionally generous without guilt or financial strain.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium mb-1 block">Monthly Generosity Budget (QAR)</label>
+                            <input type="number" id="generosityBudgetInput" placeholder="e.g., 500" min="0" step="50"
+                                class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium mb-2 block">What counts as "generosity"?</label>
+                            <div id="generosityCategories" class="space-y-2 text-sm">
+                                <!-- Checkboxes rendered by JS -->
+                            </div>
+                        </div>
+
+                        <div class="bg-fact-purple/10 rounded-lg p-3">
+                            <div class="text-xs font-medium text-fact-purple mb-1">💡 Why set a giving budget?</div>
+                            <ul class="text-xs text-fact-muted dark:text-fact-dark-muted space-y-1">
+                                <li>• Give without guilt (you planned for it!)</li>
+                                <li>• Say "not this time" without feeling bad</li>
+                                <li>• Be generous sustainably, not impulsively</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="closeGenerositySettings()" class="flex-1 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg text-sm font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="saveGenerositySettings()" class="flex-1 py-2 bg-fact-purple text-white rounded-lg text-sm font-medium">
+                            Save Budget
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- UNCATEGORIZED ALERT -->
             <div id="uncatAlert" class="hidden card rounded-xl p-3 border-l-4 border-fact-yellow bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition" onclick="openUncatModal()">
                 <div class="flex items-center justify-between">
@@ -718,8 +1466,8 @@
                 </div>
             </div>
 
-            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4" style="min-height: 500px;">
+            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) - Hidden in focus mode -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 hide-in-focus" style="min-height: 500px;">
 
                 <!-- SPENDING BREAKDOWN (Full left - 2 cols) -->
                 <div class="lg:col-span-2 card rounded-xl p-4 relative flex flex-col">
@@ -863,7 +1611,7 @@
             <footer class="text-center text-[10px] text-fact-muted dark:text-fact-dark-muted pt-4">
                 <span id="lastSync">Not synced</span> · <button onclick="syncData()" class="underline hover:text-fact-ink dark:hover:text-fact-dark-ink">Sync Now</button>
             </footer>
-        </div>
+        </main>
     </div>
     </div> <!-- Close mainApp -->
 
@@ -1733,6 +2481,16 @@
                     showToast(`Synced ${STATE.allTxns.length} transactions`, 'success');
                 }
 
+                // Check for achievements after data loads
+                if (typeof checkAchievements === 'function') {
+                    setTimeout(() => checkAchievements(), 1000);
+                }
+
+                // Show pattern-based nudges (delayed to not overwhelm)
+                if (typeof renderPatternWarnings === 'function') {
+                    setTimeout(() => renderPatternWarnings(), 3000);
+                }
+
             } catch (err) {
                 console.error('Sync error:', err);
                 if (typeof showToast === 'function') {
@@ -2303,6 +3061,60 @@
             renderRecentTxns();
             renderUncatAlert();
             renderQuickInsights();
+            renderTodaySection();
+            checkForImpulseBursts();
+        }
+
+        // Render Today section with daily budget meter
+        function renderTodaySection() {
+            // Update date
+            document.getElementById('todayDate').textContent = dayjs().format('dddd, MMM D');
+
+            // Calculate today's spending
+            const status = checkDailyBudget();
+            document.getElementById('todaySpent').textContent = `QAR ${formatNum(status.spent)}`;
+            document.getElementById('todayBudget').textContent = `QAR ${formatNum(status.budget)}`;
+
+            // Update meter
+            updateDailyBudgetMeter();
+
+            // Update streak
+            updateStreak();
+            renderStreakBadge();
+
+            // Update generosity budget (if enabled)
+            if (typeof renderGenerosityBudget === 'function') {
+                renderGenerosityBudget();
+            }
+
+            // Update focus mode hero if active
+            if (isFocusMode && typeof updateFocusHero === 'function') {
+                updateFocusHero();
+                updateQuickInsight();
+            }
+        }
+
+        // Check for impulse bursts and show warning
+        function checkForImpulseBursts() {
+            const today = dayjs().startOf('day');
+            const todayTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.isAfter(today.subtract(1, 'day'))
+            );
+
+            const bursts = detectImpulseBurst(todayTxns);
+
+            if (bursts.length > 0 && !STATE.impulseBannerDismissed) {
+                const latest = bursts[bursts.length - 1];
+                document.getElementById('impulseMessage').textContent =
+                    `${latest.count} purchases (QAR ${formatNum(latest.total)}) in 30 minutes`;
+                document.getElementById('impulseBanner').style.display = 'block';
+            }
+        }
+
+        function dismissImpulseBanner() {
+            document.getElementById('impulseBanner').style.display = 'none';
+            STATE.impulseBannerDismissed = true;
         }
 
         // Category breakdown for left panel
@@ -3585,6 +4397,9 @@
                 const answer = data.answer;
                 responseDiv.innerHTML = sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'));
 
+                // Track AI usage achievement
+                trackAchievement('fact_asked_ai');
+
             } catch (err) {
                 responseDiv.innerHTML = `<p class="text-fact-red">Error: ${err.message}</p>`;
             }
@@ -4170,6 +4985,7 @@
                 isListening = true;
                 document.getElementById('voiceBtn').classList.add('listening');
                 document.getElementById('voiceStatus').classList.remove('hidden');
+                trackAchievement('fact_used_voice');
                 document.getElementById('aiChatInput').value = '';
             }
         }
@@ -4191,6 +5007,15 @@
             { id: 'period-month', icon: '📅', label: 'This Month', action: () => { closeCmdPalette(); setPeriod('thisMonth'); } },
             { id: 'period-last', icon: '📅', label: 'Last Month', action: () => { closeCmdPalette(); setPeriod('lastMonth'); } },
             { id: 'voice', icon: '🎤', label: 'Voice Input', shortcut: 'V', action: () => { closeCmdPalette(); toggleVoiceInput(); } },
+            { id: 'achievements', icon: '🏆', label: 'Achievements', shortcut: 'W', action: () => { closeCmdPalette(); openAchievements(); } },
+            { id: 'generosity', icon: '💜', label: 'Generosity Budget', shortcut: 'Y', action: () => { closeCmdPalette(); openGenerositySettings(); } },
+            { id: 'focus', icon: '👁️', label: 'Toggle Focus Mode', shortcut: 'F', action: () => { closeCmdPalette(); toggleFocusMode(); } },
+            { id: 'health', icon: '❤️', label: 'Financial Health Score', shortcut: 'L', action: () => { closeCmdPalette(); openHealthScore(); } },
+            { id: 'patterns', icon: '🔍', label: 'Spending Patterns', shortcut: 'P', action: () => { closeCmdPalette(); openPatternAnalysis(); } },
+            { id: 'future', icon: '🔮', label: 'Future Projection', shortcut: 'Z', action: () => { closeCmdPalette(); openFutureProjection(); } },
+            { id: 'weekly', icon: '📅', label: 'Weekly Check-In', shortcut: 'I', action: () => { closeCmdPalette(); openWeeklyCheckIn(); } },
+            { id: 'emergency', icon: '🚨', label: 'Emergency Mode', shortcut: 'X', action: () => { closeCmdPalette(); toggleEmergencyMode(); } },
+            { id: 'share', icon: '📤', label: 'Share Summary', action: () => { closeCmdPalette(); shareWeeklySummary(); } },
             { id: 'shortcuts', icon: '⌨️', label: 'Keyboard Shortcuts', shortcut: '?', action: () => { closeCmdPalette(); openShortcuts(); } },
             { id: 'logout', icon: '🚪', label: 'Logout', action: () => { closeCmdPalette(); logout(); } },
         ];
@@ -4405,11 +5230,24 @@
             renderGoalsList();
         }
 
-        function deleteGoal(index) {
+        async function deleteGoal(index) {
             const goals = getGoals();
-            goals.splice(index, 1);
-            saveGoals(goals);
-            renderGoalsList();
+            const goal = goals[index];
+
+            const confirmed = await showConfirm({
+                title: 'Delete Budget Goal',
+                message: `Remove the ${goal.category} budget of QAR ${formatNum(goal.amount)}?`,
+                confirmText: 'Delete',
+                cancelText: 'Keep',
+                type: 'danger'
+            });
+
+            if (confirmed) {
+                goals.splice(index, 1);
+                saveGoals(goals);
+                renderGoalsList();
+                showToast(`Removed ${goal.category} goal`, 'info');
+            }
         }
 
         // ============== TIMELINE HEATMAP ==============
@@ -4417,6 +5255,7 @@
         function openHeatmap() {
             renderHeatmap();
             document.getElementById('heatmapModal').classList.remove('hidden');
+            trackAchievement('fact_viewed_heatmap');
         }
 
         function closeHeatmap() {
@@ -4647,6 +5486,7 @@
                 URL.revokeObjectURL(url);
 
                 showToast(`Exported ${rows.length} transactions`, 'success');
+                trackAchievement('fact_exported');
             } catch (err) {
                 showToast('Export failed: ' + err.message, 'error');
             } finally {
@@ -4724,12 +5564,1512 @@
             }
         });
 
+        // ============== ACHIEVEMENTS SYSTEM ==============
+
+        const ACHIEVEMENTS = {
+            'first-login': { icon: '🚀', name: 'First Steps', desc: 'Opened FACT/Flow for the first time', check: () => true },
+            'first-categorize': { icon: '🏷️', name: 'Organizer', desc: 'Categorized your first transaction', check: () => Object.keys(STATE.localMappings || {}).length > 0 },
+            'ten-categorize': { icon: '📋', name: 'Sorting Pro', desc: 'Categorized 10 transactions', check: () => Object.keys(STATE.localMappings || {}).length >= 10 },
+            'first-goal': { icon: '🎯', name: 'Goal Setter', desc: 'Set your first budget goal', check: () => getGoals().length > 0 },
+            'three-goals': { icon: '🎪', name: 'Triple Threat', desc: 'Set 3 budget goals', check: () => getGoals().length >= 3 },
+            'streak-3': { icon: '🔥', name: 'On Fire', desc: '3-day under-budget streak', check: () => getStreakData().longestStreak >= 3 },
+            'streak-7': { icon: '⚡', name: 'Week Warrior', desc: '7-day under-budget streak', check: () => getStreakData().longestStreak >= 7 },
+            'streak-30': { icon: '💎', name: 'Diamond Discipline', desc: '30-day under-budget streak', check: () => getStreakData().longestStreak >= 30 },
+            'ask-ai': { icon: '🤖', name: 'AI Explorer', desc: 'Asked AI for spending advice', check: () => localStorage.getItem('fact_asked_ai') === 'true' },
+            'voice-input': { icon: '🎤', name: 'Voice Commander', desc: 'Used voice input', check: () => localStorage.getItem('fact_used_voice') === 'true' },
+            'dark-mode': { icon: '🌙', name: 'Night Owl', desc: 'Switched to dark mode', check: () => localStorage.getItem('fact_dark_mode') === 'true' },
+            'export-data': { icon: '📊', name: 'Data Analyst', desc: 'Exported your data to CSV', check: () => localStorage.getItem('fact_exported') === 'true' },
+            'under-budget-day': { icon: '✅', name: 'Budget Boss', desc: 'Stayed under daily budget', check: () => checkDailyBudget().status === 'safe' },
+            'heatmap-view': { icon: '🗓️', name: 'Pattern Seeker', desc: 'Viewed the spending heatmap', check: () => localStorage.getItem('fact_viewed_heatmap') === 'true' },
+            'generosity-set': { icon: '💜', name: 'Generous Heart', desc: 'Set a generosity budget', check: () => localStorage.getItem(`fact_generosity_${STATE.currentUser}`) !== null },
+            'focus-mode': { icon: '👁️', name: 'Zen Master', desc: 'Used Focus Mode for simplified view', check: () => localStorage.getItem('fact_focus_mode') === 'true' },
+            'health-check': { icon: '❤️', name: 'Health Conscious', desc: 'Checked your financial health score', check: () => localStorage.getItem('fact_health_score') === 'true' },
+            'pattern-watcher': { icon: '🔍', name: 'Pattern Detective', desc: 'Analyzed your spending patterns', check: () => localStorage.getItem('fact_viewed_patterns') === 'true' },
+            'future-self': { icon: '🔮', name: 'Time Traveler', desc: 'Viewed your future spending projection', check: () => localStorage.getItem('fact_viewed_future') === 'true' },
+            'weekly-reviewer': { icon: '📅', name: 'Weekly Warrior', desc: 'Did a weekly check-in', check: () => localStorage.getItem('fact_weekly_checkin') === 'true' }
+        };
+
+        function getUnlockedAchievements() {
+            try {
+                return JSON.parse(localStorage.getItem(`fact_achievements_${STATE.currentUser}`)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveUnlockedAchievements(achievements) {
+            localStorage.setItem(`fact_achievements_${STATE.currentUser}`, JSON.stringify(achievements));
+        }
+
+        function checkAchievements() {
+            const unlocked = getUnlockedAchievements();
+            const newUnlocks = [];
+
+            Object.entries(ACHIEVEMENTS).forEach(([id, achievement]) => {
+                if (!unlocked.includes(id) && achievement.check()) {
+                    unlocked.push(id);
+                    newUnlocks.push({ id, ...achievement });
+                }
+            });
+
+            if (newUnlocks.length > 0) {
+                saveUnlockedAchievements(unlocked);
+                // Celebrate the first new unlock
+                setTimeout(() => celebrate(newUnlocks[0]), 500);
+            }
+
+            return unlocked;
+        }
+
+        function celebrate(achievement) {
+            const overlay = document.getElementById('celebrationOverlay');
+
+            // Generate confetti
+            const confettiColors = ['#F4C44E', '#75B876', '#B593C6', '#E57373', '#64B5F6'];
+            let confettiHtml = '';
+            for (let i = 0; i < 50; i++) {
+                const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                const left = Math.random() * 100;
+                const delay = Math.random() * 2;
+                const size = 5 + Math.random() * 10;
+                confettiHtml += `<div class="confetti" style="left: ${left}%; background: ${color}; width: ${size}px; height: ${size}px; animation-delay: ${delay}s; border-radius: ${Math.random() > 0.5 ? '50%' : '0'}"></div>`;
+            }
+
+            overlay.innerHTML = `
+                <div class="celebration-overlay" onclick="closeCelebration()">
+                    ${confettiHtml}
+                    <div class="celebration-box" onclick="event.stopPropagation()">
+                        <div class="celebration-icon">${achievement.icon}</div>
+                        <h2 class="font-display font-bold text-xl text-fact-ink mt-2">Achievement Unlocked!</h2>
+                        <h3 class="font-display font-semibold text-lg text-fact-ink mt-1">${achievement.name}</h3>
+                        <p class="text-sm text-fact-ink/70 mt-2">${achievement.desc}</p>
+                        <button onclick="closeCelebration()" class="mt-4 px-6 py-2 bg-fact-ink text-white rounded-full font-medium">
+                            Awesome! 🎉
+                        </button>
+                    </div>
+                </div>
+            `;
+            overlay.classList.remove('hidden');
+
+            // Auto close after 5 seconds
+            setTimeout(closeCelebration, 5000);
+        }
+
+        function closeCelebration() {
+            const overlay = document.getElementById('celebrationOverlay');
+            overlay.classList.add('hidden');
+            overlay.innerHTML = '';
+        }
+
+        function openAchievements() {
+            const unlocked = getUnlockedAchievements();
+            const container = document.getElementById('achievementsList');
+
+            document.getElementById('achievementProgress').textContent =
+                `${unlocked.length} of ${Object.keys(ACHIEVEMENTS).length} unlocked`;
+
+            container.innerHTML = Object.entries(ACHIEVEMENTS).map(([id, a]) => {
+                const isUnlocked = unlocked.includes(id);
+                return `
+                    <div class="achievement-badge ${isUnlocked ? '' : 'locked'}">
+                        <div class="badge-icon">${a.icon}</div>
+                        <div class="text-xs font-medium">${a.name}</div>
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">${isUnlocked ? a.desc : '???'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('achievementsModal').classList.remove('hidden');
+        }
+
+        function closeAchievements() {
+            document.getElementById('achievementsModal').classList.add('hidden');
+        }
+
+        // Track specific actions for achievements
+        function trackAchievement(key) {
+            localStorage.setItem(key, 'true');
+            setTimeout(checkAchievements, 100);
+        }
+
+        // ============== CONFIRMATION DIALOG ==============
+
+        function showConfirm(options) {
+            return new Promise((resolve) => {
+                const { title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning' } = options;
+                const modal = document.getElementById('confirmModal');
+
+                const colors = {
+                    warning: { bg: 'bg-fact-yellow', icon: '⚠️' },
+                    danger: { bg: 'bg-fact-red', icon: '🗑️' },
+                    info: { bg: 'bg-fact-purple', icon: 'ℹ️' }
+                };
+                const color = colors[type] || colors.warning;
+
+                modal.innerHTML = `
+                    <div class="confirm-overlay" onclick="event.target === this && confirmResolve(false)">
+                        <div class="confirm-box">
+                            <div class="text-4xl mb-4">${color.icon}</div>
+                            <h3 class="font-display font-semibold text-lg mb-2">${escapeHtml(title)}</h3>
+                            <p class="text-sm text-fact-muted dark:text-fact-dark-muted mb-6">${escapeHtml(message)}</p>
+                            <div class="flex gap-3">
+                                <button onclick="confirmResolve(false)" class="flex-1 px-4 py-2 text-sm rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800">${cancelText}</button>
+                                <button onclick="confirmResolve(true)" class="flex-1 px-4 py-2 text-sm rounded-lg ${color.bg} text-white font-medium">${confirmText}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+
+                window.confirmResolve = (result) => {
+                    modal.classList.add('hidden');
+                    modal.innerHTML = '';
+                    resolve(result);
+                };
+            });
+        }
+
+        // ============== IMPULSE CONTROL ==============
+
+        // Detect impulse burst (multiple transactions in short time)
+        function detectImpulseBurst(transactions) {
+            const bursts = [];
+            const sorted = [...transactions].sort((a, b) => a.date.unix() - b.date.unix());
+
+            for (let i = 0; i < sorted.length; i++) {
+                const windowStart = sorted[i].date;
+                const windowTxns = [sorted[i]];
+
+                for (let j = i + 1; j < sorted.length; j++) {
+                    const diff = sorted[j].date.diff(windowStart, 'minute');
+                    if (diff <= 30) { // 30 minute window
+                        windowTxns.push(sorted[j]);
+                    } else {
+                        break;
+                    }
+                }
+
+                if (windowTxns.length >= 3) {
+                    bursts.push({
+                        time: windowStart,
+                        count: windowTxns.length,
+                        total: windowTxns.reduce((s, t) => s + t.amount, 0),
+                        transactions: windowTxns
+                    });
+                    i += windowTxns.length - 1; // Skip processed transactions
+                }
+            }
+
+            return bursts;
+        }
+
+        // Check if user is over daily budget
+        function checkDailyBudget() {
+            const today = dayjs().startOf('day');
+            const todayTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' &&
+                t.date.isAfter(today) &&
+                t.date.isBefore(today.add(1, 'day'))
+            );
+            const todaySpent = todayTxns.reduce((s, t) => s + t.amount, 0);
+
+            const proj = calculateBudgetProjection();
+            const dailyBudget = proj.recommended || 300; // Default 300 QAR
+
+            const percentage = (todaySpent / dailyBudget) * 100;
+
+            return {
+                spent: todaySpent,
+                budget: dailyBudget,
+                remaining: Math.max(0, dailyBudget - todaySpent),
+                percentage,
+                status: percentage < 50 ? 'safe' : percentage < 80 ? 'warning' : 'danger'
+            };
+        }
+
+        // Show pause modal for large purchases
+        function showPauseModal(amount, merchant, callback) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                let countdown = 5;
+
+                modal.innerHTML = `
+                    <div class="confirm-overlay">
+                        <div class="confirm-box pause-modal">
+                            <div class="text-4xl mb-2">⏸️</div>
+                            <h3 class="font-display font-semibold text-lg mb-2">Large Purchase</h3>
+                            <p class="text-sm text-fact-muted dark:text-fact-dark-muted">
+                                ${escapeHtml(merchant)}: <strong>QAR ${formatNum(amount)}</strong>
+                            </p>
+                            <div class="pause-countdown" id="pauseCountdown">${countdown}</div>
+                            <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-4">
+                                Take a breath. Do you really need this?
+                            </p>
+                            <div class="flex gap-3">
+                                <button onclick="pauseResolve(false)" class="flex-1 px-4 py-2 text-sm rounded-lg bg-fact-green text-white font-medium">Skip (I needed it)</button>
+                                <button id="pauseConfirmBtn" disabled class="flex-1 px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 text-fact-muted font-medium">Wait ${countdown}s</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+
+                const interval = setInterval(() => {
+                    countdown--;
+                    const countEl = document.getElementById('pauseCountdown');
+                    const btnEl = document.getElementById('pauseConfirmBtn');
+                    if (countEl) countEl.textContent = countdown;
+
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                        if (btnEl) {
+                            btnEl.disabled = false;
+                            btnEl.className = 'flex-1 px-4 py-2 text-sm rounded-lg bg-fact-yellow text-fact-ink font-medium';
+                            btnEl.textContent = 'Categorize anyway';
+                            btnEl.onclick = () => pauseResolve(true);
+                        }
+                    } else if (btnEl) {
+                        btnEl.textContent = `Wait ${countdown}s`;
+                    }
+                }, 1000);
+
+                window.pauseResolve = (result) => {
+                    clearInterval(interval);
+                    modal.classList.add('hidden');
+                    modal.innerHTML = '';
+                    resolve(result);
+                };
+            });
+        }
+
+        // Check for large purchase before categorizing
+        async function checkLargePurchase(amount, merchant) {
+            const LARGE_THRESHOLD = 500; // QAR
+            if (amount >= LARGE_THRESHOLD) {
+                const proceed = await showPauseModal(amount, merchant);
+                return proceed;
+            }
+            return true;
+        }
+
+        // Track and warn about daily budget
+        function updateDailyBudgetMeter() {
+            const status = checkDailyBudget();
+            const meterEl = document.getElementById('dailyBudgetMeter');
+            if (!meterEl) return;
+
+            const fillEl = meterEl.querySelector('.budget-meter-fill');
+            if (fillEl) {
+                fillEl.style.width = `${Math.min(100, status.percentage)}%`;
+                fillEl.className = `budget-meter-fill ${status.status}`;
+            }
+
+            const labelEl = document.getElementById('dailyBudgetLabel');
+            if (labelEl) {
+                labelEl.textContent = `${formatNum(status.remaining)} left today`;
+                labelEl.className = status.status === 'danger' ? 'text-fact-red' : 'text-fact-muted dark:text-fact-dark-muted';
+            }
+
+            // Show warning toast if over 80%
+            if (status.percentage >= 80 && status.percentage < 100 && !STATE.dailyWarningShown) {
+                showToast(`⚠️ You've used ${status.percentage.toFixed(0)}% of today's budget`, 'info');
+                STATE.dailyWarningShown = true;
+            } else if (status.percentage >= 100 && !STATE.dailyOverShown) {
+                showToast(`🚨 Over budget today! Spent ${formatNum(status.spent)} of ${formatNum(status.budget)}`, 'error');
+                STATE.dailyOverShown = true;
+            }
+        }
+
+        // ============== STREAK TRACKING ==============
+
+        function getStreakData() {
+            try {
+                return JSON.parse(localStorage.getItem(`fact_streak_${STATE.currentUser}`)) || {
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    lastGoodDay: null
+                };
+            } catch (e) {
+                return { currentStreak: 0, longestStreak: 0, lastGoodDay: null };
+            }
+        }
+
+        function saveStreakData(data) {
+            localStorage.setItem(`fact_streak_${STATE.currentUser}`, JSON.stringify(data));
+        }
+
+        function updateStreak() {
+            const status = checkDailyBudget();
+            const streak = getStreakData();
+            const today = dayjs().format('YYYY-MM-DD');
+            const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+
+            // Only update at end of day or when checking previous days
+            if (status.status !== 'danger') {
+                if (streak.lastGoodDay === yesterday) {
+                    streak.currentStreak++;
+                } else if (streak.lastGoodDay !== today) {
+                    streak.currentStreak = 1;
+                }
+                streak.lastGoodDay = today;
+                streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+            } else if (streak.lastGoodDay !== today && streak.lastGoodDay !== yesterday) {
+                streak.currentStreak = 0;
+            }
+
+            saveStreakData(streak);
+            return streak;
+        }
+
+        function renderStreakBadge() {
+            const streak = getStreakData();
+            const container = document.getElementById('streakContainer');
+            if (!container) return;
+
+            if (streak.currentStreak > 0) {
+                container.innerHTML = `
+                    <div class="streak-badge">
+                        <span>🔥</span>
+                        <span>${streak.currentStreak} day${streak.currentStreak > 1 ? 's' : ''}</span>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                        Stay under budget to start a streak!
+                    </div>
+                `;
+            }
+        }
+
+        // ============== GENEROSITY BUDGET SYSTEM ==============
+
+        // Categories that count as "generosity" - user can customize
+        const DEFAULT_GENEROSITY_CATEGORIES = [
+            { id: 'gifts', name: 'Gifts & Presents', default: true },
+            { id: 'charity', name: 'Charity & Donations', default: true },
+            { id: 'treats', name: 'Treating Others (meals, drinks)', default: true },
+            { id: 'social', name: 'Social Outings (I paid for everyone)', default: false },
+            { id: 'family', name: 'Family Support', default: false },
+            { id: 'loans', name: 'Loans to Friends', default: false }
+        ];
+
+        function getGenerositySettings() {
+            try {
+                const stored = localStorage.getItem(`fact_generosity_${STATE.currentUser}`);
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveGenerositySettings() {
+            const budgetInput = document.getElementById('generosityBudgetInput');
+            const budget = parseFloat(budgetInput.value) || 0;
+
+            // Get selected categories
+            const selectedCategories = [];
+            document.querySelectorAll('#generosityCategories input[type="checkbox"]:checked').forEach(cb => {
+                selectedCategories.push(cb.value);
+            });
+
+            const settings = {
+                budget: budget,
+                categories: selectedCategories,
+                enabled: budget > 0
+            };
+
+            localStorage.setItem(`fact_generosity_${STATE.currentUser}`, JSON.stringify(settings));
+
+            // Trigger achievement check
+            if (typeof checkAchievements === 'function') {
+                setTimeout(() => checkAchievements(), 500);
+            }
+
+            closeGenerositySettings();
+            renderGenerosityBudget();
+            showToast('Generosity budget saved! 💜', 'success');
+        }
+
+        function openGenerositySettings() {
+            const settings = getGenerositySettings() || { budget: 0, categories: ['gifts', 'charity', 'treats'], enabled: false };
+
+            // Set budget input
+            document.getElementById('generosityBudgetInput').value = settings.budget || '';
+
+            // Render category checkboxes
+            const container = document.getElementById('generosityCategories');
+            container.innerHTML = DEFAULT_GENEROSITY_CATEGORIES.map(cat => {
+                const checked = settings.categories?.includes(cat.id) || (!settings.categories && cat.default);
+                return `
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="${cat.id}" ${checked ? 'checked' : ''}
+                            class="w-4 h-4 rounded border-fact-border text-fact-purple focus:ring-fact-purple">
+                        <span>${cat.name}</span>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('generosityModal').classList.remove('hidden');
+        }
+
+        function closeGenerositySettings() {
+            document.getElementById('generosityModal').classList.add('hidden');
+        }
+
+        function calcGenerositySpending() {
+            const settings = getGenerositySettings();
+            if (!settings || !settings.enabled) return { spent: 0, budget: 0, transactions: [] };
+
+            // Get current month's transactions
+            const now = dayjs();
+            const monthStart = now.startOf('month');
+            const monthEnd = now.endOf('month');
+
+            // Keywords that indicate generosity based on selected categories
+            const categoryKeywords = {
+                'gifts': ['gift', 'present', 'birthday', 'anniversary', 'wedding'],
+                'charity': ['charity', 'donation', 'donate', 'zakat', 'sadaqah', 'ngo', 'red cross', 'unicef'],
+                'treats': ['coffee', 'starbucks', 'costa', 'restaurant', 'cafe', 'dinner', 'lunch'],
+                'social': ['night out', 'club', 'bar', 'pub', 'party'],
+                'family': ['transfer', 'family', 'mom', 'dad', 'sister', 'brother', 'parent'],
+                'loans': ['loan', 'lend', 'borrow']
+            };
+
+            // Build keywords list based on selected categories
+            let keywords = [];
+            settings.categories.forEach(catId => {
+                if (categoryKeywords[catId]) {
+                    keywords = keywords.concat(categoryKeywords[catId]);
+                }
+            });
+
+            // Also check for "Gifts" or "Social" category assignments
+            const generosityCategories = ['Gifts', 'Charity', 'Social'];
+
+            const generosityTxns = STATE.txns.filter(txn => {
+                const txnDate = dayjs(txn.date);
+                if (!txnDate.isBetween(monthStart, monthEnd, 'day', '[]')) return false;
+
+                // Check if category matches
+                if (generosityCategories.some(c => txn.category?.toLowerCase().includes(c.toLowerCase()))) {
+                    return true;
+                }
+
+                // Check if description contains generosity keywords
+                const desc = (txn.description || '').toLowerCase();
+                const merchant = (txn.merchant || '').toLowerCase();
+                return keywords.some(kw => desc.includes(kw) || merchant.includes(kw));
+            });
+
+            const spent = generosityTxns.reduce((sum, txn) => sum + Math.abs(txn.qar), 0);
+
+            return {
+                spent: spent,
+                budget: settings.budget,
+                transactions: generosityTxns.slice(0, 5), // Last 5 for display
+                percentage: settings.budget > 0 ? Math.min((spent / settings.budget) * 100, 100) : 0,
+                remaining: Math.max(settings.budget - spent, 0),
+                over: spent > settings.budget
+            };
+        }
+
+        function renderGenerosityBudget() {
+            const settings = getGenerositySettings();
+            const card = document.getElementById('generosityCard');
+
+            if (!settings || !settings.enabled) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            card.classList.remove('hidden');
+
+            const data = calcGenerositySpending();
+
+            // Update spent amount
+            document.getElementById('generositySpent').textContent = `QAR ${Math.round(data.spent).toLocaleString()}`;
+
+            // Update budget display
+            document.getElementById('generosityBudget').textContent = `QAR ${Math.round(data.budget).toLocaleString()}`;
+
+            // Update meter
+            const fill = document.getElementById('generosityMeterFill');
+            fill.style.width = `${data.percentage}%`;
+            fill.className = `generosity-meter-fill ${data.over ? 'over' : ''}`;
+
+            // Update status message
+            const status = document.getElementById('generosityStatus');
+            if (data.over) {
+                status.textContent = `Over budget by QAR ${Math.round(data.spent - data.budget).toLocaleString()}`;
+                status.className = 'text-xs text-fact-red';
+            } else if (data.percentage >= 80) {
+                status.textContent = `QAR ${Math.round(data.remaining).toLocaleString()} left to give`;
+                status.className = 'text-xs text-fact-yellow';
+            } else {
+                status.textContent = `QAR ${Math.round(data.remaining).toLocaleString()} left to give 💜`;
+                status.className = 'text-xs text-fact-muted dark:text-fact-dark-muted';
+            }
+
+            // Render recent generosity transactions
+            const recentDiv = document.getElementById('recentGenerosity');
+            if (data.transactions.length === 0) {
+                recentDiv.innerHTML = '<div class="text-xs text-fact-muted dark:text-fact-dark-muted italic">No giving this month yet</div>';
+            } else {
+                recentDiv.innerHTML = data.transactions.map(txn => `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="truncate flex-1">${escapeHtml(txn.merchant || txn.description)}</span>
+                        <span class="text-fact-purple font-medium ml-2">QAR ${Math.abs(txn.qar).toFixed(0)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Add generosity budget to command palette
+        function addGenerosityToCommandPalette() {
+            const cmdInput = document.getElementById('cmdInput');
+            if (!cmdInput) return;
+
+            // The command palette already listens for input
+            // We'll add generosity as a command in the existing handler
+        }
+
+        // ============== FOCUS MODE - ADHD-FRIENDLY UI ==============
+
+        let isFocusMode = false;
+
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            localStorage.setItem(`fact_focus_mode_${STATE.currentUser}`, isFocusMode);
+
+            applyFocusMode();
+
+            if (isFocusMode) {
+                showToast('Focus Mode enabled - simplified view', 'info');
+                trackAchievement('fact_focus_mode');
+            } else {
+                showToast('Full view restored', 'info');
+            }
+        }
+
+        function applyFocusMode() {
+            const body = document.body;
+            const toggle = document.getElementById('focusToggle');
+            const focusHero = document.getElementById('focusHero');
+            const quickInsight = document.getElementById('quickInsight');
+
+            if (isFocusMode) {
+                body.classList.add('focus-mode');
+                toggle?.classList.add('active');
+                focusHero?.classList.remove('hidden');
+                quickInsight?.classList.remove('hidden');
+                updateFocusHero();
+                updateQuickInsight();
+            } else {
+                body.classList.remove('focus-mode');
+                toggle?.classList.remove('active');
+                focusHero?.classList.add('hidden');
+                quickInsight?.classList.add('hidden');
+            }
+        }
+
+        function updateFocusHero() {
+            const budget = checkDailyBudget();
+            const focusNumber = document.getElementById('focusHeroNumber');
+            const focusDays = document.getElementById('focusDaysToSalary');
+            const focusStreak = document.getElementById('focusStreak');
+
+            if (!focusNumber) return;
+
+            // Update the main number
+            const remaining = Math.max(0, budget.remaining);
+            focusNumber.textContent = `QAR ${formatNum(remaining)}`;
+
+            // Set color based on status
+            focusNumber.className = 'focus-hero-number breathe';
+            if (budget.status === 'danger') {
+                focusNumber.classList.add('danger');
+            } else if (budget.status === 'warning') {
+                focusNumber.classList.add('warning');
+            } else {
+                focusNumber.classList.add('positive');
+            }
+
+            // Update days to salary
+            const daysUntil = document.getElementById('daysUntilSalary')?.textContent || '--';
+            if (focusDays) focusDays.textContent = daysUntil;
+
+            // Update streak
+            const streak = getStreakData();
+            if (focusStreak) focusStreak.textContent = streak.currentStreak || '0';
+        }
+
+        function updateQuickInsight() {
+            const insightText = document.getElementById('quickInsightText');
+            const insightSubtext = document.getElementById('quickInsightSubtext');
+            if (!insightText || !insightSubtext) return;
+
+            const budget = checkDailyBudget();
+            const streak = getStreakData();
+
+            // Generate contextual insight
+            if (budget.status === 'danger') {
+                insightText.textContent = "Budget alert! Consider pausing spending.";
+                insightSubtext.textContent = `You've spent ${Math.round((budget.spent / budget.budget) * 100)}% of today's budget`;
+            } else if (budget.status === 'warning') {
+                insightText.textContent = "Halfway through your daily budget";
+                insightSubtext.textContent = `QAR ${formatNum(budget.remaining)} left - spend wisely!`;
+            } else if (streak.currentStreak >= 3) {
+                insightText.textContent = `🔥 ${streak.currentStreak}-day streak! You're crushing it!`;
+                insightSubtext.textContent = "Keep the momentum going";
+            } else {
+                insightText.textContent = "You're doing great today!";
+                insightSubtext.textContent = `QAR ${formatNum(budget.remaining)} left to spend`;
+            }
+        }
+
+        function initFocusMode() {
+            // Load saved preference
+            const saved = localStorage.getItem(`fact_focus_mode_${STATE.currentUser}`);
+            if (saved === 'true') {
+                isFocusMode = true;
+                applyFocusMode();
+            }
+        }
+
+        // ============== FINANCIAL HEALTH SCORE ==============
+
+        function calculateHealthScore() {
+            // Returns a score from 0-100 based on multiple financial health factors
+
+            const factors = [];
+
+            // 1. Budget Adherence (25 points max)
+            // How often are you under daily budget?
+            const budgetStatus = checkDailyBudget();
+            let budgetScore = 25;
+            if (budgetStatus.status === 'danger') budgetScore = 5;
+            else if (budgetStatus.status === 'warning') budgetScore = 15;
+            factors.push({
+                id: 'budget',
+                name: 'Daily Budget',
+                icon: '📊',
+                score: budgetScore,
+                max: 25,
+                tip: budgetStatus.status === 'safe' ? 'Great daily spending control!' : 'Try to stay under your daily budget'
+            });
+
+            // 2. Streak Consistency (20 points max)
+            const streak = getStreakData();
+            const streakScore = Math.min(20, streak.currentStreak * 4); // 5 days = 20 points
+            factors.push({
+                id: 'streak',
+                name: 'Consistency',
+                icon: '🔥',
+                score: streakScore,
+                max: 20,
+                tip: streak.currentStreak >= 3 ? `${streak.currentStreak} day streak! Keep going!` : 'Build a streak by staying under budget'
+            });
+
+            // 3. Savings Rate (20 points max)
+            // Income - Spending / Income
+            const totalIn = STATE.txns.filter(t => t.direction === 'IN').reduce((s, t) => s + t.qar, 0);
+            const totalOut = STATE.txns.filter(t => t.direction === 'OUT').reduce((s, t) => s + Math.abs(t.qar), 0);
+            const savingsRate = totalIn > 0 ? Math.max(0, (totalIn - totalOut) / totalIn) : 0;
+            const savingsScore = Math.min(20, Math.round(savingsRate * 40)); // 50% savings = full points
+            factors.push({
+                id: 'savings',
+                name: 'Savings Rate',
+                icon: '💰',
+                score: savingsScore,
+                max: 20,
+                tip: savingsRate >= 0.2 ? `${Math.round(savingsRate * 100)}% savings rate!` : 'Try to save more of your income'
+            });
+
+            // 4. Spending Diversity (15 points max)
+            // Penalize if >50% of spending in one category
+            const byCategory = {};
+            STATE.txns.filter(t => t.direction === 'OUT').forEach(t => {
+                const cat = t.summaryGroup || 'Uncategorized';
+                byCategory[cat] = (byCategory[cat] || 0) + Math.abs(t.qar);
+            });
+            const maxCatPercent = totalOut > 0 ? Math.max(...Object.values(byCategory)) / totalOut : 0;
+            const diversityScore = maxCatPercent < 0.3 ? 15 : maxCatPercent < 0.5 ? 10 : 5;
+            factors.push({
+                id: 'diversity',
+                name: 'Balanced Spending',
+                icon: '⚖️',
+                score: diversityScore,
+                max: 15,
+                tip: diversityScore >= 10 ? 'Well-balanced spending!' : 'Consider diversifying spending'
+            });
+
+            // 5. Impulse Control (10 points max)
+            // Based on impulse bursts detected
+            const today = dayjs().startOf('day');
+            const recentTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' && t.date.isAfter(today.subtract(7, 'day'))
+            );
+            const bursts = detectImpulseBurst(recentTxns);
+            const impulseScore = bursts.length === 0 ? 10 : bursts.length < 3 ? 5 : 0;
+            factors.push({
+                id: 'impulse',
+                name: 'Impulse Control',
+                icon: '🧘',
+                score: impulseScore,
+                max: 10,
+                tip: impulseScore >= 10 ? 'No impulse spending detected!' : 'Watch out for rapid purchases'
+            });
+
+            // 6. Tracking Engagement (10 points max)
+            const hasGoals = getGoals().length > 0;
+            const hasGenerosity = getGenerositySettings()?.enabled;
+            const usesApp = streak.longestStreak > 0;
+            let engagementScore = 0;
+            if (hasGoals) engagementScore += 4;
+            if (hasGenerosity) engagementScore += 3;
+            if (usesApp) engagementScore += 3;
+            factors.push({
+                id: 'engagement',
+                name: 'App Engagement',
+                icon: '📱',
+                score: engagementScore,
+                max: 10,
+                tip: engagementScore >= 7 ? 'Great use of FACT/Flow features!' : 'Set goals & use more features'
+            });
+
+            // Calculate total score
+            const totalScore = factors.reduce((sum, f) => sum + f.score, 0);
+
+            // Generate status label
+            let status, statusDesc;
+            if (totalScore >= 80) {
+                status = 'Excellent!';
+                statusDesc = 'Your finances are in great shape';
+            } else if (totalScore >= 60) {
+                status = 'Good';
+                statusDesc = 'You\'re on the right track';
+            } else if (totalScore >= 40) {
+                status = 'Fair';
+                statusDesc = 'Room for improvement';
+            } else {
+                status = 'Needs Work';
+                statusDesc = 'Let\'s focus on building better habits';
+            }
+
+            // Generate primary insight based on lowest scoring factor
+            const lowestFactor = factors.reduce((min, f) =>
+                (f.score / f.max) < (min.score / min.max) ? f : min
+            , factors[0]);
+
+            return {
+                score: totalScore,
+                maxScore: 100,
+                status,
+                statusDesc,
+                factors,
+                primaryInsight: lowestFactor
+            };
+        }
+
+        function openHealthScore() {
+            const modal = document.getElementById('healthScoreModal');
+            modal.classList.remove('hidden');
+
+            // Calculate and display
+            const health = calculateHealthScore();
+
+            // Animate score ring
+            const ringProgress = document.getElementById('healthRingProgress');
+            const circumference = 2 * Math.PI * 50; // r=50
+            const offset = circumference - (health.score / 100) * circumference;
+
+            // Set color class based on score
+            ringProgress.classList.remove('excellent', 'good', 'fair', 'poor');
+            if (health.score >= 80) ringProgress.classList.add('excellent');
+            else if (health.score >= 60) ringProgress.classList.add('good');
+            else if (health.score >= 40) ringProgress.classList.add('fair');
+            else ringProgress.classList.add('poor');
+
+            // Animate the ring
+            setTimeout(() => {
+                ringProgress.style.strokeDashoffset = offset;
+            }, 100);
+
+            // Update score number
+            document.getElementById('healthScoreNumber').textContent = health.score;
+
+            // Update status
+            document.getElementById('healthStatusLabel').textContent = health.status;
+            document.getElementById('healthStatusDesc').textContent = health.statusDesc;
+
+            // Render factors
+            const factorsDiv = document.getElementById('healthFactors');
+            factorsDiv.innerHTML = health.factors.map(f => {
+                const percent = (f.score / f.max) * 100;
+                const colorClass = percent >= 70 ? 'green' : percent >= 40 ? 'yellow' : 'red';
+                return `
+                    <div class="health-factor">
+                        <div class="health-factor-icon">${f.icon}</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>${f.name}</span>
+                                <span class="text-fact-muted dark:text-fact-dark-muted">${f.score}/${f.max}</span>
+                            </div>
+                            <div class="health-factor-bar">
+                                <div class="health-factor-fill ${colorClass}" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render primary insight
+            const insight = health.primaryInsight;
+            document.getElementById('healthInsightTitle').textContent = `Focus on: ${insight.name}`;
+            document.getElementById('healthInsightText').textContent = insight.tip;
+
+            // Track achievement
+            trackAchievement('fact_health_score');
+        }
+
+        function closeHealthScore() {
+            document.getElementById('healthScoreModal').classList.add('hidden');
+        }
+
+        // ============== PATTERN DETECTION & NUDGES ==============
+
+        function analyzeSpendingPatterns() {
+            const patterns = [];
+            const now = dayjs();
+
+            // 1. Weekend Overspending
+            const weekendTxns = STATE.allTxns.filter(t => {
+                const day = t.date.day();
+                return t.direction === 'OUT' && (day === 0 || day === 5 || day === 6);
+            });
+            const weekdayTxns = STATE.allTxns.filter(t => {
+                const day = t.date.day();
+                return t.direction === 'OUT' && day >= 1 && day <= 4;
+            });
+
+            const weekendTotal = weekendTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+            const weekdayTotal = weekdayTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+            const weekendAvg = weekendTotal / Math.max(1, weekendTxns.length);
+            const weekdayAvg = weekdayTotal / Math.max(1, weekdayTxns.length);
+
+            if (weekendAvg > weekdayAvg * 1.5 && weekendTxns.length > 3) {
+                patterns.push({
+                    id: 'weekend-spender',
+                    icon: '🎉',
+                    title: 'Weekend Warrior',
+                    message: `You spend ${Math.round((weekendAvg / weekdayAvg - 1) * 100)}% more on weekends`,
+                    tip: 'Plan fun weekend activities that don\'t cost much',
+                    severity: 'warning'
+                });
+            }
+
+            // 2. Late Night Purchases (after 10pm)
+            const lateNightTxns = STATE.allTxns.filter(t => {
+                if (t.direction !== 'OUT') return false;
+                // Parse time from description if available, otherwise use midnight
+                const hour = t.date.hour();
+                return hour >= 22 || hour < 5;
+            });
+
+            if (lateNightTxns.length >= 5) {
+                const lateTotal = lateNightTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+                patterns.push({
+                    id: 'night-owl',
+                    icon: '🦉',
+                    title: 'Night Owl Spending',
+                    message: `${lateNightTxns.length} late-night purchases (QAR ${formatNum(lateTotal)})`,
+                    tip: 'Impulse purchases are more likely when tired',
+                    severity: 'caution'
+                });
+            }
+
+            // 3. Payday Splurge (first week of month)
+            const firstWeekTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' && t.date.date() <= 7
+            );
+            const otherWeeksTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' && t.date.date() > 7
+            );
+
+            const firstWeekAvg = firstWeekTxns.reduce((s, t) => s + Math.abs(t.qar), 0) / 7;
+            const otherWeeksAvg = otherWeeksTxns.reduce((s, t) => s + Math.abs(t.qar), 0) / 21;
+
+            if (firstWeekAvg > otherWeeksAvg * 1.5 && firstWeekTxns.length > 5) {
+                patterns.push({
+                    id: 'payday-splurge',
+                    icon: '💸',
+                    title: 'Payday Splurge Pattern',
+                    message: 'You spend more right after salary',
+                    tip: 'Transfer savings immediately when paid',
+                    severity: 'warning'
+                });
+            }
+
+            // 4. End of Month Stress Spending
+            const endMonthTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' && t.date.date() >= 25
+            );
+
+            if (endMonthTxns.length > 10) {
+                const avgEndMonth = endMonthTxns.reduce((s, t) => s + Math.abs(t.qar), 0) / endMonthTxns.length;
+                const avgOther = otherWeeksTxns.reduce((s, t) => s + Math.abs(t.qar), 0) / Math.max(1, otherWeeksTxns.length);
+
+                if (avgEndMonth < avgOther * 0.5) {
+                    patterns.push({
+                        id: 'month-end-tight',
+                        icon: '😰',
+                        title: 'Month-End Crunch',
+                        message: 'Spending drops significantly at month end',
+                        tip: 'Spread your budget more evenly through the month',
+                        severity: 'info'
+                    });
+                }
+            }
+
+            // 5. Category Concentration Risk
+            const byCategory = {};
+            STATE.allTxns.filter(t => t.direction === 'OUT').forEach(t => {
+                const cat = t.summaryGroup || 'Uncategorized';
+                byCategory[cat] = (byCategory[cat] || 0) + Math.abs(t.qar);
+            });
+
+            const totalSpent = Object.values(byCategory).reduce((a, b) => a + b, 0);
+            const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+
+            if (topCategory && topCategory[1] / totalSpent > 0.4) {
+                patterns.push({
+                    id: 'category-heavy',
+                    icon: '📊',
+                    title: `${topCategory[0]} Dominates`,
+                    message: `${Math.round(topCategory[1] / totalSpent * 100)}% of spending is ${topCategory[0]}`,
+                    tip: 'Look for ways to reduce this category',
+                    severity: topCategory[1] / totalSpent > 0.6 ? 'warning' : 'info'
+                });
+            }
+
+            // 6. Frequent Small Purchases (death by 1000 cuts)
+            const smallTxns = STATE.allTxns.filter(t =>
+                t.direction === 'OUT' && Math.abs(t.qar) < 50
+            );
+
+            if (smallTxns.length > 30) {
+                const smallTotal = smallTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+                patterns.push({
+                    id: 'death-by-cuts',
+                    icon: '✂️',
+                    title: 'Small Purchase Pattern',
+                    message: `${smallTxns.length} purchases under QAR 50 totaling QAR ${formatNum(smallTotal)}`,
+                    tip: 'Small purchases add up fast!',
+                    severity: 'caution'
+                });
+            }
+
+            return patterns;
+        }
+
+        function getContextualNudge() {
+            const now = dayjs();
+            const hour = now.hour();
+            const day = now.day(); // 0 = Sunday
+            const dateOfMonth = now.date();
+
+            // Late night nudge
+            if (hour >= 22 || hour < 5) {
+                return {
+                    icon: '🌙',
+                    message: 'Late night spending? Sleep on it!',
+                    severity: 'gentle'
+                };
+            }
+
+            // Weekend nudge
+            if ((day === 5 && hour >= 17) || day === 6 || day === 0) {
+                return {
+                    icon: '🎉',
+                    message: 'Weekend vibes! Keep an eye on spending.',
+                    severity: 'gentle'
+                };
+            }
+
+            // Payday period (first 3 days)
+            if (dateOfMonth <= 3) {
+                return {
+                    icon: '💰',
+                    message: 'Just paid? Save first, then spend!',
+                    severity: 'gentle'
+                };
+            }
+
+            // End of month
+            if (dateOfMonth >= 25) {
+                const budget = checkDailyBudget();
+                if (budget.status === 'danger') {
+                    return {
+                        icon: '⚠️',
+                        message: 'Month-end tight. Essential spending only!',
+                        severity: 'warning'
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function renderPatternWarnings() {
+            const patterns = analyzeSpendingPatterns();
+            const nudge = getContextualNudge();
+
+            // Only show if we have patterns
+            if (patterns.length === 0 && !nudge) return;
+
+            // Show the most severe pattern as a nudge
+            const topPattern = patterns.sort((a, b) => {
+                const severityOrder = { warning: 3, caution: 2, info: 1 };
+                return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+            })[0];
+
+            // Update the quick insight with pattern if in focus mode
+            if (isFocusMode && topPattern) {
+                const insightText = document.getElementById('quickInsightText');
+                const insightSubtext = document.getElementById('quickInsightSubtext');
+                if (insightText && insightSubtext && Math.random() > 0.5) {
+                    insightText.textContent = `${topPattern.icon} ${topPattern.title}`;
+                    insightSubtext.textContent = topPattern.tip;
+                }
+            }
+
+            // Show contextual nudge as toast if appropriate
+            if (nudge && Math.random() > 0.7 && !sessionStorage.getItem('fact_nudge_shown')) {
+                sessionStorage.setItem('fact_nudge_shown', 'true');
+                showToast(`${nudge.icon} ${nudge.message}`, 'info');
+            }
+        }
+
+        function openPatternAnalysis() {
+            const patterns = analyzeSpendingPatterns();
+
+            if (patterns.length === 0) {
+                showToast('No spending patterns detected yet!', 'success');
+                return;
+            }
+
+            // Create a simple alert-style display
+            const patternList = patterns.map(p => `
+                <div class="flex items-start gap-3 p-3 bg-${p.severity === 'warning' ? 'red' : p.severity === 'caution' ? 'yellow' : 'blue'}-50 dark:bg-${p.severity === 'warning' ? 'red' : p.severity === 'caution' ? 'yellow' : 'blue'}-900/20 rounded-lg mb-2">
+                    <span class="text-xl">${p.icon}</span>
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">${p.title}</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">${p.message}</div>
+                        <div class="text-xs text-fact-green mt-1">💡 ${p.tip}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Use the confirm modal to show patterns
+            const overlay = document.querySelector('.confirm-overlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="confirm-box" style="max-width: 400px;">
+                        <h3 class="font-display font-semibold text-lg mb-4">📊 Your Spending Patterns</h3>
+                        <div class="max-h-80 overflow-y-auto">${patternList}</div>
+                        <div class="mt-4 flex justify-end">
+                            <button onclick="document.querySelector('.confirm-overlay').classList.add('hidden')"
+                                class="px-4 py-2 bg-fact-ink text-white rounded-lg text-sm">
+                                Got it!
+                            </button>
+                        </div>
+                    </div>
+                `;
+                overlay.classList.remove('hidden');
+            }
+
+            trackAchievement('fact_viewed_patterns');
+        }
+
+        // ============== FUTURE SELF PROJECTIONS ==============
+
+        function calculateFutureProjection() {
+            const now = dayjs();
+            const daysInMonth = now.daysInMonth();
+            const currentDay = now.date();
+            const daysRemaining = daysInMonth - currentDay;
+
+            // Get current month's data
+            const monthStart = now.startOf('month');
+            const monthEnd = now.endOf('month');
+
+            const monthTxns = STATE.allTxns.filter(t =>
+                t.date.isBetween(monthStart, monthEnd, 'day', '[]')
+            );
+
+            const totalIn = monthTxns.filter(t => t.direction === 'IN').reduce((s, t) => s + t.qar, 0);
+            const totalOut = monthTxns.filter(t => t.direction === 'OUT').reduce((s, t) => s + Math.abs(t.qar), 0);
+
+            // Calculate daily spending rate
+            const dailySpendRate = currentDay > 0 ? totalOut / currentDay : 0;
+
+            // Project to month end
+            const projectedTotalSpend = totalOut + (dailySpendRate * daysRemaining);
+            const projectedSavings = totalIn - projectedTotalSpend;
+
+            // Calculate ideal scenario (if stayed under budget daily)
+            const dailyBudget = checkDailyBudget().budget;
+            const idealTotalSpend = dailyBudget * daysInMonth;
+            const idealSavings = totalIn - idealTotalSpend;
+
+            // Calculate if changed behavior today
+            const newDailyRate = dailyBudget * 0.8; // 80% of budget = saving mode
+            const projectedWithChange = totalOut + (newDailyRate * daysRemaining);
+            const savingsWithChange = totalIn - projectedWithChange;
+
+            return {
+                currentDay,
+                daysRemaining,
+                daysInMonth,
+                income: totalIn,
+                spent: totalOut,
+                dailyRate: dailySpendRate,
+                projection: {
+                    current: {
+                        spending: projectedTotalSpend,
+                        savings: projectedSavings,
+                        label: 'If you continue at this pace'
+                    },
+                    ideal: {
+                        spending: idealTotalSpend,
+                        savings: idealSavings,
+                        label: 'Ideal scenario (budget every day)'
+                    },
+                    changed: {
+                        spending: projectedWithChange,
+                        savings: savingsWithChange,
+                        label: 'If you save harder starting today'
+                    }
+                },
+                isOnTrack: projectedSavings >= 0,
+                savingsGap: idealSavings - projectedSavings
+            };
+        }
+
+        function openFutureProjection() {
+            const proj = calculateFutureProjection();
+
+            // Format savings display
+            const formatSavings = (amount) => {
+                if (amount >= 0) return `<span class="text-fact-green">+QAR ${formatNum(amount)}</span>`;
+                return `<span class="text-fact-red">-QAR ${formatNum(Math.abs(amount))}</span>`;
+            };
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="text-center p-4 rounded-lg bg-gradient-to-r from-fact-purple/10 to-fact-green/10">
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted mb-1">Day ${proj.currentDay} of ${proj.daysInMonth}</div>
+                        <div class="text-sm">${proj.daysRemaining} days until month end</div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted">SCENARIOS</div>
+
+                        <!-- Current trajectory -->
+                        <div class="p-3 rounded-lg ${proj.projection.current.savings >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>${proj.projection.current.savings >= 0 ? '📈' : '📉'}</span>
+                                <span>${proj.projection.current.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.current.spending)} • Savings: ${formatSavings(proj.projection.current.savings)}
+                            </div>
+                        </div>
+
+                        <!-- Changed behavior -->
+                        <div class="p-3 rounded-lg bg-fact-yellow/10">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>💪</span>
+                                <span>${proj.projection.changed.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.changed.spending)} • Savings: ${formatSavings(proj.projection.changed.savings)}
+                            </div>
+                        </div>
+
+                        <!-- Ideal scenario -->
+                        <div class="p-3 rounded-lg bg-fact-green/10">
+                            <div class="flex items-center gap-2 text-sm font-medium mb-1">
+                                <span>⭐</span>
+                                <span>${proj.projection.ideal.label}</span>
+                            </div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">
+                                Spend: QAR ${formatNum(proj.projection.ideal.spending)} • Savings: ${formatSavings(proj.projection.ideal.savings)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-fact-ink/5 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs font-medium mb-2">💡 Your daily spending rate</div>
+                        <div class="text-lg font-display font-bold">QAR ${formatNum(proj.dailyRate)}/day</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted mt-1">
+                            ${proj.isOnTrack ? 'You\'re on track!' : `You need to reduce by QAR ${formatNum(proj.savingsGap / Math.max(1, proj.daysRemaining))}/day to meet budget`}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Use confirm overlay to show
+            const overlay = document.querySelector('.confirm-overlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="confirm-box" style="max-width: 400px;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-semibold text-lg">🔮 Future You</h3>
+                            <button onclick="document.querySelector('.confirm-overlay').classList.add('hidden')"
+                                class="text-fact-muted hover:text-fact-ink">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+                overlay.classList.remove('hidden');
+            }
+
+            trackAchievement('fact_viewed_future');
+        }
+
+        // ============== WEEKLY CHECK-IN SYSTEM (Iteration 11) ==============
+
+        function getWeeklyStats() {
+            const now = dayjs();
+            const weekStart = now.startOf('week');
+            const weekEnd = now.endOf('week');
+
+            const weekTxns = STATE.allTxns.filter(t =>
+                t.date.isBetween(weekStart, weekEnd, 'day', '[]')
+            );
+
+            const totalOut = weekTxns.filter(t => t.direction === 'OUT').reduce((s, t) => s + Math.abs(t.qar), 0);
+            const totalIn = weekTxns.filter(t => t.direction === 'IN').reduce((s, t) => s + t.qar, 0);
+
+            // Count days under budget
+            const daysUnderBudget = [0, 1, 2, 3, 4, 5, 6].filter(offset => {
+                const day = weekStart.add(offset, 'day');
+                const dayTxns = weekTxns.filter(t => t.date.isSame(day, 'day') && t.direction === 'OUT');
+                const dayTotal = dayTxns.reduce((s, t) => s + Math.abs(t.qar), 0);
+                return dayTotal < checkDailyBudget().budget;
+            }).length;
+
+            // Top category
+            const byCategory = {};
+            weekTxns.filter(t => t.direction === 'OUT').forEach(t => {
+                const cat = t.summaryGroup || 'Uncategorized';
+                byCategory[cat] = (byCategory[cat] || 0) + Math.abs(t.qar);
+            });
+            const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+
+            return {
+                spent: totalOut,
+                income: totalIn,
+                saved: totalIn - totalOut,
+                daysUnderBudget,
+                topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null,
+                txnCount: weekTxns.filter(t => t.direction === 'OUT').length
+            };
+        }
+
+        function openWeeklyCheckIn() {
+            const stats = getWeeklyStats();
+            const streak = getStreakData();
+
+            // Generate wins
+            const wins = [];
+            if (stats.daysUnderBudget >= 5) wins.push('📅 5+ days under budget!');
+            if (stats.saved > 0) wins.push(`💰 Saved QAR ${formatNum(stats.saved)}`);
+            if (streak.currentStreak >= 3) wins.push(`🔥 ${streak.currentStreak} day streak!`);
+            if (stats.txnCount < 20) wins.push('🧘 Kept purchases minimal');
+
+            // Generate areas to improve
+            const improvements = [];
+            if (stats.daysUnderBudget < 4) improvements.push('💡 Try to stay under budget more days');
+            if (stats.topCategory && stats.topCategory.amount > stats.spent * 0.4) {
+                improvements.push(`📊 ${stats.topCategory.name} is ${Math.round(stats.topCategory.amount / stats.spent * 100)}% of spending`);
+            }
+            if (stats.saved <= 0) improvements.push('💸 Spending exceeded income');
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="text-center p-4 rounded-lg bg-gradient-to-r from-fact-yellow/10 to-fact-green/10">
+                        <div class="text-2xl mb-1">📊</div>
+                        <div class="text-xs text-fact-muted dark:text-fact-dark-muted">This Week's Summary</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                            <div class="text-lg font-bold text-fact-red">QAR ${formatNum(stats.spent)}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Spent</div>
+                        </div>
+                        <div class="p-3 ${stats.saved >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'} rounded-lg text-center">
+                            <div class="text-lg font-bold ${stats.saved >= 0 ? 'text-fact-green' : 'text-fact-red'}">${stats.saved >= 0 ? '+' : ''}QAR ${formatNum(stats.saved)}</div>
+                            <div class="text-xs text-fact-muted dark:text-fact-dark-muted">Net</div>
+                        </div>
+                    </div>
+
+                    ${wins.length > 0 ? `
+                    <div>
+                        <div class="text-xs font-medium text-fact-green mb-2">🎉 This Week's Wins</div>
+                        <div class="space-y-1">
+                            ${wins.map(w => `<div class="text-sm">${w}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${improvements.length > 0 ? `
+                    <div>
+                        <div class="text-xs font-medium text-fact-yellow mb-2">📈 Areas to Improve</div>
+                        <div class="space-y-1">
+                            ${improvements.map(i => `<div class="text-sm">${i}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="p-3 bg-fact-purple/10 rounded-lg">
+                        <div class="text-xs font-medium mb-2">🎯 Next Week's Focus</div>
+                        <div class="text-sm text-fact-muted dark:text-fact-dark-muted">
+                            ${improvements.length > 0 ? improvements[0].replace(/[📊💡💸]/, '').trim() : 'Keep up the great work!'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const overlay = document.querySelector('.confirm-overlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div class="confirm-box" style="max-width: 380px;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display font-semibold text-lg">📅 Weekly Check-In</h3>
+                            <button onclick="document.querySelector('.confirm-overlay').classList.add('hidden')"
+                                class="text-fact-muted hover:text-fact-ink">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+                overlay.classList.remove('hidden');
+            }
+
+            trackAchievement('fact_weekly_checkin');
+        }
+
+        // ============== EMERGENCY BUDGET MODE (Iteration 13) ==============
+
+        let emergencyMode = false;
+
+        function toggleEmergencyMode() {
+            emergencyMode = !emergencyMode;
+            localStorage.setItem(`fact_emergency_${STATE.currentUser}`, emergencyMode);
+
+            if (emergencyMode) {
+                document.body.classList.add('emergency-mode');
+                showToast('🚨 Emergency Mode ON - Essential spending only!', 'error');
+            } else {
+                document.body.classList.remove('emergency-mode');
+                showToast('Emergency Mode OFF - Normal spending resumed', 'success');
+            }
+
+            updateEmergencyUI();
+        }
+
+        function updateEmergencyUI() {
+            // Add emergency banner if active
+            const existing = document.getElementById('emergencyBanner');
+            if (emergencyMode && !existing) {
+                const banner = document.createElement('div');
+                banner.id = 'emergencyBanner';
+                banner.className = 'fixed top-0 left-0 right-0 bg-fact-red text-white text-center py-2 text-sm font-medium z-40';
+                banner.innerHTML = `
+                    🚨 EMERGENCY MODE - Essentials Only
+                    <button onclick="toggleEmergencyMode()" class="ml-4 underline">Turn Off</button>
+                `;
+                document.body.prepend(banner);
+            } else if (!emergencyMode && existing) {
+                existing.remove();
+            }
+        }
+
+        function initEmergencyMode() {
+            emergencyMode = localStorage.getItem(`fact_emergency_${STATE.currentUser}`) === 'true';
+            if (emergencyMode) {
+                document.body.classList.add('emergency-mode');
+                updateEmergencyUI();
+            }
+        }
+
+        // ============== CELEBRATION MILESTONES (Iteration 14) ==============
+
+        const MILESTONES = [
+            { id: 'first-week', check: () => getStreakData().longestStreak >= 7, message: '🎉 First full week under budget!' },
+            { id: 'first-month', check: () => getStreakData().longestStreak >= 30, message: '🏆 A whole month of discipline!' },
+            { id: 'savings-100', check: () => calculateFutureProjection().projection.current.savings >= 100, message: '💰 On track to save 100+ QAR!' },
+            { id: 'savings-500', check: () => calculateFutureProjection().projection.current.savings >= 500, message: '💎 On track to save 500+ QAR!' },
+            { id: 'all-categorized', check: () => STATE.txns.filter(t => !t.category).length === 0, message: '✅ All transactions categorized!' }
+        ];
+
+        function checkMilestones() {
+            const reached = JSON.parse(localStorage.getItem(`fact_milestones_${STATE.currentUser}`) || '[]');
+
+            MILESTONES.forEach(m => {
+                if (!reached.includes(m.id) && m.check()) {
+                    reached.push(m.id);
+                    localStorage.setItem(`fact_milestones_${STATE.currentUser}`, JSON.stringify(reached));
+
+                    // Show celebration toast
+                    showToast(m.message, 'success');
+                }
+            });
+        }
+
+        // Quick share function for accountability
+        function shareWeeklySummary() {
+            const stats = getWeeklyStats();
+            const text = `📊 My FACT/Flow Week:\n` +
+                `Spent: QAR ${formatNum(stats.spent)}\n` +
+                `${stats.saved >= 0 ? 'Saved' : 'Over'}: QAR ${formatNum(Math.abs(stats.saved))}\n` +
+                `Days under budget: ${stats.daysUnderBudget}/7\n` +
+                `#FACT #PersonalFinance`;
+
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                navigator.clipboard.writeText(text);
+                showToast('Summary copied to clipboard!', 'success');
+            }
+        }
+
         // ============== INIT ENHANCEMENTS ==============
 
         // Initialize all enhancements on load
         document.addEventListener('DOMContentLoaded', () => {
             initVoiceRecognition();
+            initFocusMode();
             initDarkMode();
+            initEmergencyMode();
+
+            // Check milestones after data loads (delayed)
+            setTimeout(() => {
+                if (STATE.hasLoaded && typeof checkMilestones === 'function') {
+                    checkMilestones();
+                }
+            }, 5000);
         });
     </script>
 </body>
