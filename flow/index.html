@@ -2635,12 +2635,30 @@
             const num = parseFloat(cleaned);
             if (!isNaN(num) && num > 40000 && num < 60000) {
                 // Excel serial date: days since Dec 30, 1899
-                // Convert to JavaScript date
-                const excelEpoch = new Date(1899, 11, 30);
+                // Excel dates are in local time, so we need to handle this carefully
+                // to avoid timezone offset issues
                 const days = Math.floor(num);
-                const fraction = num - days;
-                const ms = days * 24 * 60 * 60 * 1000 + fraction * 24 * 60 * 60 * 1000;
-                const parsed = dayjs(new Date(excelEpoch.getTime() + ms));
+                const timeFraction = num - days;
+
+                // Calculate date components directly to avoid timezone issues
+                // Excel epoch is Dec 30, 1899 (day 0)
+                const msPerDay = 24 * 60 * 60 * 1000;
+                const excelEpochMs = Date.UTC(1899, 11, 30); // Use UTC to avoid timezone
+                const dateMs = excelEpochMs + (days * msPerDay);
+
+                // Extract date parts in UTC
+                const utcDate = new Date(dateMs);
+                const year = utcDate.getUTCFullYear();
+                const month = utcDate.getUTCMonth();
+                const day = utcDate.getUTCDate();
+
+                // Calculate time from fraction
+                const totalMinutes = Math.round(timeFraction * 24 * 60);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+
+                // Create dayjs with explicit date/time (local timezone)
+                const parsed = dayjs(new Date(year, month, day, hours, minutes));
                 return parsed.isValid() ? parsed : dayjs();
             }
 
@@ -2852,16 +2870,28 @@
 
         // SALARY DETECTION - Find transactions with SALARY keyword
         function detectSalary() {
-            // Find transactions flagged as salary (checked in processTxns)
-            const salaries = STATE.allTxns.filter(t =>
+            // Find all transactions flagged as salary
+            const allSalaries = STATE.allTxns.filter(t =>
                 t.direction === 'IN' && t.isSalary
             ).sort((a, b) => b.date - a.date);
 
-            if (salaries.length === 0) {
+            if (allSalaries.length === 0) {
                 return { salaries: [], avgInterval: 30 };
             }
 
-            // Calculate average interval between salaries
+            // Find the most common (modal) salary amount to filter out advances/bonuses
+            const amounts = allSalaries.map(s => Math.round(s.amount / 100) * 100); // Round to nearest 100
+            const amountCounts = {};
+            amounts.forEach(a => amountCounts[a] = (amountCounts[a] || 0) + 1);
+            const mainSalaryAmount = Object.entries(amountCounts)
+                .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+            // Filter to only main salary amounts (within 10% tolerance)
+            const salaries = mainSalaryAmount
+                ? allSalaries.filter(s => Math.abs(s.amount - mainSalaryAmount) / mainSalaryAmount < 0.1)
+                : allSalaries;
+
+            // Calculate average interval between main salaries
             let avgInterval = 30;
             if (salaries.length >= 2) {
                 let totalInterval = 0;
@@ -4537,6 +4567,12 @@
                 }
 
                 const answer = data.answer;
+
+                // Validate we got an actual answer
+                if (!answer || answer.trim() === '') {
+                    throw new Error('No response received from AI. Please try again.');
+                }
+
                 responseDiv.innerHTML = sanitizeHTML(marked ? marked.parse(answer) : answer.replace(/\n/g, '<br>'));
 
                 // Track AI usage achievement
@@ -4642,6 +4678,12 @@
                 }
 
                 const answer = data.answer;
+
+                // Validate we got an actual answer
+                if (!answer || answer.trim() === '') {
+                    throw new Error('No response received from AI. Please try again.');
+                }
+
                 aiChatHistory.push({ role: 'assistant', content: answer });
 
                 // Update model name and mode indicator
