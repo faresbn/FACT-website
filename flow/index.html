@@ -1556,7 +1556,7 @@
                         <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                             <div>
                                 <h2 class="font-display font-semibold text-sm">Ask AI</h2>
-                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-5</span></p>
+                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-5-mini</span></p>
                             </div>
                             <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
                         </div>
@@ -2407,6 +2407,12 @@
             const userDisplay = document.getElementById('currentUserDisplay');
             userDisplay.textContent = session.user.charAt(0).toUpperCase() + session.user.slice(1);
 
+            // Update AI model display from saved preference
+            const modelEl = document.getElementById('aiModelName');
+            if (modelEl) {
+                modelEl.textContent = localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+            }
+
             // Init app
             loadLocal();
             syncData();
@@ -2634,11 +2640,13 @@
                 const days = Math.floor(num);
                 const fraction = num - days;
                 const ms = days * 24 * 60 * 60 * 1000 + fraction * 24 * 60 * 60 * 1000;
-                return dayjs(new Date(excelEpoch.getTime() + ms));
+                const parsed = dayjs(new Date(excelEpoch.getTime() + ms));
+                return parsed.isValid() ? parsed : dayjs();
             }
 
             // Otherwise parse as ISO string
-            return dayjs(cleaned);
+            const parsed = dayjs(cleaned);
+            return parsed.isValid() ? parsed : dayjs();
         }
 
         function processTxns(rows) {
@@ -4477,7 +4485,7 @@
             if (!query) return;
 
             if (CONFIG.GAS_URL === 'YOUR_GAS_DEPLOYMENT_URL_HERE') {
-                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in flow.html with your deployed GAS URL</p>';
+                document.getElementById('aiResponse').innerHTML = '<p class="text-fact-red">Please update CONFIG.GAS_URL in index.html with your deployed GAS URL</p>';
                 return;
             }
 
