@@ -9,9 +9,9 @@ const STATIC_ASSETS = [
   '/flow/index.html',
   '/flow/manifest.json',
   '/flow/icon-512.png',
-  '/favicon-32x32.png',
-  '/favicon-16x16.png',
-  '/apple-touch-icon.png',
+  '/flow/favicon-32x32.png',
+  '/flow/favicon-16x16.png',
+  '/flow/apple-touch-icon.png',
   '/FACTLogo2026.png'
 ];
 
