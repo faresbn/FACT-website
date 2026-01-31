@@ -3,14 +3,15 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v2';
+const CACHE_NAME = 'fact-flow-v3';
 const STATIC_ASSETS = [
-  '/flow.html',
-  '/manifest.json',
-  '/flow-icon-512.png',
-  '/favicon-32x32.png',
-  '/favicon-16x16.png',
-  '/apple-touch-icon.png',
+  '/flow/',
+  '/flow/index.html',
+  '/flow/manifest.json',
+  '/flow/icon-512.png',
+  '/flow/favicon-32x32.png',
+  '/flow/favicon-16x16.png',
+  '/flow/apple-touch-icon.png',
   '/FACTLogo2026.png'
 ];
 
@@ -123,7 +124,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Offline fallback for HTML
           if (request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/flow.html');
+            return caches.match('/flow/index.html');
           }
           return new Response('Offline', { status: 503 });
         });
