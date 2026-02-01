@@ -217,6 +217,10 @@ function doPost(e) {
         return handleChangePassword_(payload);
       }
 
+      if (payload.action === 'recipients') {
+        return handleRecipients_(payload);
+      }
+
       // Default: SMS ingestion (existing behavior)
       return handleSMSIngestion_(e, payload);
 
@@ -1280,6 +1284,133 @@ function getRecipients_(ss) {
     log_('getRecipients_', 'Error loading', { error: err.message });
   }
   return recipients;
+}
+
+/**
+ * CRUD operations for Recipients sheet
+ * subActions: add, update, delete
+ */
+function handleRecipients_(payload) {
+  logEntry_('handleRecipients_', {
+    tokenPrefix: payload.token?.substring(0, 8),
+    subAction: payload.subAction
+  });
+
+  const token = payload.token;
+  const subAction = payload.subAction;
+  const data = payload.data || {};
+
+  const session = validateToken_(token);
+  if (!session) {
+    log_('handleRecipients_', 'Invalid session');
+    logExit_('handleRecipients_', { success: false, error: 'AUTH_REQUIRED' });
+    return json_({ error: 'Invalid or expired session', code: 'AUTH_REQUIRED' });
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(session.sheetId);
+    let sheet = ss.getSheetByName('Recipients');
+
+    // Create sheet if it doesn't exist
+    if (!sheet) {
+      log_('handleRecipients_', 'Creating Recipients sheet');
+      sheet = ss.insertSheet('Recipients');
+      sheet.getRange(1, 1, 1, 4).setValues([['Phone', 'BankAccount', 'ShortName', 'LongName']]);
+      sheet.setFrozenRows(1);
+    }
+
+    const allData = sheet.getDataRange().getValues();
+    const rows = allData.slice(1); // Skip header
+
+    switch (subAction) {
+      case 'add': {
+        if (!data.shortName) {
+          return json_({ error: 'ShortName is required' });
+        }
+
+        const phone = normalizePhone_(String(data.phone || ''));
+        const newRow = [
+          phone,
+          data.bankAccount || '',
+          data.shortName,
+          data.longName || ''
+        ];
+
+        sheet.appendRow(newRow);
+        log_('handleRecipients_', 'Added recipient', { shortName: data.shortName });
+
+        logExit_('handleRecipients_', { success: true, action: 'added' });
+        return json_({
+          success: true,
+          action: 'added',
+          recipient: {
+            phone: phone,
+            bankAccount: data.bankAccount || '',
+            shortName: data.shortName,
+            longName: data.longName || ''
+          }
+        });
+      }
+
+      case 'update': {
+        const index = parseInt(data.index);
+        if (isNaN(index) || index < 0 || index >= rows.length) {
+          return json_({ error: 'Invalid index' });
+        }
+
+        if (!data.shortName) {
+          return json_({ error: 'ShortName is required' });
+        }
+
+        const rowNum = index + 2; // +1 for header, +1 for 1-indexed
+        const phone = normalizePhone_(String(data.phone || ''));
+
+        sheet.getRange(rowNum, 1, 1, 4).setValues([[
+          phone,
+          data.bankAccount || '',
+          data.shortName,
+          data.longName || ''
+        ]]);
+
+        log_('handleRecipients_', 'Updated recipient', { index, shortName: data.shortName });
+
+        logExit_('handleRecipients_', { success: true, action: 'updated' });
+        return json_({
+          success: true,
+          action: 'updated',
+          index: index
+        });
+      }
+
+      case 'delete': {
+        const index = parseInt(data.index);
+        if (isNaN(index) || index < 0 || index >= rows.length) {
+          return json_({ error: 'Invalid index' });
+        }
+
+        const rowNum = index + 2;
+        const deletedName = rows[index][2]; // ShortName
+
+        sheet.deleteRow(rowNum);
+        log_('handleRecipients_', 'Deleted recipient', { index, shortName: deletedName });
+
+        logExit_('handleRecipients_', { success: true, action: 'deleted' });
+        return json_({
+          success: true,
+          action: 'deleted',
+          index: index
+        });
+      }
+
+      default:
+        return json_({ error: 'Unknown subAction: ' + subAction });
+    }
+
+  } catch (err) {
+    logError_('handleRecipients_', err, { subAction, data });
+    logExit_('handleRecipients_', { success: false, error: err.message });
+    return json_({ error: 'Operation failed: ' + err.message });
+  }
 }
 
 /**
