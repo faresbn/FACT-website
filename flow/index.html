@@ -1729,6 +1729,12 @@
                 <h3 class="font-display font-semibold">Categorize Transaction</h3>
             </div>
             <div class="p-5 space-y-4">
+                <!-- Recipient info (shown when matched) -->
+                <div id="catModalRecipient" class="hidden p-3 bg-fact-gold/10 border border-fact-gold/30 rounded-lg">
+                    <div class="text-[10px] text-fact-gold mb-1">👤 Matched Recipient</div>
+                    <div class="text-sm font-medium" id="catModalRecipientName">--</div>
+                    <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="catModalRecipientDetails">--</div>
+                </div>
                 <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Original</div>
                     <div class="text-sm font-medium break-all" id="catModalRaw">--</div>
@@ -2274,6 +2280,7 @@
             allTxns: [],
             filtered: [],
             merchantMap: [],
+            recipients: [], // Phone/Account to name mapping for transfers
             categories: new Set(),
             fxRates: { ...CONFIG.DEFAULT_FX },
             localMappings: {},
@@ -2463,7 +2470,7 @@
                     body: JSON.stringify({
                         action: 'data',
                         token: getAuthToken(),
-                        sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext']
+                        sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients']
                     })
                 });
 
@@ -2486,6 +2493,7 @@
                 if (data.FXRates) processFX(data.FXRates.slice(1)); // Skip header
                 if (data.MerchantMap) processMerchantMap(data.MerchantMap);
                 if (data.UserContext) processUserContext(data.UserContext);
+                if (data.Recipients) processRecipients(data.Recipients);
                 if (data.RawLedger) processTxns(data.RawLedger);
 
                 document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
@@ -2583,6 +2591,75 @@
             })).filter(c => c.type && c.value);
 
             console.log('[Data] Loaded', STATE.userContext.length, 'user context entries');
+        }
+
+        // Process Recipients sheet for transfer/Fawran name mapping
+        function processRecipients(rows) {
+            // Skip header row if present
+            if (rows.length && rows[0][0]?.toString().toLowerCase().includes('phone')) rows.shift();
+
+            STATE.recipients = rows.map(r => ({
+                phone: normalizePhone(String(r[0] || '')),
+                bankAccount: clean(r[1]),
+                shortName: clean(r[2]),
+                longName: clean(r[3])
+            })).filter(rec => rec.shortName || rec.longName);
+
+            console.log('[Data] Loaded', STATE.recipients.length, 'recipients');
+        }
+
+        // Normalize phone number: remove country code, spaces, dashes
+        function normalizePhone(phone) {
+            if (!phone) return '';
+            let digits = phone.replace(/\D/g, '');
+            // Remove Qatar country code if present
+            if (digits.startsWith('974') && digits.length > 8) {
+                digits = digits.slice(3);
+            }
+            return digits;
+        }
+
+        // Match counterparty to a known recipient
+        function matchRecipient(counterparty) {
+            if (!counterparty || !STATE.recipients.length) {
+                return null;
+            }
+
+            const cpLower = counterparty.toLowerCase();
+            const cpDigits = counterparty.replace(/\D/g, '');
+
+            for (const rec of STATE.recipients) {
+                // Priority 1: Phone match (digits in counterparty contain recipient phone)
+                if (rec.phone && cpDigits.includes(rec.phone)) {
+                    return { ...rec, matchType: 'phone' };
+                }
+
+                // Priority 2: Bank account match (full or last 4 digits)
+                if (rec.bankAccount) {
+                    const acctLower = rec.bankAccount.toLowerCase();
+                    const last4 = rec.bankAccount.slice(-4);
+                    if (cpLower.includes(acctLower) || cpDigits.includes(last4)) {
+                        return { ...rec, matchType: 'account' };
+                    }
+                }
+
+                // Priority 3: Name match (words from longName found in counterparty)
+                if (rec.longName) {
+                    const words = rec.longName.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                    for (const word of words) {
+                        if (cpLower.includes(word)) {
+                            return { ...rec, matchType: 'name' };
+                        }
+                    }
+                }
+
+                // Priority 4: ShortName match (exact or partial)
+                if (rec.shortName && cpLower.includes(rec.shortName.toLowerCase())) {
+                    return { ...rec, matchType: 'shortName' };
+                }
+            }
+
+            return null;
         }
 
         // Check if a transaction matches any user context corrections
@@ -2722,6 +2799,12 @@
                     pattern: 'Normal' // Will be computed in batch by AI
                 };
 
+                // Match recipient for transfers/Fawran
+                const isTransferType = ['transfer', 'fawran', 'internal transfer'].some(t =>
+                    txnType.toLowerCase().includes(t) || raw.toLowerCase().includes(t)
+                );
+                const recipient = isTransferType ? matchRecipient(counterparty) : null;
+
                 return {
                     date: txnDate,
                     amount: amtQAR,
@@ -2738,6 +2821,10 @@
                     confidence,
                     aiContext,
                     isSalary,
+                    // Recipient matching for transfers
+                    recipient,
+                    resolvedName: recipient?.shortName || null,
+                    resolvedLongName: recipient?.longName || null,
                     // Dimensions
                     dims,
                     // Computed flags for quick filtering
@@ -4013,13 +4100,31 @@
             // Use data attribute for raw text (safely escaped via base64)
             const safeRawData = btoa(unescape(encodeURIComponent(t.raw)));
 
+            // Display name: use resolved recipient name for transfers, otherwise normal display
+            let displayName = t.display;
+            let subtitle = t.date.format('MMM D, HH:mm');
+            let recipientBadge = '';
+
+            if (t.resolvedName) {
+                displayName = t.resolvedName;
+                recipientBadge = '<span class="text-fact-gold ml-1">👤</span>';
+                // Show original counterparty or txn type as subtitle context
+                const contextInfo = t.counterparty ? t.counterparty.substring(0, 20) : t.txnType;
+                subtitle = `${t.date.format('MMM D, HH:mm')} · ${contextInfo}`;
+            }
+
+            // Tooltip with full name if available
+            const titleAttr = t.resolvedLongName
+                ? `title="${escapeHtml(t.resolvedLongName)}"`
+                : '';
+
             return `
-                <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center justify-between cursor-pointer" data-raw="${safeRawData}" onclick="openCatModalSafe(this)">
+                <div class="txn-row ${isUncat ? 'uncat' : ''} p-3 flex items-center justify-between cursor-pointer" data-raw="${safeRawData}" onclick="openCatModalSafe(this)" ${titleAttr}>
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-2 h-2 rounded-full flex-shrink-0" style="background:${escapeHtml(color)}"></div>
                         <div class="min-w-0">
-                            <div class="font-medium text-sm truncate">${escapeHtml(t.display)}</div>
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
+                            <div class="font-medium text-sm truncate">${escapeHtml(displayName)}${recipientBadge}</div>
+                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted truncate">${escapeHtml(subtitle)}</div>
                         </div>
                     </div>
                     <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">${isOut ? '' : '+'}${formatNum(t.amount)}</div>
@@ -4447,6 +4552,22 @@
 
             document.getElementById('catModalRaw').textContent = raw;
             document.getElementById('catModalName').value = '';
+
+            // Show recipient info if matched
+            const recipientSection = document.getElementById('catModalRecipient');
+            if (existingTxn?.recipient) {
+                const rec = existingTxn.recipient;
+                document.getElementById('catModalRecipientName').textContent =
+                    rec.longName || rec.shortName;
+                const matchInfo = rec.matchType === 'phone' ? `Phone: ${rec.phone}` :
+                    rec.matchType === 'account' ? `Account: ...${rec.bankAccount.slice(-4)}` :
+                    `Name match`;
+                document.getElementById('catModalRecipientDetails').textContent = matchInfo;
+                recipientSection.classList.remove('hidden');
+            } else {
+                recipientSection.classList.add('hidden');
+            }
+
             document.getElementById('catModal').classList.remove('hidden');
         }
 

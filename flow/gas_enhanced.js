@@ -428,15 +428,19 @@ function handleAIQueryPost_(payload) {
     const ss = SpreadsheetApp.openById(session.sheetId);
     const merchantMap = getMerchantMap_(ss);
 
-    // Format context including MerchantMap
-    const contextPrompt = formatContextForPrompt_(userContext, merchantMap);
+    // Load Recipients for transfer/Fawran name resolution
+    const recipients = getRecipients_(ss);
+
+    // Format context including MerchantMap and Recipients
+    const contextPrompt = formatContextForPrompt_(userContext, merchantMap, recipients);
     log_('handleAIQueryPost_', 'Context loaded', {
       income: userContext.income.length,
       payees: userContext.payees.length,
       corrections: userContext.corrections.length,
       preferences: userContext.preferences.length,
       rules: userContext.rules?.length || 0,
-      merchants: merchantMap.length
+      merchants: merchantMap.length,
+      recipients: recipients.length
     });
 
     const basePrompt = `You are a personal finance analyst for this specific user. Answer their questions about spending data.
@@ -900,7 +904,7 @@ function getUserContext_(sheetId) {
  * Format user context for inclusion in AI prompts
  * Includes income, payees, corrections, preferences, rules, and optionally MerchantMap
  */
-function formatContextForPrompt_(context, merchantMap = null) {
+function formatContextForPrompt_(context, merchantMap = null, recipients = null) {
   const parts = [];
 
   if (context.income.length > 0) {
@@ -956,6 +960,17 @@ function formatContextForPrompt_(context, merchantMap = null) {
     Object.keys(byCategory).slice(0, 8).forEach(cat => {
       const merchants = byCategory[cat].slice(0, 5);
       parts.push(`- ${cat}: ${merchants.map(m => m.displayName).join(', ')}`);
+    });
+  }
+
+  // Include Recipients for transfer/Fawran name resolution
+  if (recipients && recipients.length > 0) {
+    parts.push("\nKNOWN RECIPIENTS (for transfers and Fawran):");
+    recipients.forEach(r => {
+      const identifiers = [];
+      if (r.phone) identifiers.push(`phone: ${r.phone}`);
+      if (r.bankAccount) identifiers.push(`account: ...${r.bankAccount.slice(-4)}`);
+      parts.push(`- ${r.shortName}${r.longName ? ' (' + r.longName + ')' : ''}: ${identifiers.join(', ')}`);
     });
   }
 
@@ -1231,6 +1246,54 @@ function getMerchantMap_(ss) {
     log_('getMerchantMap_', 'Error loading', { error: err.message });
   }
   return merchants;
+}
+
+/**
+ * Load Recipients data for counterparty matching
+ * Columns: Phone, BankAccount, ShortName, LongName
+ */
+function getRecipients_(ss) {
+  const recipients = [];
+  try {
+    const sheet = ss.getSheetByName("Recipients");
+    if (!sheet) return recipients;
+
+    const data = sheet.getDataRange().getValues();
+    // Skip header row
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const shortName = String(row[2] || '').trim();
+      const longName = String(row[3] || '').trim();
+
+      // Must have at least ShortName or LongName
+      if (shortName || longName) {
+        recipients.push({
+          phone: normalizePhone_(String(row[0] || '')),
+          bankAccount: String(row[1] || '').trim(),
+          shortName: shortName,
+          longName: longName
+        });
+      }
+    }
+    log_('getRecipients_', 'Loaded recipients', { count: recipients.length });
+  } catch (err) {
+    log_('getRecipients_', 'Error loading', { error: err.message });
+  }
+  return recipients;
+}
+
+/**
+ * Normalize phone number for matching (remove spaces, dashes, country codes)
+ */
+function normalizePhone_(phone) {
+  if (!phone) return '';
+  // Remove all non-digits
+  let digits = phone.replace(/\D/g, '');
+  // Qatar numbers: strip +974 or 974 prefix
+  if (digits.startsWith('974') && digits.length > 8) {
+    digits = digits.slice(3);
+  }
+  return digits;
 }
 
 /**
