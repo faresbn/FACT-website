@@ -32,7 +32,7 @@ Deno.serve(async (request) => {
   const supabase = createUserClient(request);
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) {
-    return jsonResponse(request, { error: 'AUTH_REQUIRED' }, 401);
+    return jsonResponse(request, { error: 'AUTH_REQUIRED', code: 'AUTH_REQUIRED' }, 401);
   }
 
   const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};

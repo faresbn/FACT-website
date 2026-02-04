@@ -104,8 +104,14 @@ Deno.serve(async (request) => {
     .select('pattern, category')
     .eq('user_id', user.id);
 
+  const { data: recipientRows } = await supabase
+    .from('recipients')
+    .select('short_name, long_name, phone')
+    .eq('user_id', user.id);
+
   const ctxSummary = (contextRows || []).map((r) => `${r.type}: ${r.key} -> ${r.value} (${r.details || ''})`).slice(0, 200).join('\n');
   const merchantSummary = (merchantRows || []).slice(0, 200).map((m) => `${m.pattern} -> ${m.category}`).join('\n');
+  const recipientSummary = (recipientRows || []).slice(0, 100).map((r) => `${r.short_name}${r.long_name ? ' (' + r.long_name + ')' : ''}`).join(', ');
 
   const systemPrompt = `You are a personal finance assistant for FACT/Flow. Use the provided transaction summary and user context to answer.
 
@@ -114,6 +120,9 @@ ${ctxSummary || 'None'}
 
 Merchant map:
 ${merchantSummary || 'None'}
+
+Known recipients:
+${recipientSummary || 'None'}
 
 If asked for forecasts or optimization, be explicit about assumptions and uncertainty.`;
 

@@ -197,6 +197,7 @@ Deno.serve(async (request) => {
         continue;
       }
 
+      const direction = (extracted.direction || '').toUpperCase();
       const insertPayload = {
         user_id: userId,
         txn_timestamp: ts.toISOString(),
@@ -204,13 +205,14 @@ Deno.serve(async (request) => {
         currency,
         counterparty: extracted.counterparty || null,
         card: extracted.card || null,
-        direction: extracted.direction || null,
+        direction: direction || null,
         txn_type: extracted.txnType || null,
         category: extracted.category || null,
         subcategory: extracted.subcategory || extracted.category || null,
         confidence: extracted.confidence || null,
         context: extracted.context || { timeContext },
         raw_text: extracted.rawText || sms,
+        net: direction === 'OUT' ? -amount : amount,
         idempotency_key: idempotencyKey,
         ai_model: shouldRetry(extracted) ? MODEL_SMS_RETRY : MODEL_SMS,
         ai_mode: 'sms',

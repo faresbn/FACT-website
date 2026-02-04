@@ -50,6 +50,9 @@ Deno.serve(async (request) => {
     case 'preference':
       row = { ...row, key: data.key || '', value: data.value || '', details: data.notes || '' };
       break;
+    case 'rule':
+      row = { ...row, key: data.merchant || '', value: data.category || '', details: JSON.stringify({ condition: data.condition || '', amount: data.amount || null, frequency: data.frequency || '', description: data.description || '' }) };
+      break;
     default:
       return jsonResponse(request, { error: `Unknown type: ${type}` }, 400);
   }
