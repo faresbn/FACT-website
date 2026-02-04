@@ -2292,7 +2292,8 @@
             SUPABASE_URL: 'https://fihxypjmvizgwinozjsf.supabase.co',
             SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
             FUNCTIONS_BASE: 'https://fihxypjmvizgwinozjsf.supabase.co/functions/v1',
-            SHORTCUT_TEMPLATE_URL: 'YOUR_SHORTCUT_TEMPLATE_URL'
+            SHORTCUT_TEMPLATE_URL: 'YOUR_SHORTCUT_TEMPLATE_URL',
+            AUTH_REDIRECT_URL: 'https://www.fact.qa/flow/flow2.html'
         };
 
         const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
@@ -2483,12 +2484,12 @@
             btn.disabled = true;
 
             try {
-                const { error } = await supabaseClient.auth.signInWithOtp({
-                    email,
-                    options: {
-                        emailRedirectTo: window.location.href
-                    }
-                });
+            const { error } = await supabaseClient.auth.signInWithOtp({
+                email,
+                options: {
+                        emailRedirectTo: CONFIG.AUTH_REDIRECT_URL
+                }
+            });
                 if (error) throw error;
                 showLoginError('Magic link sent. Check your email.', false);
             } catch (err) {
@@ -2503,7 +2504,7 @@
             await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.href
+                    redirectTo: CONFIG.AUTH_REDIRECT_URL
                 }
             });
         }
