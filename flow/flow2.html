@@ -2460,17 +2460,21 @@
 
         // AUTH & INIT
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                showApp(user);
+            const { data: session } = await supabaseClient.auth.getSession();
+            if (session?.session?.user) {
+                showApp(session.session.user);
             } else {
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
             }
 
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session?.user) {
-                    showApp(session.user);
+            supabaseClient.auth.onAuthStateChange((event, sessionData) => {
+                if (event === 'SIGNED_IN' && sessionData?.user) {
+                    showApp(sessionData.user);
+                }
+                if (event === 'SIGNED_OUT') {
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('hidden');
                 }
             });
         });
@@ -2518,7 +2522,7 @@
             setTimeout(() => el.classList.add('hidden'), 4000);
         }
 
-        function showApp(user) {
+        async function showApp(user) {
             // Hide login, show app
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -2537,9 +2541,14 @@
                 modelEl.textContent = localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
             }
 
+            // Clean OAuth hash from URL
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+
             // Init app
             loadLocal();
-            syncData();
+            await syncData();
 
             // Event listeners
             const txnSearch = document.getElementById('txnSearch');
@@ -2581,10 +2590,7 @@
             try {
                 const { data: session } = await supabaseClient.auth.getSession();
                 const accessToken = session?.session?.access_token;
-                if (!accessToken) {
-                    location.reload();
-                    return;
-                }
+                if (!accessToken) throw new Error('AUTH_REQUIRED');
 
                 const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-data`, {
                     method: 'POST',
@@ -2597,16 +2603,14 @@
                     })
                 });
 
+                if (response.status === 401) throw new Error('AUTH_REQUIRED');
                 const result = await response.json();
-
-                if (result.code === 'AUTH_REQUIRED') {
-                    location.reload();
-                    return;
+                if (result?.code === 'AUTH_REQUIRED' || result?.error === 'AUTH_REQUIRED') {
+                    throw new Error('AUTH_REQUIRED');
                 }
-
-                if (result.error) throw new Error(result.error);
-
-                const data = result.data;
+                if (result?.error) throw new Error(result.error);
+                const data = result?.data;
+                if (!data) throw new Error('No data returned');
 
                 // Process each sheet (Supabase returns arrays, same format as CSV)
                 if (data.FXRates) processFX(data.FXRates.slice(1)); // Skip header
@@ -2645,6 +2649,12 @@
 
             } catch (err) {
                 console.error('Sync error:', err);
+                if (String(err.message || err).includes('AUTH_REQUIRED')) {
+                    await supabaseClient.auth.signOut();
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('hidden');
+                    return;
+                }
                 if (typeof showToast === 'function') {
                     showToast('Sync failed: ' + err.message, 'error');
                 } else {
