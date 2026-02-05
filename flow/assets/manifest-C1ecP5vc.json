@@ -1,0 +1,57 @@
+{
+  "name": "FACT/Flow",
+  "short_name": "Flow",
+  "description": "Personal Finance Intelligence by FACT",
+  "start_url": "/flow/",
+  "scope": "/flow/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F0F0F",
+  "theme_color": "#F4C44E",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "FACT/Flow Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ask AI",
+      "short_name": "Ask",
+      "description": "Quick AI query about spending",
+      "url": "/flow/#ai",
+      "icons": [{ "src": "icon-512.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sync Data",
+      "short_name": "Sync",
+      "description": "Refresh transaction data",
+      "url": "/flow/#sync",
+      "icons": [{ "src": "icon-512.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
