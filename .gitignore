@@ -1,0 +1,24 @@
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude/AI
+.claude/
+.mcp.json
+.codex/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Temporary
+*.log
+*.tmp
+/tmp/

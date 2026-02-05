@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#1A1A1A" media="(prefers-color-scheme: dark)">
     <meta name="description" content="FACT/Flow - Personal Finance Intelligence">
     <title>FACT/Flow</title>
-    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    <link rel="apple-touch-icon" href="icon-512.png">
-    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="512x512" href="/flow/assets/icon-512-BaCJW5bY.png">
+    <link rel="apple-touch-icon" href="/flow/assets/icon-512-BaCJW5bY.png">
+    <link rel="manifest" href="/flow/assets/manifest-C1ecP5vc.json">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,10 +39,12 @@
             }
         }
     </script>
+  <script type="module" crossorigin src="/flow/assets/index-DbAZPS8Y.js"></script>
+  <link rel="stylesheet" crossorigin href="/flow/assets/index-hG3o3lui.css">
 </head>
 <body class="text-fact-ink dark:text-fact-dark-ink">
     <!-- Skip to main content for accessibility -->
-    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <a href="#mainContent" class="skip-link" style="position: absolute; top: -40px; left: 0; z-index: 1000;">Skip to main content</a>
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -139,7 +141,7 @@
 
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 bg-[#0a0a0a]">
-                    <img src="icon-512.png" alt="/" class="w-12 h-12 object-contain">
+                    <img src="/flow/assets/icon-512-BaCJW5bY.png" alt="/" class="w-12 h-12 object-contain">
                 </div>
                 <h1 class="font-display font-bold text-2xl">FACT/Flow</h1>
                 <p class="text-fact-muted dark:text-fact-dark-muted text-sm mt-1">Personal Finance Intelligence</p>
@@ -175,7 +177,7 @@
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded flex items-center justify-center bg-[#0a0a0a]">
-                    <img src="icon-512.png" alt="/" class="w-8 h-8 object-contain">
+                    <img src="/flow/assets/icon-512-BaCJW5bY.png" alt="/" class="w-8 h-8 object-contain">
                 </div>
                 <div>
                     <h1 class="font-display font-bold text-xl tracking-tight">FACT<span class="text-fact-yellow">/</span><span class="text-fact-muted font-normal text-sm">Flow</span></h1>
@@ -1263,7 +1265,7 @@
     <!-- PWA INSTALL BANNER -->
     <div id="installBanner" class="install-banner">
         <div class="flex items-center gap-3">
-            <img src="icon-512.png" alt="FACT/Flow" class="w-10 h-10 rounded-lg">
+            <img src="/flow/assets/icon-512-BaCJW5bY.png" alt="FACT/Flow" class="w-10 h-10 rounded-lg">
             <div>
                 <div class="font-medium text-sm">Install FACT/Flow</div>
                 <div class="text-[11px] opacity-80">Add to home screen for quick access</div>
@@ -1302,6 +1304,5 @@
     </div>
 
     <!-- Main application script (Vite module) -->
-    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
