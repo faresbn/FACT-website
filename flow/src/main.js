@@ -684,6 +684,18 @@ function renderPatternWarnings() {
 
 let appInitialised = false;
 
+// Remove the pre-render auth guard and let normal CSS classes take over
+function removeAuthGuard() {
+    const guard = document.getElementById('authGuardCSS');
+    if (guard) guard.remove();
+}
+
+function showLogin() {
+    removeAuthGuard();
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Set up auth state listener FIRST so it catches PKCE exchange events
     supabaseClient.auth.onAuthStateChange((event, sessionData) => {
@@ -695,8 +707,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (event === 'SIGNED_OUT') {
             appInitialised = false;
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('mainApp').classList.add('hidden');
+            showLogin();
         }
     });
 
@@ -706,23 +717,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authError = params.get('error_description') || hashParams.get('error_description');
 
     if (authError) {
-        // Clean URL and show error
         history.replaceState(null, '', window.location.pathname);
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
+        showLogin();
         showLoginError(authError === 'OAuth callback with invalid state'
             ? 'Login link expired. Please try again.'
             : authError);
         return;
     }
 
-    // getSession will trigger INITIAL_SESSION via onAuthStateChange above
+    // Handle PKCE code exchange explicitly (OAuth redirect back with ?code=)
+    const code = params.get('code');
+    if (code) {
+        try {
+            const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
+            if (error) {
+                console.error('PKCE exchange failed:', error.message);
+                history.replaceState(null, '', window.location.pathname);
+                showLogin();
+                showLoginError('Login failed. Please try again.');
+                return;
+            }
+            // Success — onAuthStateChange SIGNED_IN will fire and call showApp
+            history.replaceState(null, '', window.location.pathname);
+            return;
+        } catch (err) {
+            console.error('PKCE exchange error:', err);
+            history.replaceState(null, '', window.location.pathname);
+            showLogin();
+            showLoginError('Login failed. Please try again.');
+            return;
+        }
+    }
+
+    // No code param — check for existing session
     const { data: session } = await supabaseClient.auth.getSession();
 
-    // If no session after getSession resolves and INITIAL_SESSION hasn't triggered showApp, show login
+    // If no session and app hasn't initialized, show login
     if (!session?.session?.user && !appInitialised) {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
+        showLogin();
     }
 });
 
@@ -770,6 +802,7 @@ function showLoginError(msg, isError = true) {
 }
 
 async function showApp(user) {
+    removeAuthGuard();
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
 
@@ -784,10 +817,8 @@ async function showApp(user) {
         modelEl.textContent = localStorage.getItem('fact_ai_model') || 'claude-sonnet';
     }
 
-    // Clean auth tokens from URL (both hash-based and PKCE query params)
-    const hasHashToken = window.location.hash && window.location.hash.includes('access_token');
-    const hasCodeParam = new URLSearchParams(window.location.search).has('code');
-    if (hasHashToken || hasCodeParam) {
+    // Clean auth tokens from URL (hash-based implicit flow)
+    if (window.location.hash && window.location.hash.includes('access_token')) {
         history.replaceState(null, '', window.location.pathname);
     }
 

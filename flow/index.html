@@ -39,7 +39,29 @@
             }
         }
     </script>
-  <script type="module" crossorigin src="/flow/assets/flow-DVy1NSC2.js"></script>
+  <!-- Auth-aware pre-render: hide everything, then show the right screen instantly -->
+  <style id="authGuardCSS">
+    #loginScreen, #mainApp { display: none !important; }
+  </style>
+  <script>
+    // Synchronous check before first paint — no flash at all
+    (function(){
+      var key = 'sb-fihxypjmvizgwinozjsf-auth-token';
+      var hasSession = false;
+      try { hasSession = !!localStorage.getItem(key); } catch(e){}
+      // If returning from OAuth with ?code= param, treat as "logging in" (show nothing until JS handles it)
+      var hasCode = window.location.search.indexOf('code=') !== -1;
+      var style = document.getElementById('authGuardCSS');
+      if (hasCode) {
+        // PKCE flow in progress — keep both hidden, JS will resolve it
+      } else if (hasSession) {
+        style.textContent = '#loginScreen { display: none !important; }';
+      } else {
+        style.textContent = '#mainApp { display: none !important; }';
+      }
+    })();
+  </script>
+  <script type="module" crossorigin src="/flow/assets/flow-EVKLXDCN.js"></script>
   <link rel="stylesheet" crossorigin href="/flow/assets/flow-hG3o3lui.css">
 </head>
 <body class="text-fact-ink dark:text-fact-dark-ink">
