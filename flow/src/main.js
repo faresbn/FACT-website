@@ -765,22 +765,38 @@ async function attemptLogin() {
     const email = document.getElementById('loginUsername').value.trim();
     if (!email) return showLoginError('Please enter your email');
 
+    const password = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
-    btn.textContent = 'Sending link...';
     btn.disabled = true;
 
-    try {
-        const { error } = await supabaseClient.auth.signInWithOtp({
-            email,
-            options: { emailRedirectTo: CONFIG.AUTH_REDIRECT_URL }
-        });
-        if (error) throw error;
-        showLoginError('Magic link sent. Check your email.', false);
-    } catch (err) {
-        showLoginError(err.message || 'Login failed');
-    } finally {
-        btn.textContent = 'Send magic link';
-        btn.disabled = false;
+    if (password) {
+        // Email + password login
+        btn.textContent = 'Signing in...';
+        try {
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+        } catch (err) {
+            showLoginError(err.message || 'Login failed');
+        } finally {
+            btn.textContent = 'Sign in';
+            btn.disabled = false;
+        }
+    } else {
+        // Magic link login
+        btn.textContent = 'Sending link...';
+        try {
+            const { error } = await supabaseClient.auth.signInWithOtp({
+                email,
+                options: { emailRedirectTo: CONFIG.AUTH_REDIRECT_URL }
+            });
+            if (error) throw error;
+            showLoginError('Magic link sent. Check your email.', false);
+        } catch (err) {
+            showLoginError(err.message || 'Login failed');
+        } finally {
+            btn.textContent = 'Sign in';
+            btn.disabled = false;
+        }
     }
 }
 
