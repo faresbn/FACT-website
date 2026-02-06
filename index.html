@@ -1,229 +1,821 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FACT — Applied Intelligence</title>
-<meta name="description" content="FACT — strategic intelligence across communications, finance, and legal operations.">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#fbfafa;
-    --edge:#17191a;
-    --ink:#111217;
-    --muted:#525456;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACT Special Projects</title>
+    <meta name="description" content="FACT Special Projects — Strategy, Structure, Story. Applied intelligence from Doha, Qatar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════
+           FACT SPECIAL PROJECTS — 2026
+           Type: Noto Sans / Noto Sans Display / Jost
+           Palette: Warm bone + Y/G/P triad
+           Final Draft — All panel notes resolved
+           ═══════════════════════════════════════ */
 
-    --purple:#B593C6;
-    --yellow:#F7C843;
-    --green:#70BB73;
+        :root {
+            --bone: #F6F4F0;
+            --bone-deep: #EDEAE4;
+            --cream: #FDFCFA;
 
-    --purple-t:#EDE2F5;
-    --yellow-t:#FBEDD2;
-    --green-t:#DFF2E6;
-  }
+            --yellow: #F4C44E;
+            --green: #75B876;
+            --purple: #D3C0D9;
 
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;overflow:hidden}
-  body{
-    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
-    line-height:1.5;-webkit-text-size-adjust:100%;
-  }
+            --ink: #111111;
+            --ink-80: #333;
+            --ink-60: #555;
+            --ink-40: #888;
+            --ink-25: #ABABAB;
+            --ink-12: #D5D3CF;
+            --ink-06: #E8E6E2;
 
-  .page{height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
-  .shell{
-    width:100%;max-width:1160px;height:100%;max-height:700px;
-    display:grid;grid-template-columns:38% 62%;
-    border:4px solid var(--edge);background:#fff;
-    box-shadow:0 8px 32px rgba(23,25,26,0.12),0 2px 12px rgba(23,25,26,0.06);
-  }
+            --fi: 20px;
+        }
 
-  /* Left column */
-  .sidebar{
-    display:flex;flex-direction:column;justify-content:space-between;
-    padding:2rem 1.5rem;border-right:1px solid rgba(23,25,26,0.12);
-  }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
 
-  .brand{display:flex;flex-direction:column;gap:1.5rem}
-  .brand img{width:100%;max-width:280px;height:auto}
-  .tagline{
-    font-family:Space Grotesk;font-size:.85rem;line-height:1.6;
-    color:var(--ink);font-weight:500;max-width:32ch;
-  }
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background: var(--bone);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-  /* Tab navigation */
-  .tabs{display:flex;flex-direction:column;gap:.5rem;margin-top:2rem}
-  .tab{
-    font-family:Space Grotesk;font-size:.9rem;font-weight:600;
-    text-transform:uppercase;letter-spacing:.08em;
-    padding:.75rem 1rem;border-radius:4px;cursor:pointer;
-    background:transparent;border:1px solid transparent;
-    color:var(--muted);transition:all .2s ease;
-    text-align:left;
-  }
-  .tab:hover{background:rgba(23,25,26,0.03)}
-  .tab.active{border-color:var(--edge);color:var(--edge)}
-  .tab.active[data-tab="creative"]{border-left:4px solid var(--purple)}
-  .tab.active[data-tab="finance"]{border-left:4px solid var(--yellow)}
-  .tab.active[data-tab="legal"]{border-left:4px solid var(--green)}
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: -1;
+            opacity: 0.18;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
 
-  /* Contact */
-  .contact{
-    padding-top:1.5rem;border-top:1px solid rgba(23,25,26,0.1);
-    font-size:.85rem;color:var(--muted);
-  }
-  .contact a{
-    color:var(--edge);text-decoration:none;font-weight:600;
-    border-bottom:1px solid transparent;transition:border .2s ease;
-  }
-  .contact a:hover{border-bottom-color:var(--edge)}
+        h1, h2, .display { font-family: 'Noto Sans Display', 'Noto Sans', sans-serif; }
+        .jost { font-family: 'Jost', sans-serif; }
 
-  /* Right column - content area */
-  .content-area{
-    padding:2rem;display:flex;align-items:center;justify-content:center;
-    position:relative;overflow:hidden;
-  }
+        /* ── FIXED CORNERS ── */
+        .fc {
+            position: fixed; z-index: 100;
+            width: 14px; height: 14px;
+            border: 1.5px solid var(--ink);
+            pointer-events: none;
+            opacity: 0.18;
+            transition: opacity 0.6s;
+        }
+        body:hover .fc { opacity: 0.4; }
+        .fc-tl { top: var(--fi); left: var(--fi); border-right: none; border-bottom: none; }
+        .fc-tr { top: var(--fi); right: var(--fi); border-left: none; border-bottom: none; }
+        .fc-bl { bottom: var(--fi); left: var(--fi); border-right: none; border-top: none; }
+        .fc-br { bottom: var(--fi); right: var(--fi); border-left: none; border-top: none; }
 
-  .content-panel{
-    display:none;opacity:0;transition:opacity .3s ease;
-    max-width:560px;
-  }
-  .content-panel.active{display:block;opacity:1}
+        /* ── TOP BAR ── */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 52px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 clamp(1.5rem, 4vw, 3rem);
+            z-index: 90;
+            background: rgba(246, 244, 240, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .topbar-mark {
+            font-family: 'Jost', sans-serif;
+            font-weight: 700; font-size: 0.78rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--ink);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .topbar-mark.visible { opacity: 1; }
 
-  .content-panel h2{
-    font-family:Space Grotesk;font-size:2rem;font-weight:700;
-    text-transform:uppercase;line-height:1.2;margin-bottom:1rem;
-    color:var(--edge);
-  }
-  .content-panel .accent{display:inline-block;padding:0 .3rem}
-  .creative-panel .accent{background:var(--purple-t);color:var(--purple)}
-  .finance-panel .accent{background:var(--yellow-t);color:var(--edge)}
-  .legal-panel .accent{background:var(--green-t);color:var(--green)}
+        .nav-dots { display: flex; gap: 4px; align-items: center; }
+        .nav-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--ink-25);
+            border: none; cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0; margin: 0;
+            position: relative;
+        }
+        /* Invisible touch target */
+        .nav-dot::before {
+            content: '';
+            position: absolute;
+            inset: -12px;
+        }
+        .nav-dot:hover { transform: scale(1.6); }
+        .nav-dot.active { transform: scale(1.6); }
+        .nav-dot[data-s="hero"].active { background: var(--ink); }
+        .nav-dot[data-s="capabilities"].active { background: var(--yellow); }
+        .nav-dot[data-s="deployments"].active { background: var(--green); }
+        .nav-dot[data-s="team"].active { background: var(--purple); }
+        .nav-dot[data-s="contact"].active { background: var(--ink); }
 
-  .content-panel p{
-    font-size:.95rem;line-height:1.7;color:var(--ink);margin-bottom:1rem;
-  }
-  .content-panel ul{
-    list-style:none;margin-top:1.5rem;display:flex;flex-direction:column;gap:.75rem;
-  }
-  .content-panel li{
-    padding-left:1.5rem;position:relative;font-size:.9rem;line-height:1.6;
-    color:var(--ink);
-  }
-  .content-panel li:before{
-    content:"→";position:absolute;left:0;font-weight:700;
-  }
-  .creative-panel li:before{color:var(--purple)}
-  .finance-panel li:before{color:var(--yellow)}
-  .legal-panel li:before{color:var(--green)}
+        /* ── SECTIONS ── */
+        section {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: clamp(6rem, 12vh, 10rem) clamp(1.5rem, 6vw, 7rem);
+            position: relative;
+        }
+        .si { width: 100%; max-width: 1080px; }
 
-  /* Responsive */
-  @media (max-width:920px){
-    .shell{grid-template-columns:1fr;max-height:none;height:auto}
-    .sidebar{border-right:none;border-bottom:1px solid rgba(23,25,26,0.12);padding:1.5rem}
-    .tabs{flex-direction:row;flex-wrap:wrap}
-    .tab{flex:1;min-width:140px;text-align:center}
-    .content-area{padding:1.5rem}
-  }
+        /* ── COLOR DIVIDER STRIPS ── */
+        .divider-strip {
+            display: flex; height: 4px; width: 100%;
+        }
+        .divider-strip span { flex: 1; }
 
-  @media (max-width:520px){
-    .page{padding:1rem}
-    .content-panel h2{font-size:1.6rem}
-  }
-</style>
+        /* ═══ HERO ═══ */
+        .hero { min-height: 100vh; padding-bottom: 0; }
+
+        .hero .si {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 5vw, 6rem);
+            align-items: center;
+        }
+
+        .hero-content { position: relative; }
+
+        .hero-logo {
+            width: clamp(80px, 14vw, 160px);
+            margin-bottom: clamp(2rem, 5vh, 4rem);
+            opacity: 0;
+            animation: fu 0.7s 0.15s ease-out forwards;
+        }
+        .hero h1 {
+            font-weight: 900;
+            font-size: clamp(3rem, 7.5vw, 7rem);
+            line-height: 0.88;
+            letter-spacing: -0.045em;
+            margin-bottom: clamp(2rem, 4vh, 3rem);
+        }
+        .hero h1 span {
+            display: block;
+            opacity: 0;
+            animation: fu 0.55s ease-out forwards;
+        }
+        .hero h1 span:nth-child(1) { animation-delay: 0.3s; color: var(--yellow); }
+        .hero h1 span:nth-child(2) { animation-delay: 0.45s; color: var(--green); }
+        .hero h1 span:nth-child(3) { animation-delay: 0.6s; color: var(--purple); }
+
+        .hero-rule {
+            width: 48px; height: 3px;
+            background: var(--ink);
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fu 0.4s 0.8s ease-out forwards;
+        }
+        .hero-text {
+            max-width: 420px;
+            opacity: 0;
+            animation: fu 0.4s 0.95s ease-out forwards;
+        }
+        .hero-text .lead {
+            font-family: 'Jost', sans-serif;
+            font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+            font-weight: 500;
+            color: var(--ink-80);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.01em;
+        }
+        .hero-text .sub {
+            font-size: 0.88rem;
+            color: var(--ink-60);
+            line-height: 1.75;
+        }
+
+        /* Hero right — architectural color bars */
+        .hero-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            animation: fu 0.6s 1.1s ease-out forwards;
+        }
+        .hero-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+        }
+        .hero-bar {
+            height: 6px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-bar:nth-child(1) { background: var(--yellow); width: clamp(120px, 22vw, 280px); animation: barGrow1 0.7s 1.3s ease-out forwards; }
+        .hero-bar:nth-child(2) { background: var(--green); width: clamp(80px, 16vw, 200px); animation: barGrow2 0.7s 1.45s ease-out forwards; }
+        .hero-bar:nth-child(3) { background: var(--purple); width: clamp(160px, 28vw, 340px); animation: barGrow3 0.7s 1.6s ease-out forwards; }
+
+        @keyframes barGrow1 { from { width: 0; } to { width: clamp(120px, 22vw, 280px); } }
+        @keyframes barGrow2 { from { width: 0; } to { width: clamp(80px, 16vw, 200px); } }
+        @keyframes barGrow3 { from { width: 0; } to { width: clamp(160px, 28vw, 340px); } }
+
+        .hero-location {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-top: 2.5rem;
+        }
+
+        @keyframes fu {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══ CAPABILITIES ═══ */
+        .capabilities {
+            background: var(--ink);
+            color: var(--cream);
+            position: relative;
+        }
+
+        .cap-label {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--ink-40);
+            margin-bottom: 1.25rem;
+        }
+        .cap-heading {
+            font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: clamp(3rem, 6vh, 5rem);
+            line-height: 1.15;
+        }
+
+        .cap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+        }
+        .cap-card {
+            padding: clamp(1.5rem, 2.5vw, 2.5rem);
+            border-left: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+            transition: background 0.3s;
+        }
+        .cap-card:first-child { border-left: none; }
+        .cap-card:hover { background: rgba(255,255,255,0.02); }
+
+        .cap-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -1px;
+            width: 3px; height: 100%;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .cap-card:first-child::before { left: 0; }
+        .cap-card:nth-child(1)::before { background: var(--yellow); }
+        .cap-card:nth-child(2)::before { background: var(--green); }
+        .cap-card:nth-child(3)::before { background: var(--purple); }
+        .cap-card:hover::before { opacity: 1; }
+
+        .cap-num {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.6rem; font-weight: 700;
+            letter-spacing: 0.06em;
+            margin-bottom: 1.75rem;
+        }
+        .cap-card:nth-child(1) .cap-num { color: var(--yellow); }
+        .cap-card:nth-child(2) .cap-num { color: var(--green); }
+        .cap-card:nth-child(3) .cap-num { color: var(--purple); }
+
+        .cap-card h3 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+        }
+        .cap-card .desc {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        .cap-list {
+            list-style: none;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .cap-list li {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 400;
+            color: rgba(255,255,255,0.55);
+            padding-left: 1.1rem;
+            position: relative;
+            letter-spacing: 0.01em;
+        }
+        .cap-list li::before {
+            content: '→';
+            position: absolute; left: 0;
+            font-weight: 600;
+        }
+        .cap-card:nth-child(1) .cap-list li::before { color: var(--yellow); }
+        .cap-card:nth-child(2) .cap-list li::before { color: var(--green); }
+        .cap-card:nth-child(3) .cap-list li::before { color: var(--purple); }
+
+        /* ═══ DEPLOYMENTS ═══ */
+        .deployments { background: var(--cream); }
+        .deployments .si { max-width: 960px; }
+
+        .dep-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding-bottom: 1.25rem;
+            margin-bottom: clamp(2rem, 4vh, 3rem);
+            border-bottom: 1px solid var(--ink-06);
+        }
+        .dep-header h2 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: clamp(1.2rem, 2vw, 1.5rem);
+            font-weight: 600;
+        }
+        .dep-header .dates {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.7rem; color: var(--ink-25);
+            letter-spacing: 0.08em;
+        }
+
+        .dep-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+        }
+        .dep-item {
+            padding: clamp(1.1rem, 2vw, 1.5rem);
+            border-bottom: 1px solid var(--ink-06);
+            position: relative;
+            padding-left: clamp(1.5rem, 2.5vw, 2rem);
+            transition: background 0.2s;
+        }
+        .dep-item:nth-child(odd) { border-right: 1px solid var(--ink-06); }
+        .dep-item:hover { background: rgba(0,0,0,0.015); }
+
+        .dep-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 3px; height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .dep-item:hover::before { opacity: 1; }
+        .dep-item:nth-child(1)::before, .dep-item:nth-child(2)::before { background: var(--purple); }
+        .dep-item:nth-child(3)::before { background: var(--yellow); }
+        .dep-item:nth-child(4)::before { background: var(--yellow); }
+        .dep-item:nth-child(5)::before { background: var(--purple); }
+        .dep-item:nth-child(6)::before { background: var(--purple); }
+
+        .dep-tag {
+            display: inline-flex;
+            align-items: center; gap: 6px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.55rem; font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--ink-25);
+            margin-bottom: 0.5rem;
+        }
+        .dep-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dep-item h4 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--ink);
+        }
+        .dep-item p {
+            font-size: 0.78rem;
+            color: var(--ink-40);
+            line-height: 1.55;
+        }
+
+        /* ═══ TEAM ═══ */
+        .team { background: var(--bone); }
+
+        .team-label {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+        .team-heading {
+            text-align: center;
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: clamp(3rem, 6vh, 5rem);
+            line-height: 1.2;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(1rem, 2vw, 2rem);
+        }
+        .team-card {
+            padding: clamp(1.5rem, 2.5vw, 2.25rem);
+            background: var(--cream);
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .team-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+        }
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+        }
+        .team-card:nth-child(1)::before { background: var(--yellow); }
+        .team-card:nth-child(2)::before { background: var(--green); }
+        .team-card:nth-child(3)::before { background: var(--purple); }
+
+        .team-num {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+        .team-card:nth-child(1) .team-num { color: var(--yellow); }
+        .team-card:nth-child(2) .team-num { color: var(--green); }
+        .team-card:nth-child(3) .team-num { color: var(--purple); }
+
+        .team-card h3 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            line-height: 1.3;
+        }
+        .team-role {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 1.25rem;
+        }
+        .team-card .bio {
+            font-size: 0.82rem;
+            color: var(--ink-60);
+            line-height: 1.75;
+        }
+
+        /* ═══ CONTACT ═══ */
+        .contact-section {
+            background: var(--ink);
+            color: var(--cream);
+            text-align: center;
+            min-height: 60vh;
+        }
+        .contact-section .si {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .contact-ring {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            border: 2px solid var(--ink-40);
+            transition: border-color 0.3s;
+        }
+        .contact-ring:hover { border-color: var(--cream); }
+        .contact-ring .dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--cream);
+        }
+
+        .contact-section h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+        }
+        .contact-section .email {
+            font-family: 'Jost', sans-serif;
+            font-size: clamp(1rem, 1.6vw, 1.25rem);
+            color: var(--ink-40);
+            text-decoration: none;
+            transition: color 0.3s;
+            letter-spacing: 0.03em;
+        }
+        .contact-section .email:hover { color: var(--cream); }
+        .contact-location {
+            margin-top: 2.5rem;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.58rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.14);
+        }
+
+        /* ═══ REVEAL SYSTEM ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .rd1 { transition-delay: 0.12s; }
+        .rd2 { transition-delay: 0.24s; }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 920px) {
+            .hero .si {
+                grid-template-columns: 1fr;
+            }
+            .hero-visual {
+                align-items: flex-start;
+            }
+            .hero-bar:nth-child(1) { width: 60%; }
+            .hero-bar:nth-child(2) { width: 40%; }
+            .hero-bar:nth-child(3) { width: 80%; }
+            @keyframes barGrow1 { from { width: 0; } to { width: 60%; } }
+            @keyframes barGrow2 { from { width: 0; } to { width: 40%; } }
+            @keyframes barGrow3 { from { width: 0; } to { width: 80%; } }
+        }
+
+        @media (max-width: 820px) {
+            .cap-grid { grid-template-columns: 1fr; }
+            .cap-card {
+                border-left: none;
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+                padding: 1.5rem 0;
+            }
+            .cap-card:last-child { border-bottom: none; }
+            .cap-card::before { display: none; }
+
+            .dep-grid { grid-template-columns: 1fr; }
+            .dep-item:nth-child(odd) { border-right: none; }
+
+            .team-grid { grid-template-columns: 1fr; justify-items: center; }
+            .team-card { max-width: 440px; width: 100%; }
+        }
+
+        @media (max-width: 520px) {
+            :root { --fi: 10px; }
+            section { padding-left: 1.25rem; padding-right: 1.25rem; }
+            .topbar { padding: 0 1.25rem; }
+        }
+    </style>
 </head>
 <body>
-  <div class="page">
-    <div class="shell">
-      
-      <!-- Left sidebar -->
-      <aside class="sidebar">
-        <div class="brand">
-          <img src="FACTLogo2025wline.png" alt="FACT" loading="eager" decoding="async" />
-          <p class="tagline">Strategic intelligence across communications, finance, and legal operations.</p>
-          
-          <nav class="tabs" role="tablist">
-            <button class="tab active" data-tab="creative" role="tab" aria-selected="true">Communications</button>
-            <button class="tab" data-tab="finance" role="tab" aria-selected="false">Finance</button>
-            <button class="tab" data-tab="legal" role="tab" aria-selected="false">Legal</button>
-          </nav>
+    <div class="fc fc-tl"></div><div class="fc fc-tr"></div>
+    <div class="fc fc-bl"></div><div class="fc fc-br"></div>
+
+    <nav class="topbar">
+        <span class="topbar-mark jost" id="topbar-mark">FACT</span>
+        <div class="nav-dots">
+            <button class="nav-dot active" data-s="hero" onclick="scrollTo_('hero')" aria-label="Home"></button>
+            <button class="nav-dot" data-s="capabilities" onclick="scrollTo_('capabilities')" aria-label="Capabilities"></button>
+            <button class="nav-dot" data-s="deployments" onclick="scrollTo_('deployments')" aria-label="Deployments"></button>
+            <button class="nav-dot" data-s="team" onclick="scrollTo_('team')" aria-label="Team"></button>
+            <button class="nav-dot" data-s="contact" onclick="scrollTo_('contact')" aria-label="Contact"></button>
         </div>
+    </nav>
 
-        <div class="contact">
-          <div>Independent practice</div>
-          <div style="margin-top:.5rem"><a href="mailto:info@fact.qa">info@fact.qa</a></div>
+    <!-- ═══ HERO ═══ -->
+    <section class="hero" id="hero">
+        <div class="si">
+            <div class="hero-content">
+                <img src="FACTLogo2026.png" alt="FACT Special Projects" class="hero-logo" onerror="this.style.display='none'">
+                <h1>
+                    <span>Strategy.</span>
+                    <span>Structure.</span>
+                    <span>Story.</span>
+                </h1>
+                <div class="hero-rule"></div>
+                <div class="hero-text">
+                    <p class="lead">Applied intelligence for complex systems.</p>
+                    <p class="sub">A multidisciplinary bureau providing a single interface for expert-led mandates across capital, compliance, and narrative design.</p>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-block">
+                    <div class="hero-bar"></div>
+                    <div class="hero-bar"></div>
+                    <div class="hero-bar"></div>
+                </div>
+                <div class="hero-location jost">Doha — Qatar</div>
+            </div>
         </div>
-      </aside>
+    </section>
 
-      <!-- Right content area -->
-      <main class="content-area">
-        
-        <!-- Creative/Communications panel -->
-        <div class="content-panel creative-panel active" role="tabpanel">
-          <h2><span class="accent">Strategy &amp; Creative Systems</span></h2>
-          <p>Applied research and narrative intelligence for complex projects. We work at the intersection of story, systems, and AI-assisted creativity.</p>
-          <ul>
-            <li>Strategic communications and positioning</li>
-            <li>Narrative research and applied frameworks</li>
-            <li>AI toolkit development and custom solutions</li>
-            <li>Content strategy and creative direction</li>
-          </ul>
-        </div>
-
-        <!-- Finance panel -->
-        <div class="content-panel finance-panel" role="tabpanel">
-          <h2><span class="accent">Financial Advisory</span></h2>
-          <p>Independent financial consulting and advisory services. We provide strategic guidance on capital structure, financial planning, and project financing.</p>
-          <ul>
-            <li>Financial consulting and advisory</li>
-            <li>Project financing and capital planning</li>
-            <li>Business development support</li>
-            <li>Financial modeling and analysis</li>
-          </ul>
-        </div>
-
-        <!-- Legal panel -->
-        <div class="content-panel legal-panel" role="tabpanel">
-          <h2><span class="accent">Legal &amp; Operations</span></h2>
-          <p>Corporate legal support and contract management. Senior paralegal expertise across corporate structures, agreements, and operational compliance.</p>
-          <ul>
-            <li>Corporate legal and contracts</li>
-            <li>Paralegal services and documentation</li>
-            <li>Agreement drafting and review</li>
-            <li>Operational compliance support</li>
-          </ul>
-        </div>
-
-      </main>
-
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
     </div>
-  </div>
 
-  <script>
-    // Tab switching
-    const tabs = document.querySelectorAll('.tab');
-    const panels = document.querySelectorAll('.content-panel');
+    <!-- ═══ CAPABILITIES ═══ -->
+    <section class="capabilities" id="capabilities">
+        <div class="si">
+            <div class="reveal">
+                <div class="cap-label jost">What We Do</div>
+                <h2 class="cap-heading">Three disciplines.<br>One interface.</h2>
+            </div>
+            <div class="cap-grid reveal rd1">
+                <div class="cap-card">
+                    <div class="cap-num jost">01</div>
+                    <h3>Commercial Strategy</h3>
+                    <p class="desc">The business logic. Maximising value through capital efficiency and operational rigour.</p>
+                    <ul class="cap-list">
+                        <li>M&amp;A &amp; Restructuring</li>
+                        <li>Target Operating Models</li>
+                        <li>ESG Assurance</li>
+                    </ul>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num jost">02</div>
+                    <h3>Legal Architecture</h3>
+                    <p class="desc">The framework. Protecting assets and ensuring compliance across complex jurisdictions.</p>
+                    <ul class="cap-list">
+                        <li>Corporate Formation</li>
+                        <li>Telecom &amp; Tech Contracts</li>
+                        <li>Operational Compliance</li>
+                    </ul>
+                </div>
+                <div class="cap-card">
+                    <div class="cap-num jost">03</div>
+                    <h3>Narrative Intelligence</h3>
+                    <p class="desc">The interface. Deploying AI and narrative design to position complex ideas with precision.</p>
+                    <ul class="cap-list">
+                        <li>Brand Strategy</li>
+                        <li>AI-First Ideation</li>
+                        <li>Government &amp; Policy Comms</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const target = tab.dataset.tab;
-        
-        // Update tabs
-        tabs.forEach(t => {
-          t.classList.remove('active');
-          t.setAttribute('aria-selected', 'false');
-        });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        
-        // Update panels
-        panels.forEach(panel => {
-          panel.classList.remove('active');
-        });
-        document.querySelector(`.${target}-panel`).classList.add('active');
-      });
-    });
-  </script>
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ DEPLOYMENTS ═══ -->
+    <section class="deployments" id="deployments">
+        <div class="si">
+            <div class="dep-header reveal">
+                <h2>Deployments</h2>
+                <span class="dates jost">2023 — 2026</span>
+            </div>
+            <div class="dep-grid reveal rd1">
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Tech</div>
+                    <h4>Proprietary Gen-AI Machine</h4>
+                    <p>Generative AI framework accelerating creative brainstorming (Stealth).</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Gov</div>
+                    <h4>Government Digital Comms</h4>
+                    <p>Narrative strategy, content systems, and workflow automation for a national digital transformation programme.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy</div>
+                    <h4>Regional Telco Restructuring</h4>
+                    <p>Carve-out and pro forma financials for a major GCC telecom group.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy / Tech</div>
+                    <h4>Automated Finance Platform</h4>
+                    <p>SMS-to-dashboard personal finance SaaS with AI-powered categorisation and analytics.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Tech / EdTech</div>
+                    <h4>US EdTech Scaling</h4>
+                    <p>AI-driven content workflow optimisation for educational platforms.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Culture</div>
+                    <h4>National Cultural Narrative</h4>
+                    <p>Strategic copywriting and positioning for national tourism and heritage initiatives.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ TEAM ═══ -->
+    <section class="team" id="team">
+        <div class="si">
+            <div class="reveal">
+                <div class="team-label jost">Specialists</div>
+                <h2 class="team-heading">Built around expertise,<br>not headcount.</h2>
+            </div>
+            <div class="team-grid reveal rd1">
+                <div class="team-card">
+                    <div class="team-num">01</div>
+                    <h3>Commercial<br>Strategy</h3>
+                    <div class="team-role jost">Samer — Capital &amp; Systems</div>
+                    <p class="bio">Ex-Big 4 Manager specialising in M&amp;A carve-outs, financial modelling, target operating model design, and ESG assurance across the GCC.</p>
+                </div>
+                <div class="team-card">
+                    <div class="team-num">02</div>
+                    <h3>Legal<br>Architecture</h3>
+                    <div class="team-role jost">Nicole — Operations &amp; Compliance</div>
+                    <p class="bio">Ex-Telecom Senior Paralegal with over twenty years in complex contract architecture, corporate formation, and operational compliance across the GCC.</p>
+                </div>
+                <div class="team-card">
+                    <div class="team-num">03</div>
+                    <h3>Narrative<br>Design</h3>
+                    <div class="team-role jost">Fares — Creative Tech</div>
+                    <p class="bio">Former Government Comms Lead specialising in AI-augmented storytelling, narrative strategy, and the design of proprietary creative-tech frameworks.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ CONTACT ═══ -->
+    <section class="contact-section" id="contact">
+        <div class="si">
+            <div class="contact-ring reveal"><div class="dot"></div></div>
+            <h2 class="reveal">Initiate Mandate</h2>
+            <a href="mailto:info@fact.qa" class="email reveal jost">info@fact.qa</a>
+            <div class="contact-location reveal jost">Doha — Qatar</div>
+        </div>
+    </section>
+
+    <script>
+        function scrollTo_(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        const ss = document.querySelectorAll('section');
+        const ds = document.querySelectorAll('.nav-dot');
+        const mk = document.getElementById('topbar-mark');
+
+        const navObs = new IntersectionObserver((es) => {
+            es.forEach(e => {
+                if (e.isIntersecting) {
+                    const id = e.target.id;
+                    ds.forEach(d => d.classList.toggle('active', d.dataset.s === id));
+                    mk.classList.toggle('visible', id !== 'hero');
+                }
+            });
+        }, { threshold: 0.3 });
+        ss.forEach(s => navObs.observe(s));
+
+        const revObs = new IntersectionObserver((es) => {
+            es.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    revObs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+    </script>
 </body>
 </html>
