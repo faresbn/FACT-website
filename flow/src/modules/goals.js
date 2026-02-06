@@ -52,9 +52,8 @@ export async function migrateGoalsToDb(STATE, supabaseClient, CONFIG) {
         }
         // Mark as migrated
         localStorage.setItem(`${localKey}_migrated`, 'true');
-        console.log('[Goals] Migrated', localGoals.length, 'goals to DB');
     } catch (err) {
-        console.warn('[Goals] Migration failed:', err.message);
+        // Goals migration is non-critical — silently skip
     }
 }
 

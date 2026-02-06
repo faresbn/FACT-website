@@ -3,7 +3,7 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v5';
+const CACHE_NAME = 'fact-flow-v6';
 const STATIC_ASSETS = [
   '/flow/',
   '/flow/index.html',
@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
 
 const CDN_ASSETS = [
   'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js',
   'https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js',
   'https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js',

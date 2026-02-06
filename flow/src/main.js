@@ -723,8 +723,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // automatically detect ?code= in the URL, exchange it for a session,
     // and fire SIGNED_IN through this listener. No manual exchange needed.
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, sessionData) => {
-        console.log('[Auth] event:', event, 'user:', sessionData?.user?.email);
-
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             if (sessionData?.user && !appInitialised) {
                 appInitialised = true;
@@ -808,8 +806,6 @@ async function showApp(user) {
     document.getElementById('mainApp').classList.remove('hidden');
 
     STATE.currentUser = user.email || 'user';
-    STATE.authToken = null;
-
     const userDisplay = document.getElementById('currentUserDisplay');
     userDisplay.textContent = (user.email || 'User').split('@')[0];
 
@@ -844,9 +840,7 @@ async function showApp(user) {
     });
 
     // Migrate localStorage goals to DB if needed
-    migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(err =>
-        console.warn('Goals migration skipped:', err.message)
-    );
+    migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(() => {});
 
     checkOnboarding(supabaseClient);
 

@@ -67,9 +67,7 @@ export function showToast(message, type = 'info', duration = 3000) {
 export function initServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/flow/sw.js')
-                .then(reg => console.log('[PWA] Service worker registered'))
-                .catch(err => console.log('[PWA] Service worker registration failed:', err));
+            navigator.serviceWorker.register('/flow/sw.js').catch(() => {});
         });
     }
 }
@@ -94,9 +92,6 @@ export function installPWA() {
     if (deferredPrompt) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choice) => {
-            if (choice.outcome === 'accepted') {
-                console.log('[PWA] User accepted install');
-            }
             deferredPrompt = null;
             document.getElementById('installBanner').style.display = 'none';
         });

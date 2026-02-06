@@ -81,19 +81,15 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         // Process new data types
         if (data.Profile) {
             STATE.profile = data.Profile;
-            console.log('[Data] Loaded profile:', Object.keys(data.Profile.settings || {}).length, 'settings');
         }
         if (data.Goals) {
             STATE.dbGoals = data.Goals;
-            console.log('[Data] Loaded', data.Goals.length, 'goals from DB');
         }
         if (data.Insights) {
             STATE.dbInsights = data.Insights;
-            console.log('[Data] Loaded', data.Insights.length, 'past insights');
         }
         if (data.Streaks) {
             STATE.dbStreaks = data.Streaks;
-            console.log('[Data] Loaded', data.Streaks.length, 'streaks from DB');
         }
 
         document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
@@ -195,8 +191,6 @@ export function processUserContext(rows, STATE) {
         dateAdded: clean(r[4]),   // When it was added
         source: clean(r[5])       // 'user' or 'ai'
     })).filter(c => c.type && c.value);
-
-    console.log('[Data] Loaded', STATE.userContext.length, 'user context entries');
 }
 
 // Normalize phone number: remove country code, spaces, dashes
@@ -222,8 +216,6 @@ export function processRecipients(rows, STATE) {
         shortName: clean(r[2]),
         longName: clean(r[3])
     })).filter(rec => rec.shortName || rec.longName);
-
-    console.log('[Data] Loaded', STATE.recipients.length, 'recipients');
 }
 
 // Match counterparty to a known recipient
