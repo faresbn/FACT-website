@@ -1,10 +1,9 @@
 // ─── AI INTEGRATION ─────────────────────────────────────────────
-import dayjs from 'dayjs';
 
 // Conversational AI Chat
 const aiChatHistory = [];
 
-export function openAIQuery() {
+export function openAskAI() {
     const chatInput = document.getElementById('aiChatInput');
     if (chatInput) {
         chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -12,8 +11,8 @@ export function openAIQuery() {
     }
 }
 
-export function closeAIQuery() {
-    // No-op - kept for backwards compatibility
+export function closeAskAI() {
+    // No-op - kept for backwards compatibility with HTML onclick
 }
 
 export function prepareTransactionSummary(STATE, formatNum) {
@@ -190,6 +189,29 @@ export async function askAIChat(question, STATE, supabaseClient, CONFIG, callbac
         // Track AI usage achievement
         trackAchievement('fact_asked_ai');
 
+        // Auto-save deep analysis to build knowledge
+        if (data.mode === 'deep') {
+            try {
+                await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        action: 'insights.save',
+                        insight: {
+                            type: 'deep',
+                            insights: `Q: ${query}\nA: ${answer.slice(0, 500)}`,
+                            period_start: STATE.dateRange?.start?.toISOString() || null,
+                            period_end: STATE.dateRange?.end?.toISOString() || null,
+                            metadata: { model: data.model || 'claude-sonnet', query }
+                        }
+                    })
+                });
+            } catch (_e) { /* silently fail */ }
+        }
+
     } catch (err) {
         const loadingEl = document.getElementById(loadingId);
         if (loadingEl) {
@@ -363,9 +385,9 @@ export async function refreshInsights(STATE, supabaseClient, CONFIG, callbacks) 
                 'Authorization': `Bearer ${accessToken}`
             },
             body: JSON.stringify({
-                q: 'Give me 3-5 quick bullet-point insights about this spending data. Be specific with numbers. Focus on patterns, anomalies, and actionable observations. Use emojis for each point. Keep each insight to one short sentence.' + contextSummary,
+                q: 'Analyse this spending data and return exactly 3-5 bullet points. Each must: (1) cite a specific QAR amount or percentage, (2) name the merchant/category involved, (3) end with one actionable suggestion. Start each bullet with a relevant emoji. One sentence per bullet, no headers.' + contextSummary,
                 data: txnSummary,
-                model: 'gpt-5.1'
+                model: 'claude-sonnet'
             })
         });
 
@@ -387,6 +409,27 @@ export async function refreshInsights(STATE, supabaseClient, CONFIG, callbacks) 
                     ${sanitizeHTML(insight)}
                 </div>
             `).join('');
+
+            // Persist insights to DB
+            try {
+                await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        action: 'insights.save',
+                        insight: {
+                            type: 'manual',
+                            insights: data.answer,
+                            period_start: STATE.dateRange?.start?.toISOString() || null,
+                            period_end: STATE.dateRange?.end?.toISOString() || null,
+                            metadata: { model: data.model || 'claude-sonnet', txn_count: STATE.filtered?.length || 0 }
+                        }
+                    })
+                });
+            } catch (_e) { /* silently fail persistence */ }
         }
 
     } catch (err) {

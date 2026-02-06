@@ -2,8 +2,8 @@ import { createAdminClient } from '../_shared/supabase.ts';
 import { buildIdempotencyKey, extractTimeContext, sha256Hex } from '../_shared/utils.ts';
 import { resolveCorsOrigin, corsHeaders } from '../_shared/cors.ts';
 
-const MODEL_SMS = Deno.env.get('FLOW_MODEL_SMS') || 'gpt-5-mini';
-const MODEL_SMS_RETRY = Deno.env.get('FLOW_MODEL_SMS_RETRY') || 'gpt-5.1';
+const MODEL_SMS = Deno.env.get('FLOW_MODEL_SMS') || 'claude-haiku-4';
+const MODEL_SMS_RETRY = Deno.env.get('FLOW_MODEL_SMS_RETRY') || 'claude-sonnet-4-20250514';
 
 function jsonResponse(request: Request, body: unknown, status = 200) {
   const origin = resolveCorsOrigin(request);
@@ -17,63 +17,72 @@ function jsonResponse(request: Request, body: unknown, status = 200) {
 }
 
 function buildSystemPrompt(contextHints: string) {
-  return `You are parsing a QNB bank SMS and must extract a clean JSON object.
+  return `Parse the following QNB (Qatar National Bank) SMS into a single JSON object. Return ONLY valid JSON, no markdown fences, no commentary.
 
-Return ONLY valid JSON with these keys:
-- amount (number)
-- currency (string, e.g. QAR, USD)
-- counterparty (string)
-- card (string or empty)
-- direction (IN or OUT)
-- txnType (string)
-- category (parent category: Essentials, Lifestyle, Family, Financial, Other)
-- subcategory (specific type like Groceries, Dining, Transfer, etc.)
-- confidence (high|medium|low)
-- context (object with short reasoning, may include timeContext)
-- skip (boolean, default false)
-- reason (string, if skip=true)
-
-Use these hints when applicable:
-${contextHints}
-
-If the SMS is not a transaction, set skip=true and provide reason.`;
+Required fields:
+{
+  "amount": <number>,
+  "currency": "<3-letter code, default QAR>",
+  "counterparty": "<merchant or recipient name, cleaned>",
+  "card": "<last 4 digits or empty string>",
+  "direction": "<IN or OUT>",
+  "txnType": "<Purchase|Transfer|ATM|Refund|Payment|Salary|Fee>",
+  "category": "<Essentials|Lifestyle|Family|Financial|Other>",
+  "subcategory": "<Groceries|Dining|Coffee|Delivery|Shopping|Transport|Health|Bills|Travel|Entertainment|Transfer|Bars & Nightlife|Family|Other>",
+  "confidence": "<high|medium|low>",
+  "context": { "reasoning": "<10 words max>" },
+  "skip": false,
+  "reason": ""
 }
 
-async function callOpenAI(model: string, systemPrompt: string, sms: string) {
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!apiKey) throw new Error('Missing OPENAI_API_KEY');
+Rules:
+- "Purchase" at a merchant = OUT. "Salary"/"Credit" = IN. "Transfer" direction depends on wording (sent=OUT, received=IN).
+- For counterparty: strip "QNB", "POS", terminal IDs, city suffixes. Keep the recognisable merchant name only.
+- Subcategory must be one of the listed values. Pick the closest match. Never return "Uncategorized".
+- If the SMS is informational (balance alert, OTP, promo), set skip=true with reason.
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+${contextHints ? `Context:\n${contextHints}` : ''}`;
+}
+
+async function callClaude(model: string, systemPrompt: string, userContent: string) {
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) throw new Error('Missing ANTHROPIC_API_KEY');
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
       model,
+      max_tokens: 512,
+      system: systemPrompt,
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: sms },
+        { role: 'user', content: userContent },
       ],
     }),
   });
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`OpenAI error: ${response.status} ${text}`);
+    throw new Error(`Claude error: ${response.status} ${text}`);
   }
 
   const json = await response.json();
-  const content = json?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty OpenAI response');
+  const content = json?.content?.[0]?.text;
+  if (!content) throw new Error('Empty Claude response');
   return content;
 }
 
 function parseExtracted(content: string) {
+  // Strip markdown fences if present
+  const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   try {
-    return JSON.parse(content);
-  } catch (err) {
-    throw new Error(`Invalid JSON from model: ${content?.slice(0, 200)}`);
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error(`Invalid JSON from model: ${cleaned.slice(0, 200)}`);
   }
 }
 
@@ -136,6 +145,19 @@ Deno.serve(async (request) => {
 
   const familyPatterns = profile?.settings?.family_patterns || [];
 
+  // Fetch recent corrections to improve AI accuracy
+  const { data: corrections } = await admin
+    .from('user_context')
+    .select('key, value')
+    .eq('user_id', userId)
+    .eq('type', 'correction')
+    .order('date_added', { ascending: false })
+    .limit(20);
+
+  const correctionHints = (corrections || [])
+    .map(c => `${c.key} → ${c.value}`)
+    .join(', ');
+
   const results = [] as any[];
   let appended = 0;
   let skipped = 0;
@@ -156,18 +178,19 @@ Deno.serve(async (request) => {
       `Time: ${timeContext.timeOfDay} (${timeContext.hour}:00)`,
       `Day: ${timeContext.dayOfWeek}, weekend: ${timeContext.isWeekend}`,
       `Month timing: ${timeContext.isStartOfMonth ? 'start' : timeContext.isEndOfMonth ? 'end' : 'mid-month'}`,
-      merchants?.length ? `Merchant patterns: ${merchants.slice(0, 50).map(m => m.pattern).join(', ')}` : '',
+      merchants?.length ? `Merchant patterns: ${merchants.slice(0, 50).map(m => `${m.pattern} → ${m.category}`).join(', ')}` : '',
       familyPatterns?.length ? `Family names: ${familyPatterns.join(', ')}` : '',
+      correctionHints ? `User corrections: ${correctionHints}` : '',
     ].filter(Boolean).join('\n');
 
     const systemPrompt = buildSystemPrompt(contextHints);
 
     try {
-      let content = await callOpenAI(MODEL_SMS, systemPrompt, sms);
+      let content = await callClaude(MODEL_SMS, systemPrompt, sms);
       let extracted = parseExtracted(content);
 
       if (shouldRetry(extracted)) {
-        content = await callOpenAI(MODEL_SMS_RETRY, systemPrompt, sms);
+        content = await callClaude(MODEL_SMS_RETRY, systemPrompt, sms);
         extracted = parseExtracted(content);
       }
 

@@ -6,7 +6,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      input: 'flow.html',
+    },
   },
   server: {
     port: 5173,

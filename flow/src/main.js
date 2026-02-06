@@ -80,7 +80,10 @@ import {
     openShortcutSetup,
     closeShortcutSetup,
     getSelectedAiModel,
-    changePassword
+    changePassword,
+    runBackfill,
+    loadProfileTab as loadProfileTabModule,
+    saveProfile as saveProfileModule
 } from './modules/settings.js';
 
 // Render module
@@ -132,7 +135,8 @@ import {
     addNewGoal as addNewGoalModule,
     closeAddGoal,
     saveGoal as saveGoalModule,
-    deleteGoal as deleteGoalModule
+    deleteGoal as deleteGoalModule,
+    migrateGoalsToDb
 } from './modules/goals.js';
 
 // Modals module
@@ -161,8 +165,8 @@ import {
 
 // AI module
 import {
-    openAIQuery,
-    closeAIQuery,
+    openAskAI,
+    closeAskAI,
     prepareTransactionSummary as prepareTransactionSummaryModule,
     askAIChat as askAIChatModule,
     clearAIChat,
@@ -351,7 +355,11 @@ const STATE = {
     catTarget: null,
     currentUser: 'default',
     viewMode: 'parent',
-    hasLoaded: false
+    hasLoaded: false,
+    profile: null,
+    dbGoals: null,
+    dbInsights: null,
+    dbStreaks: null
 };
 
 // ─── WRAPPER FUNCTIONS ──────────────────────────────────────────
@@ -568,8 +576,16 @@ function toggleVoiceInput() {
     toggleVoiceInputModule(trackAchievement, askAIChat);
 }
 
+function loadProfileTab() {
+    loadProfileTabModule(STATE);
+}
+
+async function saveProfile() {
+    await saveProfileModule(supabaseClient, CONFIG, STATE, showToast);
+}
+
 function openSettings(tab = null) {
-    openSettingsModule(tab, { renderSettingsGoalsList, renderRecipientsList });
+    openSettingsModule(tab, { renderSettingsGoalsList, renderRecipientsList, loadProfileTab });
 }
 
 function saveSettings() {
@@ -666,24 +682,48 @@ function renderPatternWarnings() {
 
 // ─── AUTH & INIT ────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const { data: session } = await supabaseClient.auth.getSession();
-    if (session?.session?.user) {
-        showApp(session.session.user);
-    } else {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-    }
+let appInitialised = false;
 
+document.addEventListener('DOMContentLoaded', async () => {
+    // Set up auth state listener FIRST so it catches PKCE exchange events
     supabaseClient.auth.onAuthStateChange((event, sessionData) => {
-        if (event === 'SIGNED_IN' && sessionData?.user) {
-            showApp(sessionData.user);
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && sessionData?.user) {
+            if (!appInitialised) {
+                appInitialised = true;
+                showApp(sessionData.user);
+            }
         }
         if (event === 'SIGNED_OUT') {
+            appInitialised = false;
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
         }
     });
+
+    // Check for auth error params in URL (e.g. expired OAuth state)
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+    const authError = params.get('error_description') || hashParams.get('error_description');
+
+    if (authError) {
+        // Clean URL and show error
+        history.replaceState(null, '', window.location.pathname);
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        showLoginError(authError === 'OAuth callback with invalid state'
+            ? 'Login link expired. Please try again.'
+            : authError);
+        return;
+    }
+
+    // getSession will trigger INITIAL_SESSION via onAuthStateChange above
+    const { data: session } = await supabaseClient.auth.getSession();
+
+    // If no session after getSession resolves and INITIAL_SESSION hasn't triggered showApp, show login
+    if (!session?.session?.user && !appInitialised) {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
 });
 
 async function attemptLogin() {
@@ -710,10 +750,14 @@ async function attemptLogin() {
 }
 
 async function loginWithGoogle() {
-    await supabaseClient.auth.signInWithOAuth({
+    const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: CONFIG.AUTH_REDIRECT_URL }
+        options: {
+            redirectTo: CONFIG.AUTH_REDIRECT_URL,
+            skipBrowserRedirect: false,
+        }
     });
+    if (error) showLoginError(error.message);
 }
 
 function showLoginError(msg, isError = true) {
@@ -737,11 +781,14 @@ async function showApp(user) {
 
     const modelEl = document.getElementById('aiModelName');
     if (modelEl) {
-        modelEl.textContent = localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+        modelEl.textContent = localStorage.getItem('fact_ai_model') || 'claude-sonnet';
     }
 
-    if (window.location.hash && window.location.hash.includes('access_token')) {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
+    // Clean auth tokens from URL (both hash-based and PKCE query params)
+    const hasHashToken = window.location.hash && window.location.hash.includes('access_token');
+    const hasCodeParam = new URLSearchParams(window.location.search).has('code');
+    if (hasHashToken || hasCodeParam) {
+        history.replaceState(null, '', window.location.pathname);
     }
 
     loadLocal(CONFIG, STATE);
@@ -763,6 +810,11 @@ async function showApp(user) {
         detectPatterns: () => detectPatterns(STATE, (t) => isExemptFromSplurge(t, STATE)),
         matchRecipient: (cp) => matchRecipient(cp, STATE)
     });
+
+    // Migrate localStorage goals to DB if needed
+    migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(err =>
+        console.warn('Goals migration skipped:', err.message)
+    );
 
     checkOnboarding(supabaseClient);
 
@@ -807,13 +859,16 @@ window.applyCustomDate = applyCustomDate;
 window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.saveSettings = saveSettings;
-window.switchSettingsTab = (tab) => switchSettingsTab(tab, { renderSettingsGoalsList, renderRecipientsList });
+window.switchSettingsTab = (tab) => switchSettingsTab(tab, { renderSettingsGoalsList, renderRecipientsList, loadProfileTab });
 window.generateShortcutKey = () => generateShortcutKey(supabaseClient, CONFIG);
 window.revokeShortcutKey = () => revokeShortcutKey(supabaseClient, CONFIG);
 window.copyShortcutKey = copyShortcutKey;
 window.openShortcutSetup = () => openShortcutSetup(CONFIG);
 window.closeShortcutSetup = closeShortcutSetup;
 window.changePassword = () => changePassword(supabaseClient);
+window.runBackfill = () => runBackfill(supabaseClient, CONFIG, showToast);
+window.saveProfile = saveProfile;
+window.loadProfileTab = loadProfileTab;
 window.setViewMode = setViewMode;
 window.sortTransactions = sortTransactions;
 window.filterTransactions = filterTransactions;
@@ -847,6 +902,8 @@ window.SUMMARY_GROUPS = SUMMARY_GROUPS;
 window.CAT_COLORS = CAT_COLORS;
 window.PATTERNS = PATTERNS;
 
+window.openAskAI = openAskAI;
+window.closeAskAI = closeAskAI;
 window.askAIChat = askAIChat;
 window.clearAIChat = clearAIChat;
 window.closeAchievements = closeAchievements;

@@ -2,10 +2,14 @@
 
 This document explains FACT/Flow personal finance tracker with:
 - Multi-user support
-- AI-powered contextual categorization (GPT-4.1/5.1)
+- AI-powered contextual categorization (Claude Haiku/Sonnet)
 - Pattern learning from user corrections
 - Weekly insights generation
 - Hierarchical category structure
+
+> **Note**: This document describes the legacy Google Apps Script architecture.
+> The current production system uses Supabase Edge Functions + Anthropic Claude.
+> See README.md for current architecture.
 
 ---
 

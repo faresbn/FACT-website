@@ -4,6 +4,15 @@ import dayjs from 'dayjs';
 // ============== GOALS SYSTEM ==============
 
 export function getGoals(STATE) {
+    // DB-first: prefer dbGoals if loaded
+    if (STATE.dbGoals && STATE.dbGoals.length > 0) {
+        return STATE.dbGoals.map(g => ({
+            id: g.id,
+            category: g.category,
+            amount: Number(g.monthly_limit),
+        }));
+    }
+    // Fallback to localStorage
     try {
         return JSON.parse(localStorage.getItem(`fact_goals_${STATE.currentUser}`)) || [];
     } catch (e) {
@@ -12,7 +21,41 @@ export function getGoals(STATE) {
 }
 
 export function saveGoals(goals, STATE) {
+    // Keep localStorage as cache
     localStorage.setItem(`fact_goals_${STATE.currentUser}`, JSON.stringify(goals));
+}
+
+// Migrate localStorage goals to DB on first load
+export async function migrateGoalsToDb(STATE, supabaseClient, CONFIG) {
+    const localKey = `fact_goals_${STATE.currentUser}`;
+    const localGoals = JSON.parse(localStorage.getItem(localKey) || '[]');
+
+    if (!localGoals.length || (STATE.dbGoals && STATE.dbGoals.length > 0)) return;
+
+    try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        if (!accessToken) return;
+
+        for (const goal of localGoals) {
+            await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-profile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    action: 'goals.save',
+                    goal: { category: goal.category, monthly_limit: goal.amount }
+                })
+            });
+        }
+        // Mark as migrated
+        localStorage.setItem(`${localKey}_migrated`, 'true');
+        console.log('[Goals] Migrated', localGoals.length, 'goals to DB');
+    } catch (err) {
+        console.warn('[Goals] Migration failed:', err.message);
+    }
 }
 
 // ============== GOALS EXTENDED ==============

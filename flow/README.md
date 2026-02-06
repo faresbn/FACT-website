@@ -2,15 +2,14 @@
 
 A privacy-first personal finance tracker designed for ADHD-friendly budgeting and spending control.
 
-## Current State (February 2025)
+## Current State (February 2026)
 
 ### Architecture
 
 ```
 flow/
 ├── index.html          # Main entry point (Vite-built app)
-├── flow.html           # Copy of index.html (for direct access)
-├── flow2.html          # Legacy monolithic file (redirects to /flow/)
+├── flow.html           # Vite source entry point
 ├── src/
 │   ├── main.js         # Thin orchestrator (~900 lines)
 │   ├── style.css       # Custom CSS (complements Tailwind)
@@ -39,10 +38,9 @@ flow/
 
 - **Frontend**: Vanilla JS + Tailwind CSS (CDN) + Vite bundler
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)
+- **AI**: Anthropic Claude (Haiku for SMS parsing, Sonnet for chat/analysis)
 - **Deployment**: GitHub Pages (static hosting)
-- **SMS Ingestion**:
-  - **Current**: Google Apps Script → Google Sheet
-  - **New**: iOS Shortcut → Supabase Edge Function (`flow-sms`)
+- **SMS Ingestion**: iOS Shortcut → Supabase Edge Function (`flow-sms`)
 
 ### Database Tables (Supabase)
 
@@ -61,9 +59,9 @@ flow/
 
 | Function | Purpose | Auth |
 |----------|---------|------|
-| `flow-sms` | Parse SMS, AI categorization | API Key |
+| `flow-sms` | Parse SMS via Claude Haiku, retry with Sonnet | API Key |
 | `flow-data` | CRUD for transactions | JWT |
-| `flow-ai` | AI chat endpoint | JWT |
+| `flow-ai` | AI chat via Claude Sonnet (standard + deep) | JWT |
 | `flow-keys` | Manage API keys | JWT |
 | `flow-learn` | Learn from corrections | JWT |
 | `flow-recipients` | Manage recipients | JWT |
@@ -111,9 +109,10 @@ flow/
    - Connection test
    - Status: Code written, needs integration
 
-3. **Model Configuration**
-   - Update `flow-sms` default model (gpt-4o-mini)
-   - Remove deprecated gpt-4.1-mini from frontend
+3. **AI Model Migration**
+   - Migrated from OpenAI GPT to Anthropic Claude
+   - `flow-sms`: Claude Haiku (fast), Sonnet retry on low confidence
+   - `flow-ai`: Claude Sonnet for standard + deep analysis
    - Status: Done
 
 4. **CSS/Accessibility Fixes**
@@ -203,12 +202,11 @@ VITE_AUTH_REDIRECT_URL=https://www.fact.qa/flow/
 4. Commit and push to main
 5. GitHub Actions deploys automatically
 
-### GAS Pipeline (Legacy)
+### GAS Pipeline (Legacy/Deprecated)
 
-The Google Apps Script (`gas_enhanced.js`) still handles:
-- SMS → Google Sheet ingestion
-- This pipeline is NOT connected to the Supabase frontend
-- Keep operational until iOS Shortcut flow is verified
+The Google Apps Script (`gas_enhanced.js`) was the original SMS ingestion pipeline.
+It has been superseded by the Supabase `flow-sms` edge function + iOS Shortcut flow.
+The file is kept for reference only.
 
 ---
 

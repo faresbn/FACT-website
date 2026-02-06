@@ -12,6 +12,29 @@ function jsonResponse(request: Request, body: unknown, status = 200) {
   });
 }
 
+// Map subcategory to parent category
+function parentCategory(subcategory: string): string {
+  const map: Record<string, string> = {
+    'Groceries': 'Essentials',
+    'Bills': 'Essentials',
+    'Health': 'Essentials',
+    'Transport': 'Essentials',
+    'Dining': 'Lifestyle',
+    'Coffee': 'Lifestyle',
+    'Delivery': 'Lifestyle',
+    'Shopping': 'Lifestyle',
+    'Bars & Nightlife': 'Lifestyle',
+    'Hobbies': 'Lifestyle',
+    'Travel': 'Lifestyle',
+    'Entertainment': 'Lifestyle',
+    'Family': 'Family',
+    'Transfer': 'Financial',
+    'Fees': 'Financial',
+    'Other': 'Other',
+  };
+  return map[subcategory] || 'Other';
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     const origin = resolveCorsOrigin(request);
@@ -40,6 +63,7 @@ Deno.serve(async (request) => {
 
   const pattern = String(counterparty).toLowerCase();
 
+  // 1. Upsert merchant_map (existing behavior)
   const { error: upsertErr } = await supabase
     .from('merchant_map')
     .upsert({
@@ -52,6 +76,21 @@ Deno.serve(async (request) => {
 
   if (upsertErr) return jsonResponse(request, { error: upsertErr.message }, 400);
 
+  // 2. Update raw_ledger: apply new category to ALL matching transactions
+  const { data: updatedRows, error: _ledgerErr } = await supabase
+    .from('raw_ledger')
+    .update({
+      subcategory: merchantType,
+      category: parentCategory(merchantType),
+      confidence: 'corrected',
+    })
+    .eq('user_id', user.id)
+    .ilike('counterparty', `%${pattern}%`)
+    .select('id');
+
+  const updatedCount = updatedRows?.length || 0;
+
+  // 3. Record correction in user_context (existing behavior)
   if (previousType && previousType !== merchantType) {
     const timestamp = new Date().toISOString();
     const { error: ctxErr } = await supabase.from('user_context').insert([
@@ -62,5 +101,11 @@ Deno.serve(async (request) => {
     if (ctxErr) return jsonResponse(request, { error: ctxErr.message }, 400);
   }
 
-  return jsonResponse(request, { success: true });
+  return jsonResponse(request, {
+    success: true,
+    updated: updatedCount,
+    message: updatedCount > 0
+      ? `Updated ${updatedCount} transaction${updatedCount > 1 ? 's' : ''} to ${merchantType}`
+      : 'Merchant pattern saved',
+  });
 });

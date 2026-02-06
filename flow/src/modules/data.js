@@ -58,7 +58,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
                 'Authorization': `Bearer ${accessToken}`
             },
             body: JSON.stringify({
-                sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients']
+                sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks']
             })
         });
 
@@ -77,6 +77,24 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         if (data.UserContext) processUserContext(data.UserContext, STATE);
         if (data.Recipients) processRecipients(data.Recipients, STATE);
         if (data.RawLedger) processTxns(data.RawLedger, STATE, callbacks);
+
+        // Process new data types
+        if (data.Profile) {
+            STATE.profile = data.Profile;
+            console.log('[Data] Loaded profile:', Object.keys(data.Profile.settings || {}).length, 'settings');
+        }
+        if (data.Goals) {
+            STATE.dbGoals = data.Goals;
+            console.log('[Data] Loaded', data.Goals.length, 'goals from DB');
+        }
+        if (data.Insights) {
+            STATE.dbInsights = data.Insights;
+            console.log('[Data] Loaded', data.Insights.length, 'past insights');
+        }
+        if (data.Streaks) {
+            STATE.dbStreaks = data.Streaks;
+            console.log('[Data] Loaded', data.Streaks.length, 'streaks from DB');
+        }
 
         document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
 

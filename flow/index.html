@@ -39,8 +39,8 @@
             }
         }
     </script>
-  <script type="module" crossorigin src="/flow/assets/index-DbAZPS8Y.js"></script>
-  <link rel="stylesheet" crossorigin href="/flow/assets/index-hG3o3lui.css">
+  <script type="module" crossorigin src="/flow/assets/flow-DVy1NSC2.js"></script>
+  <link rel="stylesheet" crossorigin href="/flow/assets/flow-hG3o3lui.css">
 </head>
 <body class="text-fact-ink dark:text-fact-dark-ink">
     <!-- Skip to main content for accessibility -->
@@ -551,7 +551,7 @@
                         <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                             <div>
                                 <h2 class="font-display font-semibold text-sm">Ask AI</h2>
-                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">gpt-5-mini</span></p>
+                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">claude-sonnet</span></p>
                             </div>
                             <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
                         </div>
@@ -808,9 +808,9 @@
             <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                 <div>
                     <h3 class="font-display font-semibold">Ask AI About Your Spending</h3>
-                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by GPT via Supabase</p>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by Claude via Supabase</p>
                 </div>
-                <button onclick="closeAIQuery()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                <button onclick="closeAskAI()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -909,6 +909,11 @@
                     <span class="text-base">👥</span>
                     <span>Contacts</span>
                 </button>
+                <button onclick="switchSettingsTab('profile')" id="tabProfile" role="tab" aria-selected="false" aria-controls="panelProfile"
+                    class="settings-tab flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 border-transparent text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink min-h-[48px] transition-colors">
+                    <span class="text-base">👤</span>
+                    <span>Profile</span>
+                </button>
             </div>
 
             <!-- Tab Panels Container (scrollable) -->
@@ -923,10 +928,10 @@
                         </label>
                         <select id="settingsAiModel"
                             class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm min-h-[48px]">
-                            <option value="gpt-5-mini" selected>gpt-5-mini (Recommended)</option>
-                            <option value="gpt-5.1">gpt-5.1 (Most capable)</option>
+                            <option value="claude-sonnet" selected>Claude Sonnet (Recommended)</option>
+                            <option value="claude-haiku">Claude Haiku (Faster)</option>
                         </select>
-                        <p class="text-[10px] text-fact-muted mt-1.5">Deep analysis always uses gpt-5.1</p>
+                        <p class="text-[10px] text-fact-muted mt-1.5">Deep analysis and insights always use Claude Sonnet</p>
                     </div>
 
                     <!-- Password Change -->
@@ -1027,6 +1032,50 @@
                     <!-- Recipients List -->
                     <div id="recipientsList" class="space-y-2 max-h-[300px] overflow-y-auto">
                         <!-- Populated by renderRecipientsList() -->
+                    </div>
+                </div>
+
+                <!-- Profile Panel -->
+                <div id="panelProfile" role="tabpanel" aria-labelledby="tabProfile" class="settings-panel p-5 hidden">
+                    <h4 class="font-medium text-sm mb-4">Financial Profile</h4>
+                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-4">Set your financial details for smarter budgeting and AI advice.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1" for="profileSalaryDay">Salary Day (1-31)</label>
+                            <input type="number" id="profileSalaryDay" min="1" max="31" placeholder="e.g. 28"
+                                class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1" for="profileSalaryAmount">Monthly Salary (QAR)</label>
+                            <input type="number" id="profileSalaryAmount" placeholder="e.g. 15000"
+                                class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1" for="profileMonthlyBudget">Monthly Budget Target (QAR)</label>
+                            <input type="number" id="profileMonthlyBudget" placeholder="e.g. 8000"
+                                class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1" for="profileFamilyNames">Family Member Names (comma-separated)</label>
+                            <input type="text" id="profileFamilyNames" placeholder="e.g. ahmed, fatima, mom"
+                                class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        </div>
+                        <button onclick="saveProfile()"
+                            class="w-full py-3 text-sm font-medium text-fact-ink bg-fact-yellow rounded-xl hover:bg-fact-yellow/80 transition min-h-[48px]">
+                            Save Profile
+                        </button>
+                    </div>
+
+                    <!-- Backfill Section -->
+                    <div id="backfillSection" class="mt-6 pt-4 border-t border-fact-border dark:border-fact-dark-border">
+                        <h4 class="font-medium text-sm mb-2">Data Backfill</h4>
+                        <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-3">Categorize legacy transactions that don't have AI subcategories.</p>
+                        <button id="backfillBtn" onclick="runBackfill()"
+                            class="w-full py-3 text-sm font-medium text-white bg-fact-purple rounded-xl hover:bg-fact-purple/80 transition min-h-[48px]">
+                            Run Backfill
+                        </button>
+                        <p id="backfillStatus" class="text-xs text-fact-muted dark:text-fact-dark-muted mt-2 text-center"></p>
                     </div>
                 </div>
             </div>

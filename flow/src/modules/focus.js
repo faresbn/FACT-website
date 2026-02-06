@@ -154,7 +154,7 @@ export function checkDailyBudget(STATE, calculateBudgetProjection) {
     const todaySpent = todayTxns.reduce((s, t) => s + t.amount, 0);
 
     const proj = calculateBudgetProjection();
-    const dailyBudget = proj.recommended || 300; // Default 300 QAR
+    const dailyBudget = proj.dailyBudget || 300; // Default 300 QAR
 
     const percentage = (todaySpent / dailyBudget) * 100;
 

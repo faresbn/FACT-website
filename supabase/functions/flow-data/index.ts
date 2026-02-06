@@ -108,5 +108,45 @@ Deno.serve(async (request) => {
     data.Recipients = [header, ...(rows || []).map((r) => [r.phone, r.bank_account, r.short_name, r.long_name, r.id])];
   }
 
+  if (sheets.includes('Profile')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('settings, display_name')
+      .eq('user_id', user.id)
+      .single();
+
+    data.Profile = profile || { settings: {}, display_name: null };
+  }
+
+  if (sheets.includes('Goals')) {
+    const { data: goals } = await supabase
+      .from('goals')
+      .select('id, category, monthly_limit, active')
+      .eq('user_id', user.id)
+      .eq('active', true);
+
+    data.Goals = goals || [];
+  }
+
+  if (sheets.includes('Insights')) {
+    const { data: insights } = await supabase
+      .from('insights')
+      .select('id, date, type, insights, period_start, period_end, metadata')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .limit(10);
+
+    data.Insights = insights || [];
+  }
+
+  if (sheets.includes('Streaks')) {
+    const { data: streaks } = await supabase
+      .from('streaks')
+      .select('type, current_count, best_count, last_date')
+      .eq('user_id', user.id);
+
+    data.Streaks = streaks || [];
+  }
+
   return jsonResponse(request, { success: true, data });
 });

@@ -239,8 +239,25 @@ export function calculateBudgetProjection(STATE) {
     const expenses = STATE.filtered.filter(t => t.direction === 'OUT').reduce((s, t) => s + t.amount, 0);
     const net = income - expenses;
 
-    // Daily budget = remaining funds / days until next salary
-    const dailyBudget = daysUntilSalary > 0 ? Math.max(0, net / daysUntilSalary) : 0;
+    // Profile-first budget: use monthly_budget from profile if available
+    const profileSettings = STATE.profile?.settings || {};
+    const monthlyBudget = profileSettings.monthly_budget;
+    const daysInMonth = today.daysInMonth();
+
+    let dailyBudget;
+    if (monthlyBudget && monthlyBudget > 0) {
+        // Profile-based: remaining monthly budget / remaining days
+        const daysPassed = today.date();
+        const thisMonthExpenses = STATE.allTxns
+            .filter(t => t.direction === 'OUT' && t.date.isAfter(today.startOf('month')) && t.date.isBefore(today.add(1, 'day')))
+            .reduce((s, t) => s + t.amount, 0);
+        const remainingBudget = Math.max(0, monthlyBudget - thisMonthExpenses);
+        const remainingDays = daysInMonth - daysPassed + 1;
+        dailyBudget = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+    } else {
+        // Fallback: salary-based calculation
+        dailyBudget = daysUntilSalary > 0 ? Math.max(0, net / daysUntilSalary) : 0;
+    }
 
     // Calculate average daily spending from filtered period
     const periodDays = STATE.dateRange.end.diff(STATE.dateRange.start, 'day') + 1;
@@ -248,6 +265,10 @@ export function calculateBudgetProjection(STATE) {
 
     // Budget status: are we on track?
     const onTrack = dailyBudget >= avgDailySpend;
+
+    // Use profile salary if available
+    const profileSalary = profileSettings.salary_amount;
+    const lastSalaryAmount = profileSalary || (salaries.length > 0 ? salaries[0].amount : 0);
 
     return {
         income,
@@ -258,6 +279,7 @@ export function calculateBudgetProjection(STATE) {
         dailyBudget,
         avgDailySpend,
         onTrack,
-        lastSalaryAmount: salaries.length > 0 ? salaries[0].amount : 0
+        lastSalaryAmount,
+        monthlyBudget: monthlyBudget || null
     };
 }

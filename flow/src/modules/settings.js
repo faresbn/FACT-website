@@ -71,12 +71,12 @@ export function applyCustomDate(STATE, filterAndRender) {
 let currentSettingsTab = 'general';
 
 export function switchSettingsTab(tabId, callbacks) {
-    const { renderSettingsGoalsList, renderRecipientsList } = callbacks;
+    const { renderSettingsGoalsList, renderRecipientsList, loadProfileTab } = callbacks;
     currentSettingsTab = tabId;
     localStorage.setItem('fact_settings_tab', tabId);
 
     // Update tab button states
-    const tabs = ['general', 'goals', 'contacts'];
+    const tabs = ['general', 'goals', 'contacts', 'profile'];
     tabs.forEach(t => {
         const tabBtn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         const panel = document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`);
@@ -102,17 +102,25 @@ export function switchSettingsTab(tabId, callbacks) {
         footer.classList.toggle('hidden', tabId !== 'general');
     }
 
+    // Show/hide footer (only for General and Profile tabs)
+    const footer2 = document.getElementById('settingsFooter');
+    if (footer2) {
+        footer2.classList.toggle('hidden', tabId !== 'general' && tabId !== 'profile');
+    }
+
     // Load data for active tab
     if (tabId === 'goals') {
         renderSettingsGoalsList();
     } else if (tabId === 'contacts') {
         renderRecipientsList();
+    } else if (tabId === 'profile' && typeof loadProfileTab === 'function') {
+        loadProfileTab();
     }
 }
 
 export function openSettings(tab = null, callbacks) {
     // Load saved settings
-    const savedModel = localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+    const savedModel = localStorage.getItem('fact_ai_model') || 'claude-sonnet';
     document.getElementById('settingsAiModel').value = savedModel;
 
     // Clear password fields
@@ -233,7 +241,104 @@ export function closeShortcutSetup() {
 }
 
 export function getSelectedAiModel() {
-    return localStorage.getItem('fact_ai_model') || 'gpt-5-mini';
+    return localStorage.getItem('fact_ai_model') || 'claude-sonnet';
+}
+
+// ─── BACKFILL ────────────────────────────────────────────────────
+export async function runBackfill(supabaseClient, CONFIG, showToast) {
+    const btn = document.getElementById('backfillBtn');
+    const status = document.getElementById('backfillStatus');
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    if (status) status.textContent = 'Categorizing transactions...';
+
+    try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        if (!accessToken) throw new Error('Not authenticated');
+
+        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-backfill`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        const msg = result.message || `Done: ${result.matched} matched, ${result.ai_categorized} AI-categorized`;
+        if (status) status.textContent = msg;
+        if (typeof showToast === 'function') showToast(msg, 'success');
+
+        // Hide backfill section if no more uncategorized
+        if (result.total === 0 || (result.matched + result.ai_categorized === result.total)) {
+            const section = document.getElementById('backfillSection');
+            if (section) section.classList.add('hidden');
+        }
+    } catch (err) {
+        if (status) status.textContent = 'Error: ' + err.message;
+        if (typeof showToast === 'function') showToast('Backfill failed: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Backfill';
+    }
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────
+export function loadProfileTab(STATE) {
+    const settings = STATE.profile?.settings || {};
+
+    const salaryDay = document.getElementById('profileSalaryDay');
+    const salaryAmount = document.getElementById('profileSalaryAmount');
+    const monthlyBudget = document.getElementById('profileMonthlyBudget');
+    const familyNames = document.getElementById('profileFamilyNames');
+
+    if (salaryDay) salaryDay.value = settings.salary_day || '';
+    if (salaryAmount) salaryAmount.value = settings.salary_amount || '';
+    if (monthlyBudget) monthlyBudget.value = settings.monthly_budget || '';
+    if (familyNames) familyNames.value = (settings.family_patterns || []).join(', ');
+}
+
+export async function saveProfile(supabaseClient, CONFIG, STATE, showToast) {
+    const salaryDay = parseInt(document.getElementById('profileSalaryDay')?.value) || null;
+    const salaryAmount = parseFloat(document.getElementById('profileSalaryAmount')?.value) || null;
+    const monthlyBudget = parseFloat(document.getElementById('profileMonthlyBudget')?.value) || null;
+    const familyNamesRaw = document.getElementById('profileFamilyNames')?.value || '';
+    const familyPatterns = familyNamesRaw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    const settings = {
+        ...(STATE.profile?.settings || {}),
+        salary_day: salaryDay,
+        salary_amount: salaryAmount,
+        monthly_budget: monthlyBudget,
+        family_patterns: familyPatterns,
+    };
+
+    try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        if (!accessToken) throw new Error('Not authenticated');
+
+        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-profile`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ action: 'save', settings })
+        });
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        STATE.profile = { ...STATE.profile, settings };
+        if (typeof showToast === 'function') showToast('Profile saved', 'success');
+    } catch (err) {
+        if (typeof showToast === 'function') showToast('Failed to save profile: ' + err.message, 'error');
+    }
 }
 
 export async function changePassword(supabaseClient) {
