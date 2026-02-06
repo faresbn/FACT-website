@@ -54,6 +54,13 @@
       var style = document.getElementById('authGuardCSS');
       if (hasCode) {
         // PKCE flow in progress — keep both hidden, JS will resolve it
+        // Safety: if JS hasn't resolved after 8s, show login
+        setTimeout(function(){
+          var guard = document.getElementById('authGuardCSS');
+          if (guard && guard.textContent.indexOf('loginScreen') !== -1 && guard.textContent.indexOf('mainApp') !== -1) {
+            guard.textContent = '#mainApp { display: none !important; }';
+          }
+        }, 8000);
       } else if (hasSession) {
         style.textContent = '#loginScreen { display: none !important; }';
       } else {
@@ -61,7 +68,7 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/flow/assets/flow-EVKLXDCN.js"></script>
+  <script type="module" crossorigin src="/flow/assets/flow-Dq0vqEUV.js"></script>
   <link rel="stylesheet" crossorigin href="/flow/assets/flow-hG3o3lui.css">
 </head>
 <body class="text-fact-ink dark:text-fact-dark-ink">

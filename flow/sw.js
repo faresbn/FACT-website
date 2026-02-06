@@ -3,7 +3,7 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v4';
+const CACHE_NAME = 'fact-flow-v5';
 const STATIC_ASSETS = [
   '/flow/',
   '/flow/index.html',

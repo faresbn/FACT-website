@@ -236,7 +236,14 @@ const CONFIG = {
     AUTH_REDIRECT_URL: import.meta.env.VITE_AUTH_REDIRECT_URL || window.location.origin + '/flow/'
 };
 
-const supabaseClient = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const supabaseClient = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+    auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        persistSession: true
+    }
+});
 
 // ─── DIMENSION-BASED CATEGORIZATION SYSTEM ──────────────────────
 
@@ -697,21 +704,7 @@ function showLogin() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Set up auth state listener FIRST so it catches PKCE exchange events
-    supabaseClient.auth.onAuthStateChange((event, sessionData) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && sessionData?.user) {
-            if (!appInitialised) {
-                appInitialised = true;
-                showApp(sessionData.user);
-            }
-        }
-        if (event === 'SIGNED_OUT') {
-            appInitialised = false;
-            showLogin();
-        }
-    });
-
-    // Check for auth error params in URL (e.g. expired OAuth state)
+    // Check for auth error params in URL FIRST (e.g. expired OAuth state)
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
     const authError = params.get('error_description') || hashParams.get('error_description');
@@ -725,37 +718,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Handle PKCE code exchange explicitly (OAuth redirect back with ?code=)
-    const code = params.get('code');
-    if (code) {
-        try {
-            const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
-            if (error) {
-                console.error('PKCE exchange failed:', error.message);
-                history.replaceState(null, '', window.location.pathname);
-                showLogin();
-                showLoginError('Login failed. Please try again.');
-                return;
+    // Set up auth state listener.
+    // With flowType:'pkce' and detectSessionInUrl:true, Supabase will
+    // automatically detect ?code= in the URL, exchange it for a session,
+    // and fire SIGNED_IN through this listener. No manual exchange needed.
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, sessionData) => {
+        console.log('[Auth] event:', event, 'user:', sessionData?.user?.email);
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (sessionData?.user && !appInitialised) {
+                appInitialised = true;
+                // Clean auth params from URL after successful auth
+                if (window.location.search.includes('code=') || window.location.hash.includes('access_token')) {
+                    history.replaceState(null, '', window.location.pathname);
+                }
+                showApp(sessionData.user);
             }
-            // Success — onAuthStateChange SIGNED_IN will fire and call showApp
-            history.replaceState(null, '', window.location.pathname);
-            return;
-        } catch (err) {
-            console.error('PKCE exchange error:', err);
-            history.replaceState(null, '', window.location.pathname);
-            showLogin();
-            showLoginError('Login failed. Please try again.');
-            return;
         }
-    }
 
-    // No code param — check for existing session
-    const { data: session } = await supabaseClient.auth.getSession();
+        if (event === 'INITIAL_SESSION') {
+            if (sessionData?.user) {
+                if (!appInitialised) {
+                    appInitialised = true;
+                    showApp(sessionData.user);
+                }
+            } else {
+                // No existing session and no code exchange happened — show login
+                // (If ?code= is present, detectSessionInUrl will handle it and
+                // fire SIGNED_IN shortly after this INITIAL_SESSION event)
+                if (!window.location.search.includes('code=')) {
+                    showLogin();
+                }
+            }
+        }
 
-    // If no session and app hasn't initialized, show login
-    if (!session?.session?.user && !appInitialised) {
-        showLogin();
-    }
+        if (event === 'SIGNED_OUT') {
+            appInitialised = false;
+            showLogin();
+        }
+    });
 });
 
 async function attemptLogin() {
