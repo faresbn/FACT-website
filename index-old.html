@@ -1,0 +1,230 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FACT — Applied Intelligence</title>
+<meta name="description" content="FACT — strategic intelligence across communications, finance, and legal operations.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfafa;
+    --edge:#17191a;
+    --ink:#111217;
+    --muted:#525456;
+
+    --purple:#B593C6;
+    --yellow:#F7C843;
+    --green:#70BB73;
+
+    --purple-t:#EDE2F5;
+    --yellow-t:#FBEDD2;
+    --green-t:#DFF2E6;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+    line-height:1.5;-webkit-text-size-adjust:100%;
+  }
+
+  .page{height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+  .shell{
+    width:100%;max-width:1160px;height:100%;max-height:700px;
+    display:grid;grid-template-columns:38% 62%;
+    border:4px solid var(--edge);background:#fff;
+    box-shadow:0 8px 32px rgba(23,25,26,0.12),0 2px 12px rgba(23,25,26,0.06);
+  }
+
+  /* Left column */
+  .sidebar{
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:2rem 1.5rem;border-right:1px solid rgba(23,25,26,0.12);
+  }
+
+  .brand{display:flex;flex-direction:column;gap:1.5rem}
+  .brand img{width:100%;max-width:280px;height:auto}
+  .tagline{
+    font-family:Space Grotesk;font-size:.85rem;line-height:1.6;
+    color:var(--ink);font-weight:500;max-width:32ch;
+  }
+
+  /* Tab navigation */
+  .tabs{display:flex;flex-direction:column;gap:.5rem;margin-top:2rem}
+  .tab{
+    font-family:Space Grotesk;font-size:.9rem;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;
+    padding:.75rem 1rem;border-radius:4px;cursor:pointer;
+    background:transparent;border:1px solid transparent;
+    color:var(--muted);transition:all .2s ease;
+    text-align:left;
+  }
+  .tab:hover{background:rgba(23,25,26,0.03)}
+  .tab.active{border-color:var(--edge);color:var(--edge)}
+  .tab.active[data-tab="creative"]{border-left:4px solid var(--purple)}
+  .tab.active[data-tab="finance"]{border-left:4px solid var(--yellow)}
+  .tab.active[data-tab="legal"]{border-left:4px solid var(--green)}
+
+  /* Contact */
+  .contact{
+    padding-top:1.5rem;border-top:1px solid rgba(23,25,26,0.1);
+    font-size:.85rem;color:var(--muted);
+  }
+  .contact a{
+    color:var(--edge);text-decoration:none;font-weight:600;
+    border-bottom:1px solid transparent;transition:border .2s ease;
+  }
+  .contact a:hover{border-bottom-color:var(--edge)}
+
+  /* Right column - content area */
+  .content-area{
+    padding:2rem;display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+
+  .content-panel{
+    display:none;opacity:0;transition:opacity .3s ease;
+    max-width:560px;
+  }
+  .content-panel.active{display:block;opacity:1}
+
+  .content-panel h2{
+    font-family:Space Grotesk;font-size:2rem;font-weight:700;
+    text-transform:uppercase;line-height:1.2;margin-bottom:1rem;
+    color:var(--edge);
+  }
+  .content-panel .accent{display:inline-block;padding:0 .3rem}
+  .creative-panel .accent{background:var(--purple-t);color:var(--purple)}
+  .finance-panel .accent{background:var(--yellow-t);color:var(--edge)}
+  .legal-panel .accent{background:var(--green-t);color:var(--green)}
+
+  .content-panel p{
+    font-size:.95rem;line-height:1.7;color:var(--ink);margin-bottom:1rem;
+  }
+  .content-panel ul{
+    list-style:none;margin-top:1.5rem;display:flex;flex-direction:column;gap:.75rem;
+  }
+  .content-panel li{
+    padding-left:1.5rem;position:relative;font-size:.9rem;line-height:1.6;
+    color:var(--ink);
+  }
+  .content-panel li:before{
+    content:"→";position:absolute;left:0;font-weight:700;
+  }
+  .creative-panel li:before{color:var(--purple)}
+  .finance-panel li:before{color:var(--yellow)}
+  .legal-panel li:before{color:var(--green)}
+
+  /* Responsive */
+  @media (max-width:920px){
+    .shell{grid-template-columns:1fr;max-height:none;height:auto}
+    .sidebar{border-right:none;border-bottom:1px solid rgba(23,25,26,0.12);padding:1.5rem}
+    .tabs{flex-direction:row;flex-wrap:wrap}
+    .tab{flex:1;min-width:140px;text-align:center}
+    .content-area{padding:1.5rem}
+  }
+
+  @media (max-width:520px){
+    .page{padding:1rem}
+    .content-panel h2{font-size:1.6rem}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      
+      <!-- Left sidebar -->
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="FACTLogo2025wline.png" alt="FACT" loading="eager" decoding="async" />
+          <p class="tagline">Strategic intelligence across communications, finance, and legal operations.</p>
+          
+          <nav class="tabs" role="tablist">
+            <button class="tab active" data-tab="creative" role="tab" aria-selected="true">Communications</button>
+            <button class="tab" data-tab="finance" role="tab" aria-selected="false">Finance</button>
+            <button class="tab" data-tab="legal" role="tab" aria-selected="false">Legal</button>
+          </nav>
+        </div>
+
+        <div class="contact">
+          <div>Independent practice</div>
+          <div style="margin-top:.5rem"><a href="mailto:info@fact.qa">info@fact.qa</a></div>
+        </div>
+      </aside>
+
+      <!-- Right content area -->
+      <main class="content-area">
+        
+        <!-- Creative/Communications panel -->
+        <div class="content-panel creative-panel active" role="tabpanel">
+          <h2><span class="accent">Strategy &amp; Creative Systems</span></h2>
+          <p>Applied research and narrative intelligence for complex projects. We work at the intersection of story, systems, and AI-assisted creativity.</p>
+          <ul>
+            <li>Strategic communications and positioning</li>
+            <li>Narrative research and applied frameworks</li>
+            <li>AI toolkit development and custom solutions</li>
+            <li>Content strategy and creative direction</li>
+          </ul>
+        </div>
+
+        <!-- Finance panel -->
+        <div class="content-panel finance-panel" role="tabpanel">
+          <h2><span class="accent">Financial Advisory</span></h2>
+          <p>Independent financial consulting and advisory services. We provide strategic guidance on capital structure, financial planning, and project financing.</p>
+          <ul>
+            <li>Financial consulting and advisory</li>
+            <li>Project financing and capital planning</li>
+            <li>Business development support</li>
+            <li>Financial modeling and analysis</li>
+          </ul>
+        </div>
+
+        <!-- Legal panel -->
+        <div class="content-panel legal-panel" role="tabpanel">
+          <h2><span class="accent">Legal &amp; Operations</span></h2>
+          <p>Corporate legal support and contract management. Senior paralegal expertise across corporate structures, agreements, and operational compliance.</p>
+          <ul>
+            <li>Corporate legal and contracts</li>
+            <li>Paralegal services and documentation</li>
+            <li>Agreement drafting and review</li>
+            <li>Operational compliance support</li>
+          </ul>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.content-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        
+        // Update tabs
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        
+        // Update panels
+        panels.forEach(panel => {
+          panel.classList.remove('active');
+        });
+        document.querySelector(`.${target}-panel`).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
