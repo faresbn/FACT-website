@@ -3,7 +3,7 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v6';
+const CACHE_NAME = 'fact-flow-v7';
 const STATIC_ASSETS = [
   '/flow/',
   '/flow/index.html',
@@ -83,19 +83,6 @@ self.addEventListener('fetch', (event) => {
       url.searchParams.has('code') ||
       url.searchParams.has('error_description') ||
       (url.hash && url.hash.includes('access_token'))) {
-    return;
-  }
-
-  // API calls (GAS): Network only (don't cache)
-  if (url.hostname.includes('script.google.com')) {
-    event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(
-          JSON.stringify({ error: 'Offline - cannot reach server', offline: true }),
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-      })
-    );
     return;
   }
 

@@ -96,16 +96,10 @@ export function switchSettingsTab(tabId, callbacks) {
         }
     });
 
-    // Show/hide footer (only for General tab)
+    // Show/hide footer (only for General and Profile tabs)
     const footer = document.getElementById('settingsFooter');
     if (footer) {
-        footer.classList.toggle('hidden', tabId !== 'general');
-    }
-
-    // Show/hide footer (only for General and Profile tabs)
-    const footer2 = document.getElementById('settingsFooter');
-    if (footer2) {
-        footer2.classList.toggle('hidden', tabId !== 'general' && tabId !== 'profile');
+        footer.classList.toggle('hidden', tabId !== 'general' && tabId !== 'profile');
     }
 
     // Load data for active tab
@@ -232,7 +226,16 @@ export function copyShortcutKey() {
 
 export function openShortcutSetup(CONFIG) {
     const link = document.getElementById('shortcutTemplateLink');
-    link.href = CONFIG.SHORTCUT_TEMPLATE_URL;
+    const url = CONFIG.SHORTCUT_TEMPLATE_URL;
+    if (!url || url === 'YOUR_SHORTCUT_TEMPLATE_URL') {
+        link.href = '#';
+        link.classList.add('opacity-50', 'pointer-events-none');
+        link.textContent = 'Shortcut Template Not Configured';
+    } else {
+        link.href = url;
+        link.classList.remove('opacity-50', 'pointer-events-none');
+        link.textContent = 'Open Shortcut Template';
+    }
     document.getElementById('shortcutSetupModal').classList.remove('hidden');
 }
 
@@ -363,8 +366,8 @@ export async function changePassword(supabaseClient) {
         return;
     }
 
-    if (newPass.length < 6) {
-        errorEl.textContent = 'Password must be at least 6 characters';
+    if (newPass.length < 8) {
+        errorEl.textContent = 'Password must be at least 8 characters';
         errorEl.classList.remove('hidden');
         return;
     }

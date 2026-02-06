@@ -3,7 +3,7 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v3';
+const CACHE_NAME = 'fact-flow-v7';
 const STATIC_ASSETS = [
   '/flow/',
   '/flow/index.html',
@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
 
 const CDN_ASSETS = [
   'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js',
   'https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js',
   'https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js',
@@ -77,20 +77,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API calls (GAS): Network only (don't cache)
-  if (url.hostname.includes('script.google.com')) {
+  // NEVER cache or intercept auth-related requests
+  // Supabase auth endpoints, OAuth callbacks with ?code=, hash tokens
+  if (url.hostname.includes('supabase.co') ||
+      url.searchParams.has('code') ||
+      url.searchParams.has('error_description') ||
+      (url.hash && url.hash.includes('access_token'))) {
+    return;
+  }
+
+  // HTML navigation: Network-first (always get latest), cache fallback for offline
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(
-          JSON.stringify({ error: 'Offline - cannot reach server', offline: true }),
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-      })
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse.ok) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('/flow/index.html'))
     );
     return;
   }
 
-  // Static assets and CDN: Cache-first, network fallback
+  // Static assets and CDN: Cache-first, network fallback (with background update)
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -112,7 +124,7 @@ self.addEventListener('fetch', (event) => {
       // Not in cache: fetch from network
       return fetch(request)
         .then((networkResponse) => {
-          // Cache successful responses
+          // Cache successful responses (skip google fonts analytics etc)
           if (networkResponse.ok && !url.hostname.includes('google')) {
             const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -122,10 +134,6 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Offline fallback for HTML
-          if (request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/flow/index.html');
-          }
           return new Response('Offline', { status: 503 });
         });
     })

@@ -92,7 +92,10 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
             STATE.dbStreaks = data.Streaks;
         }
 
-        document.getElementById('lastSync').textContent = `Synced ${dayjs().format('HH:mm')}`;
+        const syncText = `Synced ${dayjs().format('HH:mm')}`;
+        document.getElementById('lastSync').textContent = syncText;
+        const footerSync = document.getElementById('lastSyncFooter');
+        if (footerSync) footerSync.textContent = syncText;
 
         document.getElementById('loadingState').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');

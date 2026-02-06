@@ -31,6 +31,7 @@ import {
 
 // Onboarding module
 import {
+    initOnboarding,
     checkOnboarding,
     openOnboarding,
     closeOnboarding,
@@ -244,6 +245,9 @@ const supabaseClient = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KE
         persistSession: true
     }
 });
+
+// Initialize modules that need CONFIG
+initOnboarding(CONFIG);
 
 // ─── DIMENSION-BASED CATEGORIZATION SYSTEM ──────────────────────
 

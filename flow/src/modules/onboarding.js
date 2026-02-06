@@ -16,7 +16,12 @@ const BANK_CONFIG = [
 ];
 
 let onboardingStep = 0;
+let _config = null;
 const ONBOARDING_STEPS = ['welcome', 'bank', 'key', 'shortcut', 'test', 'done'];
+
+export function initOnboarding(CONFIG) {
+    _config = CONFIG;
+}
 
 export async function checkOnboarding(supabaseClient) {
     try {
@@ -68,7 +73,7 @@ export function onboardingPrev() {
     }
 }
 
-export function renderOnboardingStep(CONFIG) {
+export function renderOnboardingStep() {
     const step = ONBOARDING_STEPS[onboardingStep];
     const content = document.getElementById('onboardingContent');
     const progress = document.getElementById('onboardingProgress');
@@ -80,8 +85,8 @@ export function renderOnboardingStep(CONFIG) {
 
     backBtn.classList.toggle('hidden', onboardingStep === 0);
 
-    const FUNCTIONS_BASE = CONFIG?.FUNCTIONS_BASE || '';
-    const SHORTCUT_TEMPLATE_URL = CONFIG?.SHORTCUT_TEMPLATE_URL || '';
+    const FUNCTIONS_BASE = _config?.FUNCTIONS_BASE || '';
+    const SHORTCUT_TEMPLATE_URL = _config?.SHORTCUT_TEMPLATE_URL || '';
 
     if (step === 'welcome') {
         nextBtn.textContent = 'Get Started';
@@ -169,11 +174,15 @@ export function renderOnboardingStep(CONFIG) {
                         <span>Edit the Shortcut and paste your <strong>API Key</strong> and <strong>Supabase URL</strong> into the text fields.</span>
                     </li>
                 </ol>
+                ${SHORTCUT_TEMPLATE_URL && SHORTCUT_TEMPLATE_URL !== 'YOUR_SHORTCUT_TEMPLATE_URL' ? `
                 <a href="${SHORTCUT_TEMPLATE_URL}" target="_blank"
                     class="inline-flex items-center justify-center w-full px-4 py-3 text-sm bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-xl font-medium hover:opacity-90 transition min-h-[48px]">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Get Shortcut Template
-                </a>
+                </a>` : `
+                <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center text-xs text-fact-muted dark:text-fact-dark-muted">
+                    Shortcut template URL not configured yet. Skip this step for now.
+                </div>`}
                 <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Supabase URL (paste into Shortcut)</label>
                     <div class="flex items-center gap-2">
