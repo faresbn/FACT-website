@@ -47,8 +47,13 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
     document.getElementById('mainContent').classList.add('hidden');
 
     try {
-        const { data: session } = await supabaseClient.auth.getSession();
-        const accessToken = session?.session?.access_token;
+        // Use passed session if available (avoids getSession() race condition),
+        // otherwise fall back to getSession()
+        let accessToken = callbacks.session?.access_token;
+        if (!accessToken) {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            accessToken = sessionData?.session?.access_token;
+        }
         if (!accessToken) throw new Error('AUTH_REQUIRED');
 
         const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-data`, {

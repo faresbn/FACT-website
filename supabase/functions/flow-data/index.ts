@@ -23,7 +23,11 @@ Deno.serve(async (request) => {
   }
 
   const supabase = createUserClient(request);
-  const { data: { user }, error } = await supabase.auth.getUser();
+  // Extract JWT from Authorization header and pass explicitly to getUser()
+  // (global headers are not used by auth.getUser() when persistSession is false)
+  const authHeader = request.headers.get('authorization') || '';
+  const jwt = authHeader.replace('Bearer ', '');
+  const { data: { user }, error } = await supabase.auth.getUser(jwt);
   if (error || !user) {
     return jsonResponse(request, { error: 'AUTH_REQUIRED', code: 'AUTH_REQUIRED' }, 401);
   }

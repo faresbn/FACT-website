@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (window.location.search.includes('code=') || window.location.hash.includes('access_token')) {
                     history.replaceState(null, '', window.location.pathname);
                 }
-                showApp(sessionData.user);
+                showApp(sessionData.user, sessionData);
             }
         }
 
@@ -742,7 +742,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (sessionData?.user) {
                 if (!appInitialised) {
                     appInitialised = true;
-                    showApp(sessionData.user);
+                    showApp(sessionData.user, sessionData);
                 }
             } else {
                 // No existing session and no code exchange happened — show login
@@ -820,7 +820,7 @@ function showLoginError(msg, isError = true) {
     setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
-async function showApp(user) {
+async function showApp(user, session) {
     removeAuthGuard();
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
@@ -841,8 +841,9 @@ async function showApp(user) {
 
     loadLocal(CONFIG, STATE);
 
-    // Sync data with callbacks
+    // Sync data with callbacks (pass session to avoid getSession() race condition)
     await syncData(supabaseClient, CONFIG, STATE, {
+        session,
         showToast,
         filterAndRender,
         checkAchievements,
