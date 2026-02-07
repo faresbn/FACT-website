@@ -80,7 +80,6 @@ import {
     copyShortcutKey,
     openShortcutSetup,
     closeShortcutSetup,
-    getSelectedAiModel,
     changePassword,
     runBackfill,
     loadProfileTab as loadProfileTabModule,
@@ -164,17 +163,15 @@ import {
     renderTxnModal as renderTxnModalModule
 } from './modules/modals.js';
 
-// AI module
+// Insights module
 import {
-    openAskAI,
-    closeAskAI,
     prepareTransactionSummary as prepareTransactionSummaryModule,
-    askAIChat as askAIChatModule,
-    clearAIChat,
     renderQuickInsights as renderQuickInsightsModule,
     closeAiInsights,
-    refreshInsights as refreshInsightsModule
-} from './modules/ai.js';
+    refreshInsights as refreshInsightsModule,
+    renderRecurringSummary as renderRecurringSummaryModule,
+    renderProactiveInsights as renderProactiveInsightsModule
+} from './modules/insights.js';
 
 // Chat module (new streaming chat)
 import { initChat, toggleChat, openChat, closeChat } from './modules/chat.js';
@@ -197,8 +194,6 @@ import {
     showFilteredResults as showFilteredResultsModule,
     closeFilteredModal,
     renderTxnRowEnhanced as renderTxnRowEnhancedModule,
-    initVoiceRecognition,
-    toggleVoiceInput as toggleVoiceInputModule
 } from './modules/filters.js';
 
 // Recipients module
@@ -264,106 +259,12 @@ const supabaseClient = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KE
 // Initialize modules that need CONFIG
 initOnboarding(CONFIG);
 
-// ─── DIMENSION-BASED CATEGORIZATION SYSTEM ──────────────────────
-
-// DIMENSION 1: WHAT (merchant type)
-const MERCHANT_TYPES = {
-    'Groceries': { color: '#4CAF50', icon: '🛒', essential: true },
-    'Dining': { color: '#E67E22', icon: '🍽️', essential: false },
-    'Bars & Nightlife': { color: '#AB47BC', icon: '🍸', essential: false },
-    'Coffee': { color: '#795548', icon: '☕', essential: false },
-    'Delivery': { color: '#FFA726', icon: '📦', essential: false },
-    'Shopping': { color: '#42A5F5', icon: '🛍️', essential: false },
-    'Transport': { color: '#26C6DA', icon: '🚗', essential: true },
-    'Health': { color: '#66BB6A', icon: '💊', essential: true },
-    'Bills': { color: '#78909C', icon: '📄', essential: true },
-    'Travel': { color: '#FF7043', icon: '✈️', essential: false },
-    'Entertainment': { color: '#EC407A', icon: '🎬', essential: false },
-    'Transfer': { color: '#8D6E63', icon: '💸', essential: false },
-    'Family': { color: '#E91E63', icon: '👨‍👩‍👧‍👦', essential: false },
-    'Other': { color: '#95A5A6', icon: '📋', essential: false },
-    'Uncategorized': { color: '#E74C3C', icon: '❓', essential: false }
-};
-
-// DIMENSION 2: WHEN (time context)
-const TIME_CONTEXTS = {
-    'Work Hours': { color: '#3498DB', hours: [7, 16], days: [0, 1, 2, 3, 4], icon: '💼' },
-    'Evening': { color: '#9B59B6', hours: [17, 21], icon: '🌆' },
-    'Late Night': { color: '#2C3E50', hours: [21, 4], icon: '🌙' },
-    'Weekend': { color: '#E74C3C', days: [5, 6], icon: '🎉' },
-    'Early Morning': { color: '#F39C12', hours: [5, 7], icon: '🌅' }
-};
-
-// DIMENSION 3: SIZE (amount tier)
-const SIZE_TIERS = {
-    'Micro': { max: 25, color: '#BDC3C7', icon: '•' },
-    'Small': { max: 100, color: '#95A5A6', icon: '••' },
-    'Medium': { max: 500, color: '#7F8C8D', icon: '•••' },
-    'Large': { max: 2000, color: '#34495E', icon: '••••' },
-    'Major': { max: Infinity, color: '#2C3E50', icon: '•••••' }
-};
-
-// DIMENSION 4: PATTERN
-const PATTERNS = {
-    'Routine': { color: '#3498DB', icon: '🔄', description: 'Regular, repeated spending' },
-    'Night Out': { color: '#9B59B6', icon: '🎉', description: 'Evening social spending cluster' },
-    'Splurge': { color: '#E74C3C', icon: '💸', description: 'Unusually large purchase' },
-    'Trip': { color: '#E67E22', icon: '✈️', description: 'Travel-related cluster' },
-    'Subscription': { color: '#1ABC9C', icon: '📅', description: 'Recurring fixed amount' },
-    'Work Expense': { color: '#3498DB', icon: '💼', description: 'Likely work-related' },
-    'Normal': { color: '#95A5A6', icon: '○', description: 'Standard transaction' }
-};
-
-// High-level groupings for summary view
-const SUMMARY_GROUPS = {
-    'Essentials': { color: '#75B876', icon: '🏠', types: ['Groceries', 'Bills', 'Health', 'Transport'] },
-    'Food & Drinks': { color: '#F4C44E', icon: '🍽️', types: ['Dining', 'Coffee', 'Delivery', 'Bars & Nightlife'] },
-    'Shopping & Fun': { color: '#9B8AC4', icon: '🛍️', types: ['Shopping', 'Entertainment', 'Travel'] },
-    'Family': { color: '#E8A4B8', icon: '👨‍👩‍👧‍👦', types: ['Family'] },
-    'Other': { color: '#A8B5C4', icon: '📋', types: ['Transfer', 'Other', 'Uncategorized'] }
-};
-
-// Build CAT_COLORS from MERCHANT_TYPES and SUMMARY_GROUPS
-const CAT_COLORS = {};
-Object.entries(MERCHANT_TYPES).forEach(([name, data]) => CAT_COLORS[name] = data.color);
-Object.entries(SUMMARY_GROUPS).forEach(([name, data]) => CAT_COLORS[name] = data.color);
-
-// Compute functions
-function getSummaryGroup(merchantType) {
-    for (const [group, data] of Object.entries(SUMMARY_GROUPS)) {
-        if (data.types.includes(merchantType)) return group;
-    }
-    return 'Other';
-}
-
-function getTimeContext(date) {
-    const hour = date.hour();
-    const day = date.day();
-    const contexts = [];
-
-    if (day === 5 || day === 6) contexts.push('Weekend');
-    if (hour >= 7 && hour < 16 && day >= 0 && day <= 4) contexts.push('Work Hours');
-    if (hour >= 17 && hour < 21) contexts.push('Evening');
-    if (hour >= 21 || hour < 5) contexts.push('Late Night');
-    if (hour >= 5 && hour < 7) contexts.push('Early Morning');
-
-    return contexts.length > 0 ? contexts : ['Normal'];
-}
-
-function getSizeTier(amount) {
-    for (const [tier, data] of Object.entries(SIZE_TIERS)) {
-        if (amount <= data.max) return tier;
-    }
-    return 'Major';
-}
-
-function getTypeColor(type) {
-    return MERCHANT_TYPES[type]?.color || '#95A5A6';
-}
-
-function getGroupColor(group) {
-    return SUMMARY_GROUPS[group]?.color || '#95A5A6';
-}
+// Constants module
+import {
+    MERCHANT_TYPES, TIME_CONTEXTS, SIZE_TIERS, PATTERNS,
+    SUMMARY_GROUPS, CAT_COLORS,
+    getSummaryGroup, getTimeContext, getSizeTier, getTypeColor, getGroupColor
+} from './modules/constants.js';
 
 // ─── STATE ──────────────────────────────────────────────────────
 
@@ -385,7 +286,10 @@ const STATE = {
     profile: null,
     dbGoals: null,
     dbInsights: null,
-    dbStreaks: null
+    dbStreaks: null,
+    recurring: [],
+    hourlySpend: [],
+    proactiveInsights: []
 };
 
 // ─── WRAPPER FUNCTIONS ──────────────────────────────────────────
@@ -404,6 +308,9 @@ function filterAndRender() {
     });
     // Render new visualizations after filter
     renderAllVisualizations();
+    // Render recurring subscriptions and proactive alerts
+    renderRecurringSummary();
+    renderProactiveInsights();
     // Emit event for any module listening for data changes
     emit(EVENTS.DATA_FILTERED, { count: STATE.filtered.length, period: STATE.period });
 }
@@ -583,12 +490,6 @@ function renderQuickInsights() {
     renderQuickInsightsModule(STATE, { formatNum, escapeHtml, PATTERNS });
 }
 
-async function askAIChat(question) {
-    await askAIChatModule(question, STATE, supabaseClient, CONFIG, {
-        formatNum, escapeHtml, sanitizeHTML, getSelectedAiModel, trackAchievement
-    });
-}
-
 async function refreshInsights() {
     await refreshInsightsModule(STATE, supabaseClient, CONFIG, {
         formatNum, escapeHtml, sanitizeHTML, prepareTransactionSummary
@@ -597,6 +498,14 @@ async function refreshInsights() {
 
 function prepareTransactionSummary() {
     return prepareTransactionSummaryModule(STATE, formatNum);
+}
+
+function renderRecurringSummary() {
+    renderRecurringSummaryModule(STATE, { formatNum, escapeHtml });
+}
+
+function renderProactiveInsights() {
+    renderProactiveInsightsModule(STATE, { formatNum, escapeHtml });
 }
 
 function filterByDimension(dimension) {
@@ -609,10 +518,6 @@ function showFilteredResults(txns, title) {
 
 function renderTxnRowEnhanced(t) {
     return renderTxnRowEnhancedModule(t, { formatNum, escapeHtml, getTypeColor, MERCHANT_TYPES, PATTERNS });
-}
-
-function toggleVoiceInput() {
-    toggleVoiceInputModule(trackAchievement, askAIChat);
 }
 
 function loadProfileTab() {
@@ -883,7 +788,7 @@ async function showApp(user, session) {
         getSummaryGroup,
         getTimeContext,
         getSizeTier,
-        categorize: (raw, aiType) => categorize(raw, aiType, STATE, MERCHANT_TYPES),
+        categorize: (raw, aiType, counterparty, dbCategory) => categorize(raw, aiType, STATE, MERCHANT_TYPES, counterparty, dbCategory),
         detectPatterns: () => detectPatterns(STATE, (t) => isExemptFromSplurge(t, STATE)),
         matchRecipient: (cp) => matchRecipient(cp, STATE)
     });
@@ -892,7 +797,9 @@ async function showApp(user, session) {
     emit(EVENTS.DATA_SYNCED, { count: STATE.allTxns.length });
 
     // Initialize streaming chat panel
-    initChat(CONFIG, supabaseClient);
+    initChat(CONFIG, supabaseClient, {
+        onDataChanged: () => window.syncData()
+    });
 
     // Migrate localStorage goals to DB if needed
     migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(() => {});
@@ -931,7 +838,7 @@ window.showApp = showApp;
 window.syncData = () => syncData(supabaseClient, CONFIG, STATE, {
     showToast, filterAndRender, checkAchievements, renderPatternWarnings, setSalaryPeriod, setPeriod, updateCatDropdowns,
     MERCHANT_TYPES, getSummaryGroup, getTimeContext, getSizeTier,
-    categorize: (raw, aiType) => categorize(raw, aiType, STATE, MERCHANT_TYPES),
+    categorize: (raw, aiType, counterparty, dbCategory) => categorize(raw, aiType, STATE, MERCHANT_TYPES, counterparty, dbCategory),
     detectPatterns: () => detectPatterns(STATE, (t) => isExemptFromSplurge(t, STATE)),
     matchRecipient: (cp) => matchRecipient(cp, STATE)
 });
@@ -989,10 +896,6 @@ window.SUMMARY_GROUPS = SUMMARY_GROUPS;
 window.CAT_COLORS = CAT_COLORS;
 window.PATTERNS = PATTERNS;
 
-window.openAskAI = openAskAI;
-window.closeAskAI = closeAskAI;
-window.askAIChat = askAIChat;
-window.clearAIChat = clearAIChat;
 window.closeAchievements = closeAchievements;
 window.closeAiInsights = closeAiInsights;
 window.closeGenerositySettings = closeGenerositySettings;
@@ -1006,8 +909,6 @@ window.openTxnModal = openTxnModal;
 window.openUncatModal = openUncatModal;
 window.refreshInsights = refreshInsights;
 window.saveGenerositySettings = saveGenerositySettings;
-window.toggleVoiceInput = toggleVoiceInput;
-
 window.renderRecentTxns = renderRecentTxns;
 window.openDrilldown = openDrilldown;
 window.closeDrilldown = closeDrilldown;
@@ -1043,7 +944,5 @@ window.deleteRecipient = deleteRecipient;
 window.filterRecipientsList = () => filterRecipientsList(STATE, { escapeHtml });
 window.renderHeatmap = renderHeatmap;
 window.drilldownDate = drilldownDate;
-window.prepareTransactionSummary = prepareTransactionSummary;
-window.initVoiceRecognition = () => initVoiceRecognition(askAIChat);
 window.closeCelebration = closeCelebration;
 window.confirmResolve = () => {}; // Placeholder, set dynamically in showConfirm

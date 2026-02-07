@@ -628,6 +628,25 @@
                                 <!-- AI insights added here -->
                             </div>
                         </div>
+                        <!-- Proactive insights (anomalies, budget warnings) -->
+                        <div id="proactiveSection" class="hidden mt-3 pt-3 border-t border-fact-border/50 dark:border-fact-dark-border/50">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-medium text-amber-600 dark:text-amber-400">⚡ Alerts</span>
+                            </div>
+                            <div id="proactiveList" class="space-y-1">
+                                <!-- Proactive alerts added here -->
+                            </div>
+                        </div>
+                        <!-- Recurring/Subscriptions summary -->
+                        <div id="recurringSection" class="hidden mt-3 pt-3 border-t border-fact-border/50 dark:border-fact-dark-border/50">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-medium text-fact-green">📅 Subscriptions</span>
+                                <span id="recurringTotal" class="text-[10px] font-semibold text-fact-ink dark:text-fact-dark-ink"></span>
+                            </div>
+                            <div id="recurringList" class="space-y-1">
+                                <!-- Recurring items added here -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Category List (expanded breakdown) -->
@@ -861,48 +880,6 @@
             </div>
             <div id="merchantModalList" class="flex-1 overflow-y-auto divide-y divide-fact-border dark:divide-fact-dark-border">
                 <!-- Populated by JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- AI QUERY MODAL -->
-    <div id="aiModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <div class="modal-box card rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
-            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                <div>
-                    <h3 class="font-display font-semibold">Ask AI About Your Spending</h3>
-                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted">Powered by Claude via Supabase</p>
-                </div>
-                <button onclick="closeAskAI()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <!-- Quick Questions -->
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
-                <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-2">Quick Questions</p>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="askAI('What are my biggest spending categories this period?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Top categories</button>
-                    <button onclick="askAI('Find any unusual or suspicious transactions')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Anomalies</button>
-                    <button onclick="askAI('Which transactions might be work expenses I could claim?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Work expenses</button>
-                    <button onclick="askAI('Summarize my night out spending patterns')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Night outs</button>
-                    <button onclick="askAI('What subscriptions or recurring payments do I have?')" class="px-3 py-1.5 text-xs rounded-full border border-fact-border dark:border-fact-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 transition">Subscriptions</button>
-                </div>
-            </div>
-
-            <!-- Custom Query -->
-            <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
-                <div class="flex gap-2">
-                    <input type="text" id="aiQueryInput" placeholder="Ask anything about your spending..." class="flex-1 px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow" onkeydown="if(event.key==='Enter')askAI()">
-                    <button onclick="askAI()" class="px-4 py-2 bg-fact-ink dark:bg-fact-dark-ink text-white dark:text-fact-dark-bg rounded-lg text-sm font-medium">Ask</button>
-                </div>
-            </div>
-
-            <!-- Response -->
-            <div class="flex-1 overflow-y-auto p-5">
-                <div id="aiResponse" class="prose prose-sm dark:prose-invert max-w-none">
-                    <p class="text-fact-muted dark:text-fact-dark-muted text-sm">Ask a question to analyze your spending data.</p>
-                </div>
             </div>
         </div>
     </div>

@@ -76,7 +76,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         // Use incremental sync on subsequent loads
         const lastSync = isFirstLoad ? null : getLastSync(STATE);
         const requestBody = {
-            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks'],
+            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive'],
         };
         if (lastSync) requestBody.last_sync = lastSync;
 
@@ -100,7 +100,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
 
         const meta = result?.meta || {};
 
-        // Process each sheet (Supabase returns arrays, same format as CSV)
+        // Process each sheet
         if (data.FXRates) processFX(data.FXRates.slice(1), STATE);
         if (data.MerchantMap) processMerchantMap(data.MerchantMap, STATE, callbacks.updateCatDropdowns);
         if (data.UserContext) processUserContext(data.UserContext, STATE);
@@ -119,6 +119,15 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
         if (data.Streaks) {
             STATE.dbStreaks = data.Streaks;
+        }
+        if (data.Recurring) {
+            STATE.recurring = data.Recurring;
+        }
+        if (data.HourlySpend) {
+            STATE.hourlySpend = data.HourlySpend;
+        }
+        if (data.Proactive) {
+            STATE.proactiveInsights = data.Proactive;
         }
 
         // Save sync timestamp for next incremental sync
@@ -347,47 +356,35 @@ export function isExemptFromSplurge(txn, STATE) {
 export function processTxns(rows, STATE, callbacks) {
     const { MERCHANT_TYPES, getSummaryGroup, getTimeContext, getSizeTier, categorize, detectPatterns, matchRecipient: matchRecipientFn } = callbacks;
 
-    // Detect schema: old (8 cols) vs enhanced (12 cols)
-    const headers = rows[0] || [];
-    const hasEnhancedSchema = headers.length >= 10 &&
-        (clean(headers[7]) === 'Category' || clean(headers[8]) === 'Category');
-
-    const cols = hasEnhancedSchema
-        ? { ts: 0, amount: 1, currency: 2, counterparty: 3, card: 4, direction: 5, txnType: 6, category: 7, subcategory: 8, confidence: 9, context: 10, raw: 11 }
-        : { ts: 0, amount: 1, currency: 2, counterparty: 3, card: 4, direction: 5, txnType: 6, raw: 7 };
-
-    const data = rows.filter(r => clean(r[1]) !== 'Amount' && !isNaN(parseFloat(r[1])));
+    // rows is now an array of JSON objects from flow-data
+    const data = rows.filter(r => r.amount != null && !isNaN(parseFloat(r.amount)));
 
     STATE.allTxns = data.map(r => {
-        const raw = clean(r[cols.raw]);
-        const counterparty = clean(r[cols.counterparty]) || '';
-        const card = clean(r[cols.card]) || '';
-        const currency = clean(r[cols.currency]) || 'QAR';
-        const amount = parseFloat(r[cols.amount]);
+        const raw = r.raw_text || '';
+        const counterparty = r.counterparty || '';
+        const card = r.card || '';
+        const currency = r.currency || 'QAR';
+        const amount = parseFloat(r.amount);
         const rate = STATE.fxRates[currency] || 1;
         const amtQAR = currency === 'QAR' ? amount : amount * rate;
-        const txnDate = parseDate(r[cols.ts]);
+        const txnDate = parseDate(r.txn_timestamp);
 
-        // Try to get AI-assigned category from enhanced schema
-        let aiMerchantType = null;
-        let confidence = null;
+        // DB category fields
+        const dbCategory = r.category || null;
+        const aiMerchantType = r.subcategory || dbCategory || null;
+        const confidence = r.confidence || null;
         let aiContext = null;
-
-        if (hasEnhancedSchema) {
-            aiMerchantType = clean(r[cols.subcategory]) || clean(r[cols.category]) || null;
-            confidence = clean(r[cols.confidence]) || null;
-            try {
-                aiContext = r[cols.context] ? JSON.parse(clean(r[cols.context])) : null;
-            } catch (e) {
-                aiContext = null;
-            }
+        try {
+            aiContext = r.context ? (typeof r.context === 'string' ? JSON.parse(r.context) : r.context) : null;
+        } catch (e) {
+            aiContext = null;
         }
 
-        // Get merchant type and display info
-        const meta = categorize(raw, aiMerchantType);
+        // Get merchant type and display info (pass counterparty as clean display name)
+        const meta = categorize(raw, aiMerchantType, counterparty, dbCategory);
 
         // Check if this is a salary transaction (check multiple fields)
-        const txnType = clean(r[cols.txnType]);
+        const txnType = r.txn_type || '';
         const allText = `${raw} ${counterparty} ${card} ${txnType}`.toLowerCase();
         const isSalary = allText.includes('salary');
 
@@ -396,7 +393,7 @@ export function processTxns(rows, STATE, callbacks) {
             what: meta.merchantType,
             when: getTimeContext(txnDate),
             size: getSizeTier(amtQAR),
-            pattern: 'Normal' // Will be computed in batch by AI
+            pattern: 'Normal'
         };
 
         // Match recipient for transfers/Fawran
@@ -416,7 +413,7 @@ export function processTxns(rows, STATE, callbacks) {
             consolidated: meta.consolidated,
             merchantType: meta.merchantType,
             summaryGroup: getSummaryGroup(meta.merchantType),
-            direction: clean(r[cols.direction]),
+            direction: r.direction || '',
             txnType: txnType,
             confidence,
             aiContext,
@@ -440,8 +437,10 @@ export function processTxns(rows, STATE, callbacks) {
     detectPatterns();
 }
 
-export function categorize(raw, aiMerchantType, STATE, MERCHANT_TYPES) {
+export function categorize(raw, aiMerchantType, STATE, MERCHANT_TYPES, counterparty, dbCategory) {
     const lower = raw.toLowerCase();
+    // Use counterparty as the clean display name when available (parsed by AI on ingest)
+    const cleanName = counterparty || raw;
 
     // Priority 1: Local user overrides
     if (STATE.localMappings[lower]) {
@@ -453,9 +452,13 @@ export function categorize(raw, aiMerchantType, STATE, MERCHANT_TYPES) {
         };
     }
 
-    // Priority 2: AI-assigned type (if provided and valid)
-    if (aiMerchantType && MERCHANT_TYPES[aiMerchantType]) {
-        return { display: raw, consolidated: raw, merchantType: aiMerchantType };
+    // Priority 2: DB category — trust the database if a category was set
+    if (dbCategory && dbCategory.trim()) {
+        // Use subcategory if it matches a known MERCHANT_TYPES key, otherwise use parent category
+        const merchantType = (aiMerchantType && MERCHANT_TYPES[aiMerchantType])
+            ? aiMerchantType
+            : dbCategory;
+        return { display: cleanName, consolidated: cleanName, merchantType };
     }
 
     // Priority 3: MerchantMap patterns
@@ -482,7 +485,7 @@ export function categorize(raw, aiMerchantType, STATE, MERCHANT_TYPES) {
         return { display: match.display, consolidated: match.consolidated, merchantType };
     }
 
-    return { display: raw, consolidated: raw, merchantType: 'Uncategorized' };
+    return { display: cleanName, consolidated: cleanName, merchantType: 'Uncategorized' };
 }
 
 export function getStorageKey(CONFIG, STATE) {

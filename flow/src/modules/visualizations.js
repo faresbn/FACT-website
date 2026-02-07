@@ -316,23 +316,41 @@ export function renderTimeHeatmap(STATE, { formatNum }) {
     const container = document.getElementById('timeHeatmapGrid');
     if (!container) return;
 
-    const out = STATE.filtered.filter(t => t.direction === 'OUT');
-    if (out.length === 0) {
-        container.innerHTML = '<div class="text-xs text-fact-muted p-4 text-center">No spending data for heatmap</div>';
-        return;
-    }
-
     // Build heatmap data: 7 days x 24 hours
+    // Use pre-aggregated hourly_spend view when available (all-time, not period-filtered)
     const heatData = {};
     const maxAmount = { value: 0 };
 
-    out.forEach(t => {
-        const day = t.date.day(); // 0=Sun
-        const hour = t.date.hour();
-        const key = `${day}-${hour}`;
-        heatData[key] = (heatData[key] || 0) + t.amount;
-        if (heatData[key] > maxAmount.value) maxAmount.value = heatData[key];
-    });
+    if (STATE.hourlySpend && STATE.hourlySpend.length > 0) {
+        // Server-side pre-aggregated data from hourly_spend view
+        STATE.hourlySpend.forEach(row => {
+            const day = parseInt(row.day_of_week);
+            const hour = parseInt(row.hour_of_day);
+            const amount = parseFloat(row.total_amount || 0);
+            const key = `${day}-${hour}`;
+            heatData[key] = (heatData[key] || 0) + amount;
+            if (heatData[key] > maxAmount.value) maxAmount.value = heatData[key];
+        });
+    } else {
+        // Fallback: compute client-side from filtered transactions
+        const out = STATE.filtered.filter(t => t.direction === 'OUT');
+        if (out.length === 0) {
+            container.innerHTML = '<div class="text-xs text-fact-muted p-4 text-center">No spending data for heatmap</div>';
+            return;
+        }
+        out.forEach(t => {
+            const day = t.date.day();
+            const hour = t.date.hour();
+            const key = `${day}-${hour}`;
+            heatData[key] = (heatData[key] || 0) + t.amount;
+            if (heatData[key] > maxAmount.value) maxAmount.value = heatData[key];
+        });
+    }
+
+    if (maxAmount.value === 0) {
+        container.innerHTML = '<div class="text-xs text-fact-muted p-4 text-center">No spending data for heatmap</div>';
+        return;
+    }
 
     // Qatar week: Sun-Thu work, Fri-Sat weekend
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

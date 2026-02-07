@@ -13,6 +13,7 @@ marked.setOptions({
 let currentConversationId = null;
 let isStreaming = false;
 let chatExpanded = false;
+let chatCallbacks = {};
 
 const QUICK_ACTIONS = [
     { label: 'This month summary', query: 'Give me a summary of my spending this month' },
@@ -23,7 +24,8 @@ const QUICK_ACTIONS = [
     { label: 'Anomalies', query: 'Are there any unusual or anomalous transactions recently?' },
 ];
 
-export function initChat(CONFIG, supabaseClient) {
+export function initChat(CONFIG, supabaseClient, callbacks = {}) {
+    chatCallbacks = callbacks;
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
 
@@ -398,6 +400,12 @@ async function sendMessage(message, CONFIG, supabaseClient) {
                     if (event.type === 'done') {
                         if (event.conversation_id) {
                             currentConversationId = event.conversation_id;
+                        }
+                        // If chat used tools that modified data (goals, context), trigger re-sync
+                        if (event.remembered || event.tools_used) {
+                            if (typeof chatCallbacks?.onDataChanged === 'function') {
+                                chatCallbacks.onDataChanged();
+                            }
                         }
                     }
                 } catch (_e) {

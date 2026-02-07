@@ -417,7 +417,7 @@ export function openUncatModal(STATE, callbacks) {
         return `
             <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" data-raw="${safeRawData}" onclick="closeUncatModal(); openCatModalSafe(this)">
                 <div class="min-w-0">
-                    <div class="font-medium text-sm truncate">${escapeHtml(t.raw)}</div>
+                    <div class="font-medium text-sm truncate">${escapeHtml(t.display || t.counterparty || t.raw)}</div>
                     <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
                 </div>
                 <div class="font-display font-semibold text-sm">${formatNum(t.amount)}</div>
