@@ -57,6 +57,10 @@ jobs:
           # Copy built Flow app into /flow/
           mkdir -p _site/flow
           cp -r flow/dist/* _site/flow/
+          # GitHub Pages needs index.html for directory listing — copy flow.html as index.html
+          cp _site/flow/flow.html _site/flow/index.html
+          echo "=== _site structure ==="
+          find _site -type f | head -50
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
