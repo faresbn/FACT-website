@@ -366,7 +366,8 @@ export function processTxns(rows, STATE, callbacks) {
         const currency = r.currency || 'QAR';
         const amount = parseFloat(r.amount);
         const rate = STATE.fxRates[currency] || 1;
-        const amtQAR = currency === 'QAR' ? amount : amount * rate;
+        const amtQARApprox = r.amount_qar_approx ? parseFloat(r.amount_qar_approx) : null;
+        const amtQAR = currency === 'QAR' ? amount : (amtQARApprox || amount * rate);
         const txnDate = parseDate(r.txn_timestamp);
 
         // DB category fields

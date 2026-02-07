@@ -154,7 +154,7 @@ export function saveSettings(showToast) {
     closeSettings();
 }
 
-export async function generateShortcutKey(supabaseClient, CONFIG) {
+export async function generateShortcutKey(supabaseClient, CONFIG, callbacks = {}) {
     const statusEl = document.getElementById('shortcutKeyStatus');
     statusEl.textContent = 'Generating key...';
     try {
@@ -162,13 +162,16 @@ export async function generateShortcutKey(supabaseClient, CONFIG) {
         const accessToken = session?.session?.access_token;
         if (!accessToken) throw new Error('Not authenticated');
 
+        const labelEl = document.getElementById('shortcutKeyLabel');
+        const label = labelEl ? labelEl.value.trim() : '';
+
         const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-keys`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
             },
-            body: JSON.stringify({ action: 'create' })
+            body: JSON.stringify({ action: 'create', label: label || null })
         });
         const result = await response.json();
         if (result.error) throw new Error(result.error);
@@ -179,7 +182,15 @@ export async function generateShortcutKey(supabaseClient, CONFIG) {
         const input = document.getElementById('shortcutKeyValue');
         input.value = result.key;
         box.classList.remove('hidden');
-        statusEl.textContent = 'Key generated. Paste it into your Shortcut.';
+        statusEl.textContent = 'Key generated. Copy it now — it won\'t be shown again.';
+
+        // Clear label input
+        if (labelEl) labelEl.value = '';
+
+        // Refresh key list if callback provided
+        if (typeof callbacks.refreshKeyList === 'function') {
+            callbacks.refreshKeyList();
+        }
     } catch (err) {
         statusEl.textContent = 'Failed to generate key: ' + err.message;
     }
@@ -243,8 +254,129 @@ export function closeShortcutSetup() {
     document.getElementById('shortcutSetupModal').classList.add('hidden');
 }
 
+// ─── KEY LIST ───────────────────────────────────────────────────
+
+export async function listKeys(supabaseClient, CONFIG) {
+    try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        if (!accessToken) return [];
+
+        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-keys`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ action: 'list' })
+        });
+        const result = await response.json();
+        return result.keys || [];
+    } catch (_err) {
+        return [];
+    }
+}
+
+export function renderKeyList(keys, callbacks) {
+    const { escapeHtml } = callbacks;
+    const container = document.getElementById('keyListContainer');
+    if (!container) return;
+
+    if (!keys.length) {
+        container.innerHTML = '<p class="text-xs text-fact-muted dark:text-fact-dark-muted py-2">No keys yet. Generate one to connect your iOS Shortcut.</p>';
+        return;
+    }
+
+    container.innerHTML = keys.map(k => {
+        const isActive = !k.revoked_at;
+        const lastUsed = k.last_used_at
+            ? dayjs(k.last_used_at).format('MMM D, HH:mm')
+            : 'Never';
+        const created = dayjs(k.created_at).format('MMM D, YYYY');
+        const label = k.label ? escapeHtml(k.label) : 'Unlabeled';
+
+        return `<div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs">${escapeHtml(k.key_prefix)}...</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? 'bg-fact-green/20 text-fact-green' : 'bg-fact-red/20 text-fact-red'}">${isActive ? 'Active' : 'Revoked'}</span>
+                </div>
+                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-0.5">${label} · Created ${created}</div>
+                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Last used: ${lastUsed}</div>
+            </div>
+            ${isActive ? `<button onclick="revokeKeyById('${k.id}')" class="text-[10px] text-fact-red hover:underline flex-shrink-0">Revoke</button>` : ''}
+        </div>`;
+    }).join('');
+}
+
 export function getSelectedAiModel() {
     return localStorage.getItem('fact_ai_model') || 'claude-sonnet';
+}
+
+// ─── FX RATES ───────────────────────────────────────────────────
+
+export function renderFxRates(STATE, escapeHtml) {
+    const container = document.getElementById('fxRatesContainer');
+    if (!container) return;
+
+    const rates = STATE.fxRates || {};
+    const currencies = Object.keys(rates).filter(c => c !== 'QAR').sort();
+
+    if (!currencies.length) {
+        container.innerHTML = '<p class="text-xs text-fact-muted dark:text-fact-dark-muted py-2">No exchange rates loaded yet. Sync data to fetch rates.</p>';
+        return;
+    }
+
+    container.innerHTML = currencies.map(currency => {
+        const rate = Number(rates[currency]) || 1;
+        return `<div class="flex items-center gap-3 py-1.5">
+            <span class="text-xs font-mono w-10 text-fact-ink dark:text-fact-dark-ink">${escapeHtml(currency)}</span>
+            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">=</span>
+            <input type="number" step="0.0001" min="0" value="${rate}"
+                data-fx-currency="${escapeHtml(currency)}"
+                class="fx-rate-input flex-1 px-3 py-1.5 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-xs font-mono focus:outline-none focus:ring-2 focus:ring-fact-yellow text-right">
+            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">QAR</span>
+        </div>`;
+    }).join('');
+}
+
+export async function saveFxOverrides(supabaseClient, STATE, showToast) {
+    const inputs = document.querySelectorAll('.fx-rate-input');
+    if (!inputs.length) return;
+
+    const updates = [];
+    inputs.forEach(input => {
+        const currency = input.dataset.fxCurrency;
+        const newRate = parseFloat(input.value);
+        const currentRate = STATE.fxRates[currency];
+        if (currency && Number.isFinite(newRate) && newRate > 0 && newRate !== currentRate) {
+            updates.push({ currency, rate: newRate });
+        }
+    });
+
+    if (!updates.length) {
+        if (typeof showToast === 'function') showToast('No changes to save', 'info');
+        return;
+    }
+
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        for (const { currency, rate } of updates) {
+            const { error } = await supabaseClient
+                .from('fx_rates')
+                .upsert({ user_id: user.id, currency, rate_to_qar: rate, updated_at: new Date().toISOString() }, { onConflict: 'user_id,currency' });
+            if (error) throw error;
+
+            // Update local state
+            STATE.fxRates[currency] = rate;
+        }
+
+        if (typeof showToast === 'function') showToast(`${updates.length} rate(s) updated`, 'success');
+    } catch (err) {
+        if (typeof showToast === 'function') showToast('Failed to save rates: ' + err.message, 'error');
+    }
 }
 
 // ─── BACKFILL ────────────────────────────────────────────────────

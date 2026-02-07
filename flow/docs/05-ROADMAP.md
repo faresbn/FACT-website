@@ -26,7 +26,7 @@ Work is organized into parallel phases. Each phase is independent and can be don
 
 ---
 
-## Phase B: Frontend Cleanup -- COMPLETE
+## Phase B: Frontend Cleanup -- COMPLETE (all 4 items)
 
 **Goal**: Reduce bundle size, improve maintainability, eliminate dead code.
 
@@ -45,10 +45,10 @@ Work is organized into parallel phases. Each phase is independent and can be don
 - Falls back to client-side computation when server data unavailable
 - `flow-data` (v12) returns `HourlySpend` sheet from `hourly_spend` view
 
-### B4. Clean Up Modals
-- Status: Not started (low priority)
-- Show `t.counterparty` as subtitle in uncategorized modal
-- Pre-fill category dropdown with current merchantType
+### B4. Clean Up Modals -- DONE
+- `modals.js`: Counterparty subtitle in uncategorized modal (when different from display)
+- `modals.js`: Pre-fill category dropdown + display name in categorization modal
+- `modals.js`: Counterparty included in all-transactions search filter
 
 ---
 
@@ -94,24 +94,27 @@ Work is organized into parallel phases. Each phase is independent and can be don
 - Status: flow-sms already supports `entries[]` array (documented in D1)
 - Shortcut offline queueing/retry: Not implemented (iOS Shortcuts limitation)
 
-### D3. Key Management UI
-- Status: Not started
-- Show key status (last used, transaction count)
-- Key rotation (generate new, revoke old atomically)
+### D3. Key Management UI -- DONE
+- `flow-keys` (v7): Added `list` action returning key metadata (prefix, label, created, last used, revoked)
+- `settings.js`: `listKeys()`, `renderKeyList()` — dynamic key cards with status, per-key revoke
+- `flow.html`: Key list section with label input + New Key button in General settings tab
+- `main.js`: `refreshKeyList()`, `revokeKeyById()` wrappers + window exports
 
 ---
 
-## Phase E: Data Quality & Polish -- PARTIAL
+## Phase E: Data Quality & Polish -- MOSTLY COMPLETE
 
 ### E1. Merchant Name Normalization -- DONE
 - `flow-sms` (v10): Added normalization in AI prompt and post-processing
 - Strips POS prefixes, terminal IDs, standardizes casing
 - Results stored in `counterparty` field
 
-### E2. Currency Handling
-- Status: Not started
-- Auto-fetch FX rates from API
-- Parse "approx." amounts from SMS
+### E2. Currency Handling -- DONE
+- DB: Added `amount_qar_approx` column to `raw_ledger`
+- `flow-data` (v13): Auto-fetches FX rates from `open.er-api.com` when >24h stale, upserts for 12 common currencies
+- `flow-sms` (v11): AI prompt extracts `amount_qar_approx` from SMS (QAR equivalent amounts), included in insert
+- `data.js`: `processTxns()` prefers bank-reported approx QAR over FX rate conversion
+- Settings UI: Editable FX rates in General tab with refresh + save overrides
 
 ### E3. Recurring Transaction Detection -- DONE
 - `detect_recurring_transactions(p_user_id)` Postgres function (SECURITY DEFINER)
@@ -158,8 +161,8 @@ Work is organized into parallel phases. Each phase is independent and can be don
 | D1 (iOS Shortcut) | High | Medium | P2 | DONE |
 | E1 (Merchant names) | Medium | Medium | P2 | DONE |
 | E3 (Recurring detection) | Medium | Medium | P3 | DONE |
-| B4 (Clean up modals) | Low | Low | P4 | Not started |
+| B4 (Clean up modals) | Low | Low | P4 | DONE |
 | D2 (Batch mode) | Low | Low | P4 | Documented |
-| D3 (Key management UI) | Low | Medium | P4 | Not started |
-| E2 (Currency handling) | Low | Medium | P4 | Not started |
+| D3 (Key management UI) | Low | Medium | P4 | DONE |
+| E2 (Currency handling) | Low | Medium | P4 | DONE |
 | E4 (Receipt capture) | Medium | High | P5 | Not started |

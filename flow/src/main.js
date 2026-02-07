@@ -80,6 +80,10 @@ import {
     copyShortcutKey,
     openShortcutSetup,
     closeShortcutSetup,
+    listKeys,
+    renderKeyList as renderKeyListModule,
+    renderFxRates as renderFxRatesModule,
+    saveFxOverrides as saveFxOverridesModule,
     changePassword,
     runBackfill,
     loadProfileTab as loadProfileTabModule,
@@ -530,6 +534,60 @@ async function saveProfile() {
 
 function openSettings(tab = null) {
     openSettingsModule(tab, { renderSettingsGoalsList, renderRecipientsList, loadProfileTab });
+    refreshKeyList();
+    renderFxRates();
+}
+
+async function refreshKeyList() {
+    const keys = await listKeys(supabaseClient, CONFIG);
+    renderKeyListModule(keys, { escapeHtml });
+}
+
+async function revokeKeyById(keyId) {
+    const statusEl = document.getElementById('shortcutKeyStatus');
+    if (statusEl) statusEl.textContent = 'Revoking...';
+    try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        if (!accessToken) throw new Error('Not authenticated');
+
+        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-keys`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ action: 'revoke', keyId })
+        });
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        if (statusEl) statusEl.textContent = 'Key revoked.';
+        refreshKeyList();
+    } catch (err) {
+        if (statusEl) statusEl.textContent = 'Failed: ' + err.message;
+    }
+}
+
+function renderFxRates() {
+    renderFxRatesModule(STATE, escapeHtml);
+}
+
+async function saveFxOverrides() {
+    await saveFxOverridesModule(supabaseClient, STATE, showToast);
+}
+
+async function refreshFxRates() {
+    showToast('Refreshing rates...', 'info');
+    await syncData(supabaseClient, CONFIG, STATE, {
+        showToast, filterAndRender, checkAchievements, renderPatternWarnings, setSalaryPeriod, setPeriod, updateCatDropdowns,
+        MERCHANT_TYPES, getSummaryGroup, getTimeContext, getSizeTier,
+        categorize: (raw, aiType, counterparty, dbCategory) => categorize(raw, aiType, STATE, MERCHANT_TYPES, counterparty, dbCategory),
+        detectPatterns: () => detectPatterns(STATE, (t) => isExemptFromSplurge(t, STATE)),
+        matchRecipient: (cp) => matchRecipient(cp, STATE)
+    });
+    renderFxRates();
+    showToast('Rates refreshed', 'success');
 }
 
 function saveSettings() {
@@ -851,8 +909,9 @@ window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.saveSettings = saveSettings;
 window.switchSettingsTab = (tab) => switchSettingsTab(tab, { renderSettingsGoalsList, renderRecipientsList, loadProfileTab });
-window.generateShortcutKey = () => generateShortcutKey(supabaseClient, CONFIG);
+window.generateShortcutKey = () => generateShortcutKey(supabaseClient, CONFIG, { refreshKeyList });
 window.revokeShortcutKey = () => revokeShortcutKey(supabaseClient, CONFIG);
+window.revokeKeyById = revokeKeyById;
 window.copyShortcutKey = copyShortcutKey;
 window.openShortcutSetup = () => openShortcutSetup(CONFIG);
 window.closeShortcutSetup = closeShortcutSetup;
@@ -860,6 +919,9 @@ window.changePassword = () => changePassword(supabaseClient);
 window.runBackfill = () => runBackfill(supabaseClient, CONFIG, showToast);
 window.saveProfile = saveProfile;
 window.loadProfileTab = loadProfileTab;
+window.renderFxRates = renderFxRates;
+window.saveFxOverrides = saveFxOverrides;
+window.refreshFxRates = refreshFxRates;
 window.setViewMode = setViewMode;
 window.sortTransactions = sortTransactions;
 window.filterTransactions = filterTransactions;

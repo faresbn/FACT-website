@@ -418,6 +418,7 @@ export function openUncatModal(STATE, callbacks) {
             <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" data-raw="${safeRawData}" onclick="closeUncatModal(); openCatModalSafe(this)">
                 <div class="min-w-0">
                     <div class="font-medium text-sm truncate">${escapeHtml(t.display || t.counterparty || t.raw)}</div>
+                    ${t.counterparty && t.counterparty !== (t.display || t.counterparty) ? `<div class="text-[10px] text-fact-muted dark:text-fact-dark-muted truncate">${escapeHtml(t.counterparty)}</div>` : ''}
                     <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.date.format('MMM D, HH:mm')}</div>
                 </div>
                 <div class="font-display font-semibold text-sm">${formatNum(t.amount)}</div>
@@ -459,6 +460,15 @@ export function openCatModal(raw, STATE) {
     }
 
     document.getElementById('catModal').classList.remove('hidden');
+
+    // Pre-fill display name and category from existing transaction
+    if (existingTxn?.display) {
+        document.getElementById('catModalName').value = existingTxn.display;
+    }
+    if (existingTxn?.merchantType && existingTxn.merchantType !== 'Uncategorized') {
+        const catSelect = document.getElementById('catModalCat');
+        if (catSelect) catSelect.value = existingTxn.merchantType;
+    }
 }
 
 export function closeCatModal() {
@@ -555,7 +565,7 @@ export function filterTxnModal(STATE, renderTxnModal) {
     const cat = document.getElementById('txnFilter').value;
 
     let txns = STATE.filtered;
-    if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search));
+    if (search) txns = txns.filter(t => t.display.toLowerCase().includes(search) || t.raw.toLowerCase().includes(search) || (t.counterparty && t.counterparty.toLowerCase().includes(search)));
     if (cat) txns = txns.filter(t => t.merchantType === cat);
 
     document.getElementById('txnModalCount').textContent = `${txns.length} transactions`;

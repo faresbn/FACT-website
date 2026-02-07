@@ -993,31 +993,42 @@
                         <p id="settingsPassSuccess" class="text-xs text-fact-green mt-2 hidden"></p>
                     </div>
 
-                    <!-- iOS Shortcut Key -->
+                    <!-- iOS Shortcut Keys -->
                     <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
-                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">iOS Shortcut Key</label>
-                        <p class="text-xs text-fact-muted mb-3">Generate a key to paste into your iOS Shortcut. The key is shown once.</p>
-                        <div class="flex gap-2">
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">iOS Shortcut Keys</label>
+                        <p class="text-xs text-fact-muted mb-3">Generate keys to connect your iOS Shortcut. Each key is shown once.</p>
+
+                        <!-- Key List -->
+                        <div id="keyListContainer" class="space-y-2 mb-3">
+                            <!-- Populated by renderKeyList() -->
+                        </div>
+
+                        <!-- Generate New Key -->
+                        <div class="flex gap-2 items-end">
+                            <div class="flex-1">
+                                <label class="block text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Label (optional)</label>
+                                <input type="text" id="shortcutKeyLabel" placeholder="e.g. iPhone 15"
+                                    class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                            </div>
                             <button onclick="generateShortcutKey()"
-                                class="flex-1 px-4 py-3 text-sm bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-xl font-medium hover:opacity-90 transition min-h-[48px]">
-                                Generate Key
-                            </button>
-                            <button onclick="revokeShortcutKey()"
-                                class="px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px]">
-                                Revoke
+                                class="px-4 py-2 text-sm bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-lg font-medium hover:opacity-90 transition flex-shrink-0">
+                                + New Key
                             </button>
                         </div>
+
+                        <!-- Newly Generated Key Display -->
+                        <div id="shortcutKeyBox" class="hidden mt-3 flex items-center gap-2 bg-fact-green/10 border border-fact-green/30 rounded-xl p-3">
+                            <input id="shortcutKeyValue" readonly
+                                class="flex-1 bg-transparent text-xs font-mono outline-none"
+                                value="">
+                            <button onclick="copyShortcutKey()" class="text-xs text-fact-ink dark:text-fact-dark-ink font-medium">Copy</button>
+                        </div>
+                        <p id="shortcutKeyStatus" class="text-xs text-fact-muted mt-2"></p>
+
                         <button onclick="openShortcutSetup()"
                             class="mt-2 w-full px-4 py-2 text-xs border border-fact-border dark:border-fact-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                             Open Shortcuts Setup
                         </button>
-                        <div id="shortcutKeyBox" class="hidden mt-3 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
-                            <input id="shortcutKeyValue" readonly
-                                class="flex-1 bg-transparent text-xs font-mono outline-none"
-                                value="">
-                            <button onclick="copyShortcutKey()" class="text-xs text-fact-ink dark:text-fact-dark-ink">Copy</button>
-                        </div>
-                        <p id="shortcutKeyStatus" class="text-xs text-fact-muted mt-2"></p>
                     </div>
 
                     <!-- AI Memory Info -->
@@ -1029,6 +1040,24 @@
                             <p class="text-fact-ink dark:text-fact-dark-ink">"Remember that Aleks handles my flights"</p>
                             <p class="text-fact-ink dark:text-fact-dark-ink">"Remember that Ooredoo is telecom, not splurge"</p>
                         </div>
+                    </div>
+
+                    <!-- Exchange Rates -->
+                    <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted">Exchange Rates (to QAR)</label>
+                            <button onclick="refreshFxRates()" class="text-[10px] text-fact-yellow hover:underline">Refresh</button>
+                        </div>
+                        <p class="text-xs text-fact-muted mb-3">Rates auto-refresh daily. Edit to override.</p>
+
+                        <div id="fxRatesContainer" class="space-y-1 mb-3">
+                            <!-- Populated by renderFxRates() -->
+                        </div>
+
+                        <button onclick="saveFxOverrides()"
+                            class="w-full px-4 py-2 text-xs bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-lg font-medium hover:opacity-90 transition">
+                            Save Rate Overrides
+                        </button>
                     </div>
                 </div>
 
