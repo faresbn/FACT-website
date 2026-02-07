@@ -105,7 +105,23 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         if (data.MerchantMap) processMerchantMap(data.MerchantMap, STATE, callbacks.updateCatDropdowns);
         if (data.UserContext) processUserContext(data.UserContext, STATE);
         if (data.Recipients) processRecipients(data.Recipients, STATE);
-        if (data.RawLedger) processTxns(data.RawLedger, STATE, callbacks);
+
+        // RawLedger: on incremental sync, merge new rows into existing data;
+        // on full sync (first load), replace entirely.
+        if (data.RawLedger) {
+            if (meta.is_incremental && data.RawLedger.length === 0) {
+                // No new data — keep existing STATE.allTxns, skip re-processing
+            } else if (meta.is_incremental && data.RawLedger.length > 0 && STATE.allTxns.length > 0) {
+                // Merge: process new rows then prepend to existing
+                const prevTxns = STATE.allTxns;
+                processTxns(data.RawLedger, STATE, callbacks);
+                const newTxns = STATE.allTxns;
+                STATE.allTxns = [...newTxns, ...prevTxns].sort((a, b) => b.date - a.date);
+            } else {
+                // Full sync or first load: replace entirely
+                processTxns(data.RawLedger, STATE, callbacks);
+            }
+        }
 
         // Process new data types
         if (data.Profile) {
