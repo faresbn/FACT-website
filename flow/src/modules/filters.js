@@ -133,7 +133,7 @@ export function initVoiceRecognition(askAIChat) {
         };
 
         recognition.onerror = (event) => {
-            console.error('Voice recognition error:', event.error);
+            // Voice recognition error — silently handled
             isListening = false;
             const voiceBtn = document.getElementById('voiceBtn');
             const voiceStatus = document.getElementById('voiceStatus');

@@ -34,7 +34,7 @@ export function renderSpendingTrend(STATE, { formatNum, SUMMARY_GROUPS }) {
 
     const sortedWeeks = Object.keys(weeks).sort();
     const labels = sortedWeeks.map(w => dayjs(w).format('MMM D'));
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     const datasets = groups
         .filter(g => sortedWeeks.some(w => weeks[w][g] > 0))
@@ -141,7 +141,7 @@ export function renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS }) {
         groupColors[name] = data.color;
     });
 
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (vizCharts.treemap) vizCharts.treemap.destroy();
 
@@ -239,7 +239,7 @@ export function renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS }) {
     prevOut.forEach(t => prevByGroup[t.summaryGroup] = (prevByGroup[t.summaryGroup] || 0) + t.amount);
 
     const activeGroups = groups.filter(g => currentByGroup[g] > 0 || prevByGroup[g] > 0);
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (vizCharts.comparison) vizCharts.comparison.destroy();
 

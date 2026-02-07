@@ -186,7 +186,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
 
     } catch (err) {
-        console.error('Sync error:', err);
+        // Sync error — user is notified via toast below
         if (String(err.message || err).includes('AUTH_REQUIRED')) {
             await supabaseClient.auth.signOut();
             document.getElementById('loginScreen').classList.remove('hidden');
@@ -256,6 +256,45 @@ export function processUserContext(rows, STATE) {
         dateAdded: clean(r[4]),   // When it was added
         source: clean(r[5])       // 'user' or 'ai'
     })).filter(c => c.type && c.value);
+}
+
+/**
+ * Normalize counterparty names for consistent display.
+ * - Title-cases ALL-CAPS names (ANTHROPIC -> Anthropic)
+ * - Strips trailing branch/location suffixes (Woqod Al Wakra -> Woqod)
+ * - Collapses extra whitespace
+ */
+export function normalizeCounterparty(name) {
+    if (!name) return '';
+    let n = name.trim();
+
+    // Collapse whitespace
+    n = n.replace(/\s+/g, ' ');
+
+    // Title-case if entirely uppercase (e.g. ANTHROPIC -> Anthropic)
+    if (n === n.toUpperCase() && n.length > 2) {
+        n = n.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    // Known brand consolidations (exact prefix matching)
+    const consolidations = [
+        { prefixes: ['Woqod', 'Woqood', 'WOQOD'], canonical: 'Woqod' },
+        { prefixes: ['Carrefour', 'CARREFOUR'], canonical: 'Carrefour' },
+        { prefixes: ['Lulu ', 'LULU '], canonical: 'Lulu Hypermarket' },
+        { prefixes: ['Al Meera', 'AL MEERA'], canonical: 'Al Meera' },
+        { prefixes: ['Jarir', 'JARIR'], canonical: 'Jarir Bookstore' },
+    ];
+
+    const nLower = n.toLowerCase();
+    for (const rule of consolidations) {
+        for (const prefix of rule.prefixes) {
+            if (nLower.startsWith(prefix.toLowerCase())) {
+                return rule.canonical;
+            }
+        }
+    }
+
+    return n;
 }
 
 // Normalize phone number: remove country code, spaces, dashes
@@ -377,7 +416,7 @@ export function processTxns(rows, STATE, callbacks) {
 
     STATE.allTxns = data.map(r => {
         const raw = r.raw_text || '';
-        const counterparty = r.counterparty || '';
+        const counterparty = normalizeCounterparty(r.counterparty || '');
         const card = r.card || '';
         const currency = r.currency || 'QAR';
         const amount = parseFloat(r.amount);
@@ -413,11 +452,23 @@ export function processTxns(rows, STATE, callbacks) {
             pattern: 'Normal'
         };
 
-        // Match recipient for transfers/Fawran
+        // Match recipient for transfers/Fawran (also try on all OUT txns by phone/account)
         const isTransferType = ['transfer', 'fawran', 'internal transfer'].some(t =>
             txnType.toLowerCase().includes(t) || raw.toLowerCase().includes(t)
         );
-        const recipient = isTransferType ? matchRecipientFn(counterparty) : null;
+        let recipient = null;
+        if (isTransferType) {
+            // Primary: match by counterparty
+            recipient = matchRecipientFn(counterparty);
+            // Fallback: match by raw_text (catches phone numbers in SMS body)
+            if (!recipient) recipient = matchRecipientFn(raw);
+        } else if (r.direction === 'OUT') {
+            // For non-transfer OUT txns, only do phone/account matching (avoid false-positive name matches)
+            const cpDigits = counterparty.replace(/\D/g, '');
+            if (cpDigits.length >= 8) {
+                recipient = matchRecipientFn(counterparty);
+            }
+        }
 
         return {
             date: txnDate,

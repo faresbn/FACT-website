@@ -222,30 +222,30 @@ export function renderForecast(STATE, { formatNum }) {
     const balPrefix = period.projectedBalance >= 0 ? '+' : '';
 
     container.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-fact-ink dark:text-fact-dark-ink">Forecast</h3>
-            <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${confClass}">${period.confidence} confidence</span>
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-semibold text-fact-ink dark:text-fact-dark-ink uppercase tracking-wider">Forecast</h3>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full font-medium ${confClass}">${period.confidence}</span>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                <div class="text-lg font-display font-bold ${balColor}">${balPrefix}${formatNum(Math.abs(period.projectedBalance))}</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">projected balance</div>
-                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">${period.daysRemaining}d remaining</div>
+        <div class="grid grid-cols-2 gap-2">
+            <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div class="text-sm font-display font-bold ${balColor}">${balPrefix}${formatNum(Math.abs(period.projectedBalance))}</div>
+                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted mt-0.5">projected bal</div>
+                <div class="text-[8px] text-fact-muted dark:text-fact-dark-muted">${period.daysRemaining}d left</div>
             </div>
-            <div class="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                <div class="text-lg font-display font-bold text-fact-ink dark:text-fact-dark-ink">${formatNum(recurring.total)}</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">upcoming bills</div>
-                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">next 30 days</div>
+            <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div class="text-sm font-display font-bold text-fact-ink dark:text-fact-dark-ink">${formatNum(recurring.total)}</div>
+                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted mt-0.5">upcoming bills</div>
+                <div class="text-[8px] text-fact-muted dark:text-fact-dark-muted">next 30d</div>
             </div>
-            <div class="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                <div class="text-lg font-display font-bold ${topRising?.trend === 'rising' ? 'text-fact-red' : 'text-fact-green'}">${risingLabel}</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">trending up</div>
-                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">${risingSubLabel}</div>
+            <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div class="text-sm font-display font-bold ${topRising?.trend === 'rising' ? 'text-fact-red' : 'text-fact-green'}">${risingLabel}</div>
+                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted mt-0.5">trending</div>
+                <div class="text-[8px] text-fact-muted dark:text-fact-dark-muted">${risingSubLabel}</div>
             </div>
-            <div class="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                <div class="text-lg font-display font-bold text-fact-ink dark:text-fact-dark-ink">${goalsLabel}</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mt-1">goals</div>
-                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">${goalsSubLabel}</div>
+            <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div class="text-sm font-display font-bold text-fact-ink dark:text-fact-dark-ink">${goalsLabel}</div>
+                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted mt-0.5">goals</div>
+                <div class="text-[8px] text-fact-muted dark:text-fact-dark-muted">${goalsSubLabel}</div>
             </div>
         </div>
     `;

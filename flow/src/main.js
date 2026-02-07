@@ -52,6 +52,7 @@ import {
     categorize,
     matchRecipient,
     normalizePhone,
+    normalizeCounterparty,
     isExemptFromSplurge
 } from './modules/data.js';
 
@@ -517,7 +518,11 @@ function openCatModalSafe(el) {
 }
 
 async function saveCategorization() {
-    await saveCategorizationModule(STATE, supabaseClient, CONFIG, { saveLocal: () => saveLocal(CONFIG, STATE), filterAndRender });
+    await saveCategorizationModule(STATE, supabaseClient, CONFIG, {
+        saveLocal: () => saveLocal(CONFIG, STATE),
+        filterAndRender,
+        detectPatterns: () => detectPatterns(STATE, (t) => isExemptFromSplurge(t, STATE))
+    });
 }
 
 function updateCatDropdowns() {
@@ -1070,9 +1075,60 @@ window.drilldownDate = drilldownDate;
 window.closeCelebration = closeCelebration;
 window.confirmResolve = () => {}; // Placeholder, set dynamically in showConfirm
 
-// Simple modal closers for modals without module functions
+// Merchant modal: open, filter, close
 window.closeMerchantModal = () => document.getElementById('merchantModal')?.classList.add('hidden');
-window.filterMerchantModal = () => {}; // Merchant modal filter — placeholder
+window.openMerchantModal = () => {
+    document.getElementById('merchantModal')?.classList.remove('hidden');
+    document.getElementById('merchantSearch').value = '';
+    window.filterMerchantModal();
+};
+window.filterMerchantModal = () => {
+    const searchEl = document.getElementById('merchantSearch');
+    const sortEl = document.getElementById('merchantSort');
+    const listEl = document.getElementById('merchantModalList');
+    const countEl = document.getElementById('merchantModalCount');
+    if (!listEl) return;
+
+    const query = (searchEl?.value || '').toLowerCase();
+    const sortBy = sortEl?.value || 'amount';
+
+    // Group filtered OUT transactions by consolidated name
+    const byMerchant = {};
+    (STATE.filtered || []).filter(t => t.direction === 'OUT').forEach(t => {
+        const name = t.consolidated || t.display || t.counterparty || 'Unknown';
+        if (!byMerchant[name]) byMerchant[name] = { name, total: 0, count: 0, category: t.merchantType };
+        byMerchant[name].total += t.amount;
+        byMerchant[name].count++;
+    });
+
+    let merchants = Object.values(byMerchant);
+
+    // Filter by search query
+    if (query) {
+        merchants = merchants.filter(m => m.name.toLowerCase().includes(query));
+    }
+
+    // Sort
+    if (sortBy === 'amount') merchants.sort((a, b) => b.total - a.total);
+    else if (sortBy === 'count') merchants.sort((a, b) => b.count - a.count);
+    else merchants.sort((a, b) => a.name.localeCompare(b.name));
+
+    if (countEl) countEl.textContent = `${merchants.length} merchants`;
+
+    listEl.innerHTML = merchants.map(m => `
+        <div class="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
+             onclick="closeMerchantModal(); openMerchantDrilldown('${escapeHtml(m.name.replace(/'/g, "\\'"))}')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-fact-muted font-medium">${escapeHtml(m.category)}</span>
+                <span class="text-sm font-medium truncate">${escapeHtml(m.name)}</span>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <span class="text-[10px] text-fact-muted">${m.count} txns</span>
+                <span class="text-sm font-display font-bold">QAR ${formatNum(m.total)}</span>
+            </div>
+        </div>
+    `).join('') || '<div class="p-4 text-center text-sm text-fact-muted">No merchants found</div>';
+};
 window.closeCmdPalette = () => document.getElementById('cmdPalette')?.classList.remove('active');
 window.filterCommands = () => {};
 window.handleCmdKeydown = () => {};

@@ -259,9 +259,15 @@ export async function refreshInsights(STATE, supabaseClient, CONFIG, callbacks) 
             })
         });
 
+        if (!response.ok) {
+            const errBody = await response.text().catch(() => '');
+            throw new Error(`AI service error (${response.status}): ${errBody || 'Unknown error'}`);
+        }
+
         const data = await response.json();
 
         if (data.error) throw new Error(data.error);
+        if (!data.answer) throw new Error('No insights returned — try again');
 
         const aiInsights = data.answer
             .split('\n')

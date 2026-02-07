@@ -51,7 +51,7 @@ export function renderDonutChart(STATE, callbacks) {
                 data,
                 backgroundColor: colors,
                 borderWidth: 2,
-                borderColor: document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#ffffff',
+                borderColor: (document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#1a1a1a' : '#ffffff',
                 hoverOffset: 12,
                 hoverBorderWidth: 0
             }]

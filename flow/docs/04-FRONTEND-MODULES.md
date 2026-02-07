@@ -1,6 +1,6 @@
 # Frontend Module Reference
 
-## Entry Point: main.js (1,049 lines)
+## Entry Point: main.js (~1,090 lines)
 
 The orchestrator. Does NOT contain business logic -- it imports from all 17 modules, initializes STATE, sets up Supabase auth, and wires ~150 `window.*` exports for `onclick=` handlers in flow.html.
 
@@ -8,11 +8,12 @@ The orchestrator. Does NOT contain business logic -- it imports from all 17 modu
 - Supabase client initialization
 - Auth state management (onAuthStateChange)
 - STATE object definition
-- MERCHANT_TYPES and SUMMARY_GROUPS constants
 - Import and re-export all module functions to `window.*`
 - First-load orchestration (sync -> setSalaryPeriod -> render)
+- Merchant modal (open, filter, close) with search and sort
+- Viz tab and main tab switching logic
 
-### Key Constants (defined in main.js)
+### Key Constants (defined in constants.js)
 ```javascript
 MERCHANT_TYPES = {
   Groceries: { icon: '...', color: '#...', essential: true },
@@ -30,14 +31,15 @@ SUMMARY_GROUPS = {
 
 ---
 
-## data.js (508 lines) -- Data Layer
+## data.js (~570 lines) -- Data Layer
 
 ### Functions
 | Function | Purpose |
 |----------|---------|
 | `syncData()` | POST to flow-data, process all sheets, incremental sync |
 | `processTxns()` | Parse raw_ledger rows into transaction objects |
-| `categorize()` | 3-tier categorization: localMappings > AI > merchantMap |
+| `categorize()` | 3-tier categorization: localMappings > DB category > merchantMap |
+| `normalizeCounterparty()` | Title-case ALL-CAPS names, consolidate brand variants (Woqod, Carrefour, etc.) |
 | `processFX()` | Parse FX rates |
 | `processMerchantMap()` | Parse merchant patterns |
 | `processUserContext()` | Parse user corrections/preferences |
@@ -45,6 +47,15 @@ SUMMARY_GROUPS = {
 | `matchRecipient()` | Match counterparty to known recipient (phone/account/name) |
 | `getContextForTransaction()` | Find relevant user_context for a transaction |
 | `isExemptFromSplurge()` | Check if user exempted transaction from splurge detection |
+
+### Counterparty Normalization
+- ALL-CAPS names (e.g., `ANTHROPIC`) are title-cased (`Anthropic`)
+- Known brands with variants are consolidated (e.g., `Woqod Al Wakra` -> `Woqod`)
+- Applied during `processTxns()` before categorization
+
+### Recipient Matching
+- **Transfers**: Matches by counterparty first, then falls back to raw_text (catches phone numbers in SMS body)
+- **Non-transfer OUT**: Only does phone/account matching (8+ digits) to avoid false-positive name matches
 
 ### Transaction Object Shape
 ```javascript
@@ -111,13 +122,14 @@ SUMMARY_GROUPS = {
 ### Categorization Flow (saveCategorization)
 1. Save to `STATE.localMappings[raw.toLowerCase()]`
 2. Save to localStorage
-3. Update all matching transactions in STATE.allTxns
-4. Re-render UI
-5. Fire-and-forget POST to flow-learn (syncs to DB)
+3. Update all matching transactions in STATE.allTxns (display, consolidated, merchantType)
+4. Re-run `detectPatterns()` so insights/patterns reflect new category
+5. Re-render UI (filterAndRender)
+6. Fire-and-forget POST to flow-learn (syncs to DB)
 
 ---
 
-## chat.js (452 lines) -- Streaming Chat
+## chat.js (456 lines) -- Streaming Chat (Side Panel + FAB)
 
 | Function | Purpose |
 |----------|---------|
@@ -128,6 +140,12 @@ SUMMARY_GROUPS = {
 | `loadConversationList()` | Fetch conversation history |
 | `loadConversation()` | Load messages for a conversation |
 | `startNewConversation()` | Reset to welcome state |
+
+### Layout
+- **Desktop**: Right-side slide panel (380px), main content shrinks with `margin-right: 380px`
+- **Mobile**: Full-screen overlay
+- **FAB**: Floating action button (bottom-right), hidden when panel is open
+- **Input area**: Textarea + send button (top), powered-by + char count (bottom)
 
 ### Quick Actions
 Pre-defined queries: "This month summary", "Where am I overspending?", "Predict end-of-month", "Compare to last month", "Top merchants", "Anomalies".
@@ -195,23 +213,47 @@ All canvas charts stored in `vizCharts` object with `.destroy()` before recreate
 
 ---
 
-## settings.js (395 lines) -- Settings & Profile
+## settings.js (~530 lines) -- Settings & Profile
 
 | Function | Purpose |
 |----------|---------|
-| `setPeriod()` | thisMonth, lastMonth, last90, thisYear |
+| `setPeriod()` | salary, thisMonth, lastMonth, last90, custom |
 | `openSettings()` / `closeSettings()` | Settings modal |
-| `switchSettingsTab()` | general, goals, contacts, profile tabs |
+| `switchSettingsTab()` | account, budget, goals, contacts, data tabs |
 | `saveSettings()` | AI model preference (localStorage) |
 | `generateShortcutKey()` | Create API key via flow-keys |
 | `revokeShortcutKey()` | Revoke API key |
 | `runBackfill()` | Trigger flow-backfill |
 | `loadProfileTab()` / `saveProfile()` | Profile settings CRUD |
 | `changePassword()` | Supabase auth password update |
+| `renderFxRates()` / `saveFxOverrides()` | FX rate management |
+| `listKeys()` / `renderKeyList()` | API key management |
+
+### Settings Tabs
+| Tab | Contents |
+|-----|----------|
+| **Account** | AI model selector, password change, logout |
+| **Budget** | Salary day, salary amount, monthly budget, family names |
+| **Goals** | Budget goals CRUD with progress bars |
+| **Contacts** | Recipients CRUD (phone, bank account, names) |
+| **Data** | iOS shortcut keys, FX rates, backfill, export CSV |
 
 ---
 
 ## Other Modules
+
+### forecast.js (293 lines)
+Client-side spending forecasts. No edge functions needed — all computation from STATE.
+
+| Function | Purpose |
+|----------|---------|
+| `forecastPeriodEnd()` | Projected balance, daily burn rate, confidence level |
+| `forecastCategories()` | 3-month moving average per category, flags rising/falling trends |
+| `forecastRecurring()` | Sum recurring costs for next 30 days |
+| `forecastGoals()` | Predict goal status (safe/warning/over) |
+| `renderForecast()` | Update forecast card DOM (compact 2x2 grid) |
+
+Confidence levels: High (3+ months, low variance), Medium (2 months), Low (<2 months or high variance).
 
 ### features.js (522 lines)
 Donut chart, budget projection rendering, quick insights, pattern warnings, generosity budget, check achievements.
@@ -228,11 +270,11 @@ Recipient CRUD UI in settings contacts tab.
 ### onboarding.js (295 lines)
 First-run welcome flow, guided setup.
 
-### ai.js (449 lines) -- LEGACY
-Non-streaming AI chat. Replaced by chat.js + flow-chat. Still bundled.
+### constants.js (~100 lines)
+Extracted from main.js. Contains `MERCHANT_TYPES`, `SUMMARY_GROUPS`, `CAT_COLORS`, `PATTERNS`, `TIME_CONTEXTS`, `SIZE_TIERS` and helper functions.
 
 ### utils.js (139 lines)
-`formatNum()`, `escapeHtml()`, `showToast()`, `showConfirm()`, `getTypeColor()`, `getSummaryGroup()`, `getTimeContext()`, `getSizeTier()`.
+`formatNum()`, `escapeHtml()`, `showToast()`, `showConfirm()`, `initServiceWorker()`, `initPWAInstall()`, `initDarkMode()`, `toggleDarkMode()`.
 
 ### events.js (29 lines)
 EventTarget-based pub/sub. Events: `DATA_FILTERED`, `PERIOD_CHANGED`, `DATA_SYNCED`, `TOAST`.

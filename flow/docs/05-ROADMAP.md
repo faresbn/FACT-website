@@ -143,6 +143,44 @@ Work is organized into parallel phases. Each phase is independent and can be don
 
 ---
 
+## Phase F: UI Overhaul + Forecasting -- COMPLETE
+
+**Goal**: Consolidate layout, add forecasting, improve chat UX, fix data quality.
+
+### F1. Currency Fix (amount_qar_approx) -- DONE
+- flow-sms (v11): AI extracts QAR equivalent from foreign currency SMS
+- DB: Backfilled all 343 rows, added currency validation constraint
+- flow-data (v13): Auto-refresh FX rates, incremental sync
+
+### F2. Settings & Header Reorganization -- DONE
+- Header simplified: removed Goals/Heatmap/Export/Logout buttons
+- Settings tabs: Account | Budget | Goals | Contacts | Data (was General | Goals | Contacts | Profile)
+
+### F3. UI Consolidation -- DONE
+- 4 chart cards -> 1 tabbed Analytics card (Trend | Compare | Merchants | Heatmap)
+- 2-column Breakdown+Transactions -> 1 tabbed card (Breakdown | Transactions | Insights)
+- Chat: bottom-dock -> right-side panel (380px) + floating action button (FAB)
+- Budget Hero + Today + Forecast: merged into compact 2/3 + 1/3 layout
+
+### F4. Forecasting MVP -- DONE
+- New `forecast.js` module: 4 forecast functions, all client-side
+- Compact 2x2 forecast card: projected balance, upcoming bills, trending category, goal status
+- Confidence levels: high/medium/low based on data age and variance
+
+### F5. Data Quality Fixes -- DONE
+- `normalizeCounterparty()`: title-case ALL-CAPS, consolidate brand variants (Woqod, Carrefour, etc.)
+- Expanded `matchRecipient()`: transfers match by counterparty + raw_text fallback; non-transfers do phone-only matching
+- `saveCategorization()` now calls `detectPatterns()` so insights update immediately after category change
+- `refreshInsights()`: added `response.ok` check + null guard on `data.answer`
+
+### F6. Code Hygiene -- DONE
+- Fixed dark mode detection in charts.js and visualizations.js (was checking wrong class)
+- Removed all `console.error/warn/log` statements from production modules
+- Implemented merchant modal search/filter (was placeholder)
+- CSS: Fixed chat-input-area flex layout (added flex-direction: column)
+
+---
+
 ## Priority Matrix (Updated)
 
 | Phase | Impact | Effort | Priority | Status |
@@ -165,4 +203,10 @@ Work is organized into parallel phases. Each phase is independent and can be don
 | D2 (Batch mode) | Low | Low | P4 | Documented |
 | D3 (Key management UI) | Low | Medium | P4 | DONE |
 | E2 (Currency handling) | Low | Medium | P4 | DONE |
+| F1 (Currency fix) | High | Medium | P0 | DONE |
+| F2 (Settings reorg) | Medium | Medium | P2 | DONE |
+| F3 (UI consolidation) | High | High | P1 | DONE |
+| F4 (Forecasting) | Medium | Medium | P2 | DONE |
+| F5 (Data quality) | High | Medium | P1 | DONE |
+| F6 (Code hygiene) | Medium | Low | P3 | DONE |
 | E4 (Receipt capture) | Medium | High | P5 | Not started |

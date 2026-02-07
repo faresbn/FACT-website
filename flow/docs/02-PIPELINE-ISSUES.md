@@ -64,6 +64,31 @@
 **Was**: No explicit `search_path` set (vulnerable to search path manipulation)
 **Fix**: `ALTER FUNCTION ... SET search_path = public`
 
+### 13. Insights Refresh Crash (FIXED)
+**Where**: `insights.js` `refreshInsights()`
+**Was**: No `response.ok` check; no null guard on `data.answer` before `.split('\n')`
+**Fix**: Added `response.ok` check + null guard with user-friendly error
+
+### 14. Category Changes Not Updating Insights (FIXED)
+**Where**: `modals.js` `saveCategorization()`
+**Was**: `detectPatterns()` not called after recategorizing; insights stayed stale
+**Fix**: Added `detectPatterns` callback, called before `filterAndRender()`
+
+### 15. Counterparty Normalization (FIXED)
+**Where**: `data.js` `processTxns()`
+**Was**: Raw counterparty names (ANTHROPIC, Woqod Al Wakra)
+**Fix**: `normalizeCounterparty()` — title-cases ALL-CAPS, consolidates brand variants
+
+### 16. Dark Mode in Charts (FIXED)
+**Where**: `charts.js`, `visualizations.js`
+**Was**: Wrong dark mode check (documentElement class or only media query)
+**Fix**: Now checks `body.dark-mode` class OR prefers-color-scheme
+
+### 17. Chat Input Layout (FIXED)
+**Where**: `style.css` `.chat-input-area`
+**Was**: Missing `flex-direction: column`
+**Fix**: Added, input area now stacks correctly
+
 ## Remaining Issues (Low Priority)
 
 ### Leaked Password Protection

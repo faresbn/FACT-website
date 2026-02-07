@@ -163,7 +163,7 @@ export async function saveRecipient(STATE, supabaseClient, CONFIG, callbacks) {
         renderRecipientsList();
 
     } catch (err) {
-        console.error('Save recipient error:', err);
+        // Save failed — user notified via toast
         showToast('Failed to save: ' + err.message, 'error');
     }
 }
@@ -209,7 +209,7 @@ export async function deleteRecipient(index, STATE, supabaseClient, CONFIG, call
         renderRecipientsList();
 
     } catch (err) {
-        console.error('Delete recipient error:', err);
+        // Delete failed — user notified via toast
         showToast('Failed to delete: ' + err.message, 'error');
     }
 }

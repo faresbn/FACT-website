@@ -332,73 +332,83 @@
                 </div>
             </div>
 
-            <!-- BUDGET HERO - Consolidated overview (hidden in focus mode) -->
-            <div class="card rounded-xl p-4 hide-in-focus">
-                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center">
-                    <!-- Days until salary -->
-                    <div class="flex items-center gap-3">
-                        <div class="w-14 h-14 rounded-full bg-fact-purple/20 flex items-center justify-center">
-                            <span class="font-display font-bold text-xl text-fact-purple" id="daysUntilSalary">--</span>
+            <!-- BUDGET + TODAY + FORECAST - Compact combined row (hidden in focus mode) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 hide-in-focus">
+                <!-- Budget & Today (2/3 width on desktop) -->
+                <div class="lg:col-span-2 card rounded-xl p-3">
+                    <!-- Row 1: Salary countdown + IN/OUT/NET + Daily budget -->
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <!-- Days until salary (compact) -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-fact-purple/20 flex items-center justify-center">
+                                <span class="font-display font-bold text-sm text-fact-purple" id="daysUntilSalary">--</span>
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-medium leading-tight">days to salary</div>
+                                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted" id="nextSalaryDate">~--</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-xs font-medium">days to salary</div>
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="nextSalaryDate">~--</div>
+
+                        <!-- Divider -->
+                        <div class="w-px h-8 bg-fact-border dark:bg-fact-dark-border hidden sm:block"></div>
+
+                        <!-- In / Out / Net (inline) -->
+                        <div class="flex items-center gap-2 flex-1 justify-center min-w-0">
+                            <div class="text-center">
+                                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">IN</div>
+                                <div class="font-display font-bold text-sm text-fact-green" id="projIncome">--</div>
+                            </div>
+                            <span class="text-fact-muted text-sm">−</span>
+                            <div class="text-center">
+                                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">OUT</div>
+                                <div class="font-display font-bold text-sm text-fact-yellow" id="projExpense">--</div>
+                            </div>
+                            <span class="text-fact-muted text-sm">=</span>
+                            <div class="text-center">
+                                <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">NET</div>
+                                <div class="font-display font-bold text-sm" id="projNet">--</div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="w-px h-8 bg-fact-border dark:bg-fact-dark-border hidden sm:block"></div>
+
+                        <!-- Daily budget (compact) -->
+                        <div class="text-right shrink-0">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <span id="budgetStatus" class="text-[9px] px-1.5 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium">On Track</span>
+                            </div>
+                            <div class="font-display font-bold text-sm text-fact-purple mt-0.5" id="suggestedDaily">--/day</div>
+                            <div class="text-[9px] text-fact-muted dark:text-fact-dark-muted">avg: <span id="avgDailySpend">--</span>/day</div>
                         </div>
                     </div>
 
-                    <!-- In / Out / Net -->
-                    <div class="col-span-2 lg:col-span-3 flex items-center justify-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                        <div class="text-center">
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">IN</div>
-                            <div class="font-display font-bold text-lg text-fact-green" id="projIncome">--</div>
+                    <!-- Row 2: Today's spend + budget meter (compact) -->
+                    <div class="mt-2 pt-2 border-t border-fact-border/30 dark:border-fact-dark-border/30">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 shrink-0">
+                                <h3 class="text-[10px] font-semibold uppercase tracking-wider text-fact-muted dark:text-fact-dark-muted">Today</h3>
+                                <div id="streakContainer" class="inline-flex"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div id="dailyBudgetMeter" class="budget-meter h-1.5">
+                                    <div class="budget-meter-fill safe" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] shrink-0">
+                                <span class="font-display font-bold" id="todaySpent">--</span>
+                                <span class="text-fact-muted dark:text-fact-dark-muted">/ <span id="todayBudget">--</span></span>
+                            </div>
                         </div>
-                        <div class="text-xl text-fact-muted">−</div>
-                        <div class="text-center">
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">OUT</div>
-                            <div class="font-display font-bold text-lg text-fact-yellow" id="projExpense">--</div>
-                        </div>
-                        <div class="text-xl text-fact-muted">=</div>
-                        <div class="text-center">
-                            <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">NET</div>
-                            <div class="font-display font-bold text-lg" id="projNet">--</div>
+                        <div class="flex items-center justify-between mt-0.5">
+                            <span class="text-[9px] text-fact-muted dark:text-fact-dark-muted" id="dailyBudgetLabel">-- left today</span>
+                            <span class="text-[9px] text-fact-muted dark:text-fact-dark-muted" id="todayDate">--</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Daily budget -->
-                    <div class="text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <span id="budgetStatus" class="text-[10px] px-2 py-0.5 rounded-full bg-fact-green/20 text-fact-green font-medium">On Track</span>
-                        </div>
-                        <div class="font-display font-bold text-lg text-fact-purple mt-1" id="suggestedDaily">--/day</div>
-                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">avg: <span id="avgDailySpend">--</span>/day</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TODAY'S FOCUS - Simple daily view for ADHD -->
-            <div class="card rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <h2 class="font-display font-semibold text-sm">Today</h2>
-                        <div id="streakContainer">
-                            <!-- Streak badge rendered by JS -->
-                        </div>
-                    </div>
-                    <div class="text-xs text-fact-muted dark:text-fact-dark-muted" id="todayDate">--</div>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-fact-muted dark:text-fact-dark-muted">Spent today</span>
-                        <span class="font-display font-bold" id="todaySpent">--</span>
-                    </div>
-                    <div id="dailyBudgetMeter" class="budget-meter">
-                        <div class="budget-meter-fill safe" style="width: 0%"></div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted" id="dailyBudgetLabel">-- left today</span>
-                        <span class="text-xs text-fact-muted dark:text-fact-dark-muted">Budget: <span id="todayBudget">--</span></span>
-                    </div>
-                </div>
+                <!-- Forecast (1/3 width on desktop) -->
+                <div id="forecastCard" class="card rounded-xl p-3"></div>
             </div>
 
             <!-- IMPULSE WARNING BANNER (shown when burst detected) -->
@@ -510,9 +520,6 @@
                     <span class="text-xs font-medium text-fact-yellow">Fix →</span>
                 </div>
             </div>
-
-            <!-- FORECAST CARD -->
-            <div id="forecastCard" class="card rounded-xl p-4 hide-in-focus"></div>
 
             <!-- VISUALIZATIONS - Advanced analytics charts (hidden in focus mode) -->
             <!-- ANALYTICS (Tabbed Visualizations) -->

@@ -476,7 +476,7 @@ export function closeCatModal() {
 }
 
 export async function saveCategorization(STATE, supabaseClient, CONFIG, callbacks) {
-    const { saveLocal, filterAndRender } = callbacks;
+    const { saveLocal, filterAndRender, detectPatterns } = callbacks;
 
     const raw = STATE.catTarget;
     const name = document.getElementById('catModalName').value || raw;
@@ -498,6 +498,9 @@ export async function saveCategorization(STATE, supabaseClient, CONFIG, callback
             t.merchantType = cat;
         }
     });
+
+    // Re-detect patterns so insights reflect the new category
+    if (typeof detectPatterns === 'function') detectPatterns();
 
     closeCatModal();
     filterAndRender();
@@ -522,8 +525,8 @@ export async function saveCategorization(STATE, supabaseClient, CONFIG, callback
             })
         });
         STATE.catTargetPreviousType = null;
-    } catch (err) {
-        console.warn('Failed to sync categorization:', err.message);
+    } catch (_err) {
+        // Silently fail — local mapping is already saved
     }
 }
 
