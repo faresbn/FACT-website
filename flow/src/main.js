@@ -176,6 +176,21 @@ import {
     refreshInsights as refreshInsightsModule
 } from './modules/ai.js';
 
+// Chat module (new streaming chat)
+import { initChat, toggleChat, openChat, closeChat } from './modules/chat.js';
+
+// Visualizations module
+import {
+    renderSpendingTrend,
+    renderMerchantTreemap,
+    renderPeriodComparison,
+    renderTimeHeatmap,
+    renderSmartMetrics
+} from './modules/visualizations.js';
+
+// Event bus
+import { emit, on, EVENTS } from './modules/events.js';
+
 // Filters module
 import {
     filterByDimension as filterByDimensionModule,
@@ -387,6 +402,18 @@ function filterAndRender() {
         renderTodaySection,
         checkForImpulseBursts
     });
+    // Render new visualizations after filter
+    renderAllVisualizations();
+    // Emit event for any module listening for data changes
+    emit(EVENTS.DATA_FILTERED, { count: STATE.filtered.length, period: STATE.period });
+}
+
+function renderAllVisualizations() {
+    renderSpendingTrend(STATE, { formatNum, SUMMARY_GROUPS });
+    renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS });
+    renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS });
+    renderTimeHeatmap(STATE, { formatNum });
+    renderSmartMetrics(STATE, { formatNum, SUMMARY_GROUPS });
 }
 
 function renderTodaySection() {
@@ -425,6 +452,7 @@ function setSalaryPeriod() {
 
 function setPeriod(period) {
     setPeriodModule(period, STATE, filterAndRender, updateDateRangeDisplay);
+    emit(EVENTS.PERIOD_CHANGED, { period, dateRange: STATE.dateRange });
 }
 
 function updateDateRangeDisplay() {
@@ -860,6 +888,12 @@ async function showApp(user, session) {
         matchRecipient: (cp) => matchRecipient(cp, STATE)
     });
 
+    // Emit data synced event for decoupled modules
+    emit(EVENTS.DATA_SYNCED, { count: STATE.allTxns.length });
+
+    // Initialize streaming chat panel
+    initChat(CONFIG, supabaseClient);
+
     // Migrate localStorage goals to DB if needed
     migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(() => {});
 
@@ -882,6 +916,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initServiceWorker();
     initPWAInstall();
+
+    // Event bus: listen for toast events from any module
+    on(EVENTS.TOAST, ({ message, type }) => showToast(message, type || 'info'));
 });
 
 // ─── WINDOW EXPORTS ─────────────────────────────────────────────
@@ -939,6 +976,9 @@ window.getGoals = getGoals;
 window.saveGoals = saveGoals;
 window.checkDailyBudget = checkDailyBudget;
 window.getStreakData = getStreakData;
+window.toggleChat = toggleChat;
+window.openChat = openChat;
+window.closeChat = closeChat;
 window.STATE = STATE;
 window.CONFIG = CONFIG;
 window.supabaseClient = supabaseClient;

@@ -39,12 +39,29 @@ export function clean(str) {
     return str ? str.toString().replace(/^"|"$/g, '').trim() : '';
 }
 
+// Incremental sync: store last sync timestamp per user
+function getLastSyncKey(STATE) {
+    return `fact_last_sync_${STATE.currentUser}`;
+}
+
+function getLastSync(STATE) {
+    try { return localStorage.getItem(getLastSyncKey(STATE)) || null; } catch (_e) { return null; }
+}
+
+function setLastSync(STATE) {
+    try { localStorage.setItem(getLastSyncKey(STATE), new Date().toISOString()); } catch (_e) {}
+}
+
 // DATA FETCHING - Secure via Supabase Edge Function
 export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
     const { showToast, filterAndRender, checkAchievements, renderPatternWarnings, setSalaryPeriod, setPeriod } = callbacks;
 
-    document.getElementById('loadingState').classList.remove('hidden');
-    document.getElementById('mainContent').classList.add('hidden');
+    // Only show full loading skeleton on first load
+    const isFirstLoad = !STATE.hasLoaded;
+    if (isFirstLoad) {
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('mainContent').classList.add('hidden');
+    }
 
     try {
         // Use passed session if available (avoids getSession() race condition),
@@ -56,15 +73,20 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
         if (!accessToken) throw new Error('AUTH_REQUIRED');
 
+        // Use incremental sync on subsequent loads
+        const lastSync = isFirstLoad ? null : getLastSync(STATE);
+        const requestBody = {
+            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks'],
+        };
+        if (lastSync) requestBody.last_sync = lastSync;
+
         const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-data`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
             },
-            body: JSON.stringify({
-                sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks']
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (response.status === 401) throw new Error('AUTH_REQUIRED');
@@ -75,6 +97,8 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         if (result?.error) throw new Error(result.error);
         const data = result?.data;
         if (!data) throw new Error('No data returned');
+
+        const meta = result?.meta || {};
 
         // Process each sheet (Supabase returns arrays, same format as CSV)
         if (data.FXRates) processFX(data.FXRates.slice(1), STATE);
@@ -97,6 +121,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
             STATE.dbStreaks = data.Streaks;
         }
 
+        // Save sync timestamp for next incremental sync
+        setLastSync(STATE);
+
         const syncText = `Synced ${dayjs().format('HH:mm')}`;
         document.getElementById('lastSync').textContent = syncText;
         const footerSync = document.getElementById('lastSyncFooter');
@@ -113,9 +140,14 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
             setPeriod(STATE.period);
         }
 
-        // Show success toast (only after initial load)
+        // Build toast message
         if (STATE.hasLoaded && typeof showToast === 'function') {
-            showToast(`Synced ${STATE.allTxns.length} transactions`, 'success');
+            const count = meta.total_count || STATE.allTxns.length;
+            const extra = [];
+            if (meta.is_incremental) extra.push('incremental');
+            if (meta.backfill_applied) extra.push('auto-categorized');
+            const suffix = extra.length ? ` (${extra.join(', ')})` : '';
+            showToast(`Synced ${count} transactions${suffix}`, 'success');
         }
 
         // Check for achievements after data loads

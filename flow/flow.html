@@ -13,32 +13,7 @@
     <link rel="apple-touch-icon" href="/flow/assets/icon-512-BaCJW5bY.png">
     <link rel="manifest" href="/flow/assets/manifest-C1ecP5vc.json">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'media',
-            theme: {
-                extend: {
-                    colors: {
-                        'fact-yellow': '#F4C44E',
-                        'fact-green': '#75B876',
-                        'fact-purple': '#B593C6',
-                        'fact-gold': '#D4A853',
-                        'fact-red': '#E74C3C',
-                        'fact-ink': '#111111',
-                        'fact-muted': '#6B7280',
-                        'fact-border': '#E5E5E5',
-                        'fact-dark-bg': '#0F0F0F',
-                        'fact-dark-card': '#1A1A1A',
-                        'fact-dark-ink': '#F5F5F5',
-                        'fact-dark-muted': '#9CA3AF',
-                        'fact-dark-border': '#2A2A2A'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS is now built via @tailwindcss/vite plugin -->
   <!-- Auth-aware pre-render: hide everything, then show the right screen instantly -->
   <style id="authGuardCSS">
     #loginScreen, #mainApp { display: none !important; }
@@ -323,6 +298,50 @@
                 </div>
             </div>
 
+            <!-- SMART METRIC CARDS (hidden in focus mode) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 hide-in-focus">
+                <!-- Balance Card -->
+                <div id="metricBalance" class="card rounded-xl p-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="metric-label text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Net Balance</span>
+                        <div class="metric-sparkline"></div>
+                    </div>
+                    <div class="metric-value font-display font-bold text-xl">--</div>
+                    <div class="metric-sublabel text-[10px] text-fact-muted dark:text-fact-dark-muted mt-0.5"></div>
+                    <div class="metric-trend mt-1"></div>
+                </div>
+
+                <!-- Daily Budget Card -->
+                <div id="metricDailyBudget" class="card rounded-xl p-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="metric-label text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Remaining Today</span>
+                    </div>
+                    <div class="metric-value font-display font-bold text-xl">--</div>
+                    <div class="metric-sublabel text-[10px] text-fact-muted dark:text-fact-dark-muted mt-0.5"></div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-800 rounded-full mt-2 overflow-hidden">
+                        <div class="metric-progress-fill h-full rounded-full bg-fact-green transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Top Category Card -->
+                <div id="metricTopCategory" class="card rounded-xl p-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="metric-label text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Top Category</span>
+                    </div>
+                    <div class="metric-value font-display font-bold text-lg">--</div>
+                    <div class="metric-sublabel text-[10px] text-fact-muted dark:text-fact-dark-muted mt-0.5"></div>
+                </div>
+
+                <!-- Transactions Card -->
+                <div id="metricTxnCount" class="card rounded-xl p-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="metric-label text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider">Transactions</span>
+                    </div>
+                    <div class="metric-value font-display font-bold text-xl">--</div>
+                    <div class="metric-sublabel text-[10px] text-fact-muted dark:text-fact-dark-muted mt-0.5"></div>
+                </div>
+            </div>
+
             <!-- BUDGET HERO - Consolidated overview (hidden in focus mode) -->
             <div class="card rounded-xl p-4 hide-in-focus">
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center">
@@ -502,7 +521,58 @@
                 </div>
             </div>
 
-            <!-- MAIN GRID: Breakdown (left) | AI Chat + Transactions (right) - Hidden in focus mode -->
+            <!-- VISUALIZATIONS - Advanced analytics charts (hidden in focus mode) -->
+            <div class="space-y-4 hide-in-focus">
+                <!-- Spending Trend + Period Comparison side by side -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Spending Trend Area Chart -->
+                    <div class="card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="font-display font-semibold text-sm">Spending Trend</h2>
+                            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Weekly by category</span>
+                        </div>
+                        <div class="h-52">
+                            <canvas id="spendingTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Period Comparison -->
+                    <div class="card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="font-display font-semibold text-sm">Period Comparison</h2>
+                            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">vs previous period</span>
+                        </div>
+                        <div class="h-52">
+                            <canvas id="periodComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merchant Treemap + Time Heatmap side by side -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Merchant Treemap -->
+                    <div class="card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="font-display font-semibold text-sm">Where Your Money Goes</h2>
+                            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Top merchants</span>
+                        </div>
+                        <div class="h-52">
+                            <canvas id="merchantTreemapChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Time-of-Day Heatmap -->
+                    <div class="card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="font-display font-semibold text-sm">When You Spend</h2>
+                            <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">By day &amp; time</span>
+                        </div>
+                        <div id="timeHeatmapGrid" class="overflow-x-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN GRID: Breakdown (left) | Transactions (right) - Hidden in focus mode -->
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 hide-in-focus" style="min-height: 500px;">
 
                 <!-- SPENDING BREAKDOWN (Full left - 2 cols) -->
@@ -579,56 +649,11 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: AI Chat (top 2/3) + Transactions (bottom 1/3) -->
+                <!-- RIGHT COLUMN: Transactions -->
                 <div class="lg:col-span-3 flex flex-col gap-4">
 
-                    <!-- AI CHAT PANEL -->
-                    <div class="card rounded-xl overflow-hidden flex flex-col flex-[2]" style="min-height: 300px;">
-                        <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
-                            <div>
-                                <h2 class="font-display font-semibold text-sm">Ask AI</h2>
-                                <p class="text-[10px] text-fact-muted dark:text-fact-dark-muted">using <span class="text-fact-purple" id="aiModelName">claude-sonnet</span></p>
-                            </div>
-                            <button onclick="clearAIChat()" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink">Clear</button>
-                        </div>
-
-                        <!-- Chat messages -->
-                        <div id="aiChatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-                            <div class="text-fact-muted dark:text-fact-dark-muted text-xs">Ask me anything about your spending...</div>
-                        </div>
-
-                        <!-- Quick questions -->
-                        <div class="px-4 py-2 border-t border-fact-border dark:border-fact-dark-border">
-                            <div class="flex flex-wrap gap-1.5">
-                                <button onclick="askAIChat('What are my biggest spending categories?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Top categories</button>
-                                <button onclick="askAIChat('Are there any unusual transactions?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Unusual?</button>
-                                <button onclick="askAIChat('How can I save money?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Save tips</button>
-                                <button onclick="askAIChat('What are my salary payments?')" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-fact-yellow hover:text-fact-ink transition">Salary info</button>
-                            </div>
-                        </div>
-
-                        <!-- Input with Voice -->
-                        <div class="p-3 border-t border-fact-border dark:border-fact-dark-border">
-                            <div class="flex gap-2">
-                                <input type="text" id="aiChatInput" placeholder="Ask about your spending..."
-                                    class="flex-1 px-3 py-2 text-sm border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:border-fact-yellow"
-                                    onkeypress="if(event.key==='Enter')askAIChat()">
-                                <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input"
-                                    class="voice-btn w-10 h-10 flex items-center justify-center rounded-lg border border-fact-border dark:border-fact-dark-border hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                                    </svg>
-                                </button>
-                                <button onclick="askAIChat()" class="px-4 py-2 text-sm font-medium rounded-lg bg-fact-yellow text-fact-ink hover:bg-fact-yellow/80 transition">Send</button>
-                            </div>
-                            <div id="voiceStatus" class="hidden mt-2 text-xs text-fact-muted dark:text-fact-dark-muted text-center">
-                                <span class="animate-pulse">Listening...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TRANSACTIONS (bottom 1/3) -->
-                    <div class="card rounded-xl overflow-hidden flex flex-col flex-1" style="min-height: 180px;">
+                    <!-- TRANSACTIONS -->
+                    <div class="card rounded-xl overflow-hidden flex flex-col flex-1" style="min-height: 300px;">
                         <div class="p-3 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
                             <div>
                                 <h2 class="font-display font-semibold text-sm">Transactions</h2>
@@ -659,6 +684,8 @@
             </footer>
         </main>
     </div>
+    <!-- DOCKED AI CHAT PANEL (always visible at bottom when logged in) -->
+    <div id="chatPanel" class="chat-panel"></div>
     </div> <!-- Close mainApp -->
 
     <!-- MODALS -->
