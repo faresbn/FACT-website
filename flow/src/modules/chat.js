@@ -36,27 +36,29 @@ export function initChat(CONFIG, supabaseClient, callbacks = {}) {
 
 function renderChatUI(panel) {
     panel.innerHTML = `
-        <!-- Chat Toggle Bar -->
-        <div id="chatToggleBar" class="chat-toggle-bar">
+        <!-- Chat Panel Header -->
+        <div class="chat-panel-header">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-fact-green animate-pulse"></div>
                 <span class="text-sm font-medium">AI Assistant</span>
                 <span class="text-[10px] text-fact-muted dark:text-fact-dark-muted">Sonnet</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
                 <button id="chatNewBtn" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink transition px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" title="New conversation">
                     + New
                 </button>
                 <button id="chatHistoryToggle" class="text-[10px] text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink transition px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" title="History">
                     History
                 </button>
-                <svg id="chatExpandIcon" class="w-4 h-4 text-fact-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                </svg>
+                <button id="chatCloseBtn" class="p-1 text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink transition rounded hover:bg-gray-100 dark:hover:bg-gray-800" title="Close">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- Conversation History Sidebar -->
+        <!-- Conversation History Panel -->
         <div id="chatHistoryPanel" class="chat-history-panel hidden">
             <div class="p-3 border-b border-fact-border dark:border-fact-dark-border">
                 <div class="text-xs font-medium text-fact-muted dark:text-fact-dark-muted">Recent Conversations</div>
@@ -66,8 +68,8 @@ function renderChatUI(panel) {
             </div>
         </div>
 
-        <!-- Chat Body (expanded) -->
-        <div id="chatBody" class="chat-body hidden">
+        <!-- Chat Body -->
+        <div id="chatBody" class="chat-body">
             <!-- Messages -->
             <div id="chatMessages" class="chat-messages">
                 <div class="chat-welcome">
@@ -107,23 +109,15 @@ function renderChatUI(panel) {
 }
 
 function setupChatEvents(CONFIG, supabaseClient) {
-    const toggleBar = document.getElementById('chatToggleBar');
-    const body = document.getElementById('chatBody');
     const input = document.getElementById('chatInput');
     const sendBtn = document.getElementById('chatSendBtn');
     const newBtn = document.getElementById('chatNewBtn');
     const historyToggle = document.getElementById('chatHistoryToggle');
-    const expandIcon = document.getElementById('chatExpandIcon');
+    const closeBtn = document.getElementById('chatCloseBtn');
 
-    // Toggle expand/collapse
-    toggleBar?.addEventListener('click', (e) => {
-        if (e.target.closest('#chatNewBtn') || e.target.closest('#chatHistoryToggle')) return;
-        const panel = document.getElementById('chatPanel');
-        chatExpanded = !chatExpanded;
-        body?.classList.toggle('hidden', !chatExpanded);
-        panel?.classList.toggle('expanded', chatExpanded);
-        expandIcon?.classList.toggle('rotate-180', !chatExpanded);
-        if (chatExpanded) input?.focus();
+    // Close button
+    closeBtn?.addEventListener('click', () => {
+        closeChat();
     });
 
     // Auto-resize textarea
@@ -171,14 +165,12 @@ function setupChatEvents(CONFIG, supabaseClient) {
     });
 
     // New conversation
-    newBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
+    newBtn?.addEventListener('click', () => {
         startNewConversation();
     });
 
     // History toggle
-    historyToggle?.addEventListener('click', (e) => {
-        e.stopPropagation();
+    historyToggle?.addEventListener('click', () => {
         const historyPanel = document.getElementById('chatHistoryPanel');
         historyPanel?.classList.toggle('hidden');
         if (!historyPanel?.classList.contains('hidden')) {
@@ -289,11 +281,9 @@ async function loadConversation(convoId, CONFIG, supabaseClient) {
 
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-        // Expand chat if not already
+        // Open chat if not already
         if (!chatExpanded) {
-            chatExpanded = true;
-            document.getElementById('chatBody')?.classList.remove('hidden');
-            document.getElementById('chatExpandIcon')?.classList.remove('rotate-180');
+            openChat();
         }
     } catch (_e) {
         messagesDiv.innerHTML = '<div class="text-center text-fact-red text-xs py-4">Failed to load conversation</div>';
@@ -308,12 +298,9 @@ async function sendMessage(message, CONFIG, supabaseClient) {
     const sendBtn = document.getElementById('chatSendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Expand if collapsed
+    // Open panel if not already open
     if (!chatExpanded) {
-        chatExpanded = true;
-        document.getElementById('chatPanel')?.classList.add('expanded');
-        document.getElementById('chatBody')?.classList.remove('hidden');
-        document.getElementById('chatExpandIcon')?.classList.remove('rotate-180');
+        openChat();
     }
 
     // Clear welcome if present
@@ -431,21 +418,24 @@ async function sendMessage(message, CONFIG, supabaseClient) {
     }
 }
 
-// Toggle chat panel (for external callers)
+// Toggle chat side panel (for external callers / FAB)
 export function toggleChat() {
-    chatExpanded = !chatExpanded;
-    document.getElementById('chatPanel')?.classList.toggle('expanded', chatExpanded);
-    document.getElementById('chatBody')?.classList.toggle('hidden', !chatExpanded);
-    document.getElementById('chatExpandIcon')?.classList.toggle('rotate-180', !chatExpanded);
-    if (chatExpanded) document.getElementById('chatInput')?.focus();
+    if (chatExpanded) {
+        closeChat();
+    } else {
+        openChat();
+    }
 }
 
 export function openChat() {
     if (!chatExpanded) {
         chatExpanded = true;
-        document.getElementById('chatPanel')?.classList.add('expanded');
-        document.getElementById('chatBody')?.classList.remove('hidden');
-        document.getElementById('chatExpandIcon')?.classList.remove('rotate-180');
+        const panel = document.getElementById('chatPanel');
+        panel?.classList.add('open');
+        document.body.classList.add('chat-open');
+        // Hide FAB when panel is open
+        const fab = document.getElementById('chatFab');
+        if (fab) fab.style.display = 'none';
         document.getElementById('chatInput')?.focus();
     }
 }
@@ -453,8 +443,13 @@ export function openChat() {
 export function closeChat() {
     if (chatExpanded) {
         chatExpanded = false;
-        document.getElementById('chatPanel')?.classList.remove('expanded');
-        document.getElementById('chatBody')?.classList.add('hidden');
-        document.getElementById('chatExpandIcon')?.classList.add('rotate-180');
+        const panel = document.getElementById('chatPanel');
+        panel?.classList.remove('open');
+        document.body.classList.remove('chat-open');
+        // Show FAB again
+        const fab = document.getElementById('chatFab');
+        if (fab) fab.style.display = 'flex';
+        // Close history panel too
+        document.getElementById('chatHistoryPanel')?.classList.add('hidden');
     }
 }

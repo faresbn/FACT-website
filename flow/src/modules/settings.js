@@ -68,7 +68,7 @@ export function applyCustomDate(STATE, filterAndRender) {
 }
 
 // SETTINGS (Tabbed)
-let currentSettingsTab = 'general';
+let currentSettingsTab = 'account';
 
 export function switchSettingsTab(tabId, callbacks) {
     const { renderSettingsGoalsList, renderRecipientsList, loadProfileTab } = callbacks;
@@ -76,7 +76,7 @@ export function switchSettingsTab(tabId, callbacks) {
     localStorage.setItem('fact_settings_tab', tabId);
 
     // Update tab button states
-    const tabs = ['general', 'goals', 'contacts', 'profile'];
+    const tabs = ['account', 'budget', 'goals', 'contacts', 'data'];
     tabs.forEach(t => {
         const tabBtn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         const panel = document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`);
@@ -96,10 +96,10 @@ export function switchSettingsTab(tabId, callbacks) {
         }
     });
 
-    // Show/hide footer (only for General and Profile tabs)
+    // Show/hide footer (only for Account tab)
     const footer = document.getElementById('settingsFooter');
     if (footer) {
-        footer.classList.toggle('hidden', tabId !== 'general' && tabId !== 'profile');
+        footer.classList.toggle('hidden', tabId !== 'account');
     }
 
     // Load data for active tab
@@ -107,7 +107,7 @@ export function switchSettingsTab(tabId, callbacks) {
         renderSettingsGoalsList();
     } else if (tabId === 'contacts') {
         renderRecipientsList();
-    } else if (tabId === 'profile' && typeof loadProfileTab === 'function') {
+    } else if (tabId === 'budget' && typeof loadProfileTab === 'function') {
         loadProfileTab();
     }
 }
@@ -125,7 +125,11 @@ export function openSettings(tab = null, callbacks) {
     document.getElementById('settingsPassSuccess').classList.add('hidden');
 
     // Determine which tab to show
-    const targetTab = tab || localStorage.getItem('fact_settings_tab') || 'general';
+    // Map old tab names to new ones for localStorage compatibility
+    const savedTab = localStorage.getItem('fact_settings_tab');
+    const tabMap = { general: 'account', profile: 'budget' };
+    const resolvedSaved = savedTab ? (tabMap[savedTab] || savedTab) : 'account';
+    const targetTab = tab ? (tabMap[tab] || tab) : resolvedSaved;
 
     // Show modal
     document.getElementById('settingsModal').classList.remove('hidden');

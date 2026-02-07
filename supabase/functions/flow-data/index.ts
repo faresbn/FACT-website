@@ -1,4 +1,4 @@
-import { createUserClient } from '../_shared/supabase.ts';
+import { createUserClient, createAdminClient } from '../_shared/supabase.ts';
 import { resolveCorsOrigin, corsHeaders } from '../_shared/cors.ts';
 
 function jsonResponse(request: Request, body: unknown, status = 200) {
@@ -12,6 +12,31 @@ function jsonResponse(request: Request, body: unknown, status = 200) {
   });
 }
 
+// Auto-fetch FX rates from free API (no key required)
+const FX_CURRENCIES = ['USD', 'EUR', 'GBP', 'SAR', 'AED', 'BHD', 'KWD', 'OMR', 'INR', 'PKR', 'PHP', 'EGP'];
+
+async function fetchLiveRates(): Promise<Record<string, number> | null> {
+  try {
+    const response = await fetch('https://open.er-api.com/v6/latest/QAR');
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data.result !== 'success' || !data.rates) return null;
+
+    // API returns rates FROM QAR TO other currencies.
+    // We need inverse: how many QAR per 1 unit of foreign currency.
+    const rates: Record<string, number> = {};
+    for (const [currency, rate] of Object.entries(data.rates)) {
+      if (typeof rate === 'number' && rate > 0) {
+        rates[currency] = 1 / rate;
+      }
+    }
+    return rates;
+  } catch (err) {
+    console.error('FX rate fetch error:', err);
+    return null;
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     const origin = resolveCorsOrigin(request);
@@ -23,8 +48,6 @@ Deno.serve(async (request) => {
   }
 
   const supabase = createUserClient(request);
-  // Extract JWT from Authorization header and pass explicitly to getUser()
-  // (global headers are not used by auth.getUser() when persistSession is false)
   const authHeader = request.headers.get('authorization') || '';
   const jwt = authHeader.replace('Bearer ', '');
   const { data: { user }, error } = await supabase.auth.getUser(jwt);
@@ -34,34 +57,71 @@ Deno.serve(async (request) => {
 
   const payload = await request.json().catch(() => ({}));
   const sheets = payload.sheets || ['RawLedger'];
+  const lastSync: string | undefined = payload.last_sync;
 
   const data: Record<string, any> = {};
+  const meta: Record<string, any> = {
+    is_incremental: false,
+    backfill_applied: false,
+    uncategorized_count: 0,
+    total_count: 0,
+  };
 
   if (sheets.includes('RawLedger')) {
-    const { data: rows, error: rowsErr } = await supabase
+    let query = supabase
       .from('raw_ledger')
-      .select('txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text')
+      .select('txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text, amount_qar_approx')
       .eq('user_id', user.id)
       .order('txn_timestamp', { ascending: false });
 
+    if (lastSync) {
+      query = query.gt('created_at', lastSync);
+      meta.is_incremental = true;
+    }
+
+    const { data: rows, error: rowsErr } = await query;
+
     if (rowsErr) return jsonResponse(request, { error: rowsErr.message }, 400);
 
-    const header = ['Timestamp', 'Amount', 'Currency', 'Counterparty', 'Card', 'Direction', 'TxnType', 'Category', 'Subcategory', 'Confidence', 'Context', 'RawText'];
-    const rowsArray = (rows || []).map((r) => [
-      r.txn_timestamp,
-      r.amount,
-      r.currency,
-      r.counterparty,
-      r.card,
-      r.direction,
-      r.txn_type,
-      r.category,
-      r.subcategory,
-      r.confidence,
-      r.context ? JSON.stringify(r.context) : '',
-      r.raw_text,
-    ]);
-    data.RawLedger = [header, ...rowsArray];
+    const fetchedRows = rows || [];
+    meta.total_count = fetchedRows.length;
+
+    const uncategorizedCount = fetchedRows.filter(
+      (r) => !r.category || r.category.trim() === ''
+    ).length;
+    meta.uncategorized_count = uncategorizedCount;
+
+    let finalRows = fetchedRows;
+    if (fetchedRows.length > 0 && uncategorizedCount / fetchedRows.length > 0.1) {
+      try {
+        const adminClient = createAdminClient();
+        await adminClient.rpc('categorize_from_merchant_map', { p_user_id: user.id });
+        meta.backfill_applied = true;
+
+        let refetchQuery = supabase
+          .from('raw_ledger')
+          .select('txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text, amount_qar_approx')
+          .eq('user_id', user.id)
+          .order('txn_timestamp', { ascending: false });
+
+        if (lastSync) {
+          refetchQuery = refetchQuery.gt('created_at', lastSync);
+        }
+
+        const { data: updatedRows, error: refetchErr } = await refetchQuery;
+        if (!refetchErr && updatedRows) {
+          finalRows = updatedRows;
+          meta.uncategorized_count = finalRows.filter(
+            (r) => !r.category || r.category.trim() === ''
+          ).length;
+          meta.total_count = finalRows.length;
+        }
+      } catch (backfillErr) {
+        console.error('Backfill error:', backfillErr);
+      }
+    }
+
+    data.RawLedger = finalRows;
   }
 
   if (sheets.includes('MerchantMap')) {
@@ -69,9 +129,7 @@ Deno.serve(async (request) => {
       .from('merchant_map')
       .select('pattern, display_name, consolidated_name, category')
       .eq('user_id', user.id);
-
     if (rowsErr) return jsonResponse(request, { error: rowsErr.message }, 400);
-
     const header = ['Pattern', 'Display Name', 'Consolidated Name', 'Category'];
     data.MerchantMap = [header, ...(rows || []).map((r) => [r.pattern, r.display_name, r.consolidated_name, r.category])];
   }
@@ -79,13 +137,66 @@ Deno.serve(async (request) => {
   if (sheets.includes('FXRates')) {
     const { data: rows, error: rowsErr } = await supabase
       .from('fx_rates')
-      .select('currency, rate_to_qar, formula')
+      .select('currency, rate_to_qar, formula, updated_at')
       .eq('user_id', user.id);
-
     if (rowsErr) return jsonResponse(request, { error: rowsErr.message }, 400);
 
-    const header = ['Currency', 'RateToQAR', 'Formula'];
-    data.FXRates = [header, ...(rows || []).map((r) => [r.currency, r.rate_to_qar, r.formula])];
+    const existingRates = rows || [];
+
+    // Check if rates are stale (>24h old) or missing
+    const now = Date.now();
+    const isStale = existingRates.length === 0 ||
+      existingRates.some(r => {
+        const updatedAt = new Date(r.updated_at).getTime();
+        return (now - updatedAt) > 24 * 60 * 60 * 1000;
+      });
+
+    if (isStale) {
+      const liveRates = await fetchLiveRates();
+      if (liveRates) {
+        const adminClient = createAdminClient();
+        for (const cur of FX_CURRENCIES) {
+          if (liveRates[cur]) {
+            await adminClient
+              .from('fx_rates')
+              .upsert({
+                user_id: user.id,
+                currency: cur,
+                rate_to_qar: parseFloat(liveRates[cur].toFixed(6)),
+                formula: `auto:${liveRates[cur].toFixed(6)}`,
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,currency' });
+          }
+        }
+        // Always include QAR = 1
+        await adminClient
+          .from('fx_rates')
+          .upsert({
+            user_id: user.id,
+            currency: 'QAR',
+            rate_to_qar: 1,
+            formula: 'base',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id,currency' });
+
+        meta.fx_refreshed = true;
+
+        // Re-fetch after update
+        const { data: updatedRows } = await supabase
+          .from('fx_rates')
+          .select('currency, rate_to_qar, formula')
+          .eq('user_id', user.id);
+        const header = ['Currency', 'RateToQAR', 'Formula'];
+        data.FXRates = [header, ...(updatedRows || []).map((r: any) => [r.currency, r.rate_to_qar, r.formula])];
+      } else {
+        // Fallback to existing (stale) rates
+        const header = ['Currency', 'RateToQAR', 'Formula'];
+        data.FXRates = [header, ...existingRates.map((r: any) => [r.currency, r.rate_to_qar, r.formula])];
+      }
+    } else {
+      const header = ['Currency', 'RateToQAR', 'Formula'];
+      data.FXRates = [header, ...existingRates.map((r: any) => [r.currency, r.rate_to_qar, r.formula])];
+    }
   }
 
   if (sheets.includes('UserContext')) {
@@ -93,9 +204,7 @@ Deno.serve(async (request) => {
       .from('user_context')
       .select('type, key, value, details, date_added, source')
       .eq('user_id', user.id);
-
     if (rowsErr) return jsonResponse(request, { error: rowsErr.message }, 400);
-
     const header = ['Type', 'Key', 'Value', 'Details', 'DateAdded', 'Source'];
     data.UserContext = [header, ...(rows || []).map((r) => [r.type, r.key, r.value, r.details, r.date_added, r.source])];
   }
@@ -105,9 +214,7 @@ Deno.serve(async (request) => {
       .from('recipients')
       .select('phone, bank_account, short_name, long_name, id')
       .eq('user_id', user.id);
-
     if (rowsErr) return jsonResponse(request, { error: rowsErr.message }, 400);
-
     const header = ['Phone', 'BankAccount', 'ShortName', 'LongName', 'Id'];
     data.Recipients = [header, ...(rows || []).map((r) => [r.phone, r.bank_account, r.short_name, r.long_name, r.id])];
   }
@@ -118,7 +225,6 @@ Deno.serve(async (request) => {
       .select('settings, display_name')
       .eq('user_id', user.id)
       .single();
-
     data.Profile = profile || { settings: {}, display_name: null };
   }
 
@@ -128,7 +234,6 @@ Deno.serve(async (request) => {
       .select('id, category, monthly_limit, active')
       .eq('user_id', user.id)
       .eq('active', true);
-
     data.Goals = goals || [];
   }
 
@@ -139,7 +244,6 @@ Deno.serve(async (request) => {
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .limit(10);
-
     data.Insights = insights || [];
   }
 
@@ -148,9 +252,43 @@ Deno.serve(async (request) => {
       .from('streaks')
       .select('type, current_count, best_count, last_date')
       .eq('user_id', user.id);
-
     data.Streaks = streaks || [];
   }
 
-  return jsonResponse(request, { success: true, data });
+  // Pre-aggregated heatmap data from hourly_spend view
+  if (sheets.includes('HourlySpend')) {
+    const { data: hourly } = await supabase
+      .from('hourly_spend')
+      .select('day_of_week, hour_of_day, txn_count, total_amount')
+      .eq('user_id', user.id);
+    data.HourlySpend = hourly || [];
+  }
+
+  // Recurring transaction detection
+  if (sheets.includes('Recurring')) {
+    const adminClient = createAdminClient();
+    const { data: recurring, error: recErr } = await adminClient
+      .rpc('detect_recurring_transactions', { p_user_id: user.id });
+    if (recErr) {
+      console.error('Recurring detection error:', recErr);
+      data.Recurring = [];
+    } else {
+      data.Recurring = recurring || [];
+    }
+  }
+
+  // Proactive insights (anomalies, budget warnings, new merchants)
+  if (sheets.includes('Proactive')) {
+    const adminClient = createAdminClient();
+    const { data: proactive, error: proErr } = await adminClient
+      .rpc('generate_proactive_insights', { p_user_id: user.id });
+    if (proErr) {
+      console.error('Proactive insights error:', proErr);
+      data.Proactive = [];
+    } else {
+      data.Proactive = proactive || [];
+    }
+  }
+
+  return jsonResponse(request, { success: true, data, meta });
 });

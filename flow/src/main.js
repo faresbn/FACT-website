@@ -180,6 +180,9 @@ import {
 // Chat module (new streaming chat)
 import { initChat, toggleChat, openChat, closeChat } from './modules/chat.js';
 
+// Forecast module
+import { renderForecast as renderForecastModule } from './modules/forecast.js';
+
 // Visualizations module
 import {
     renderSpendingTrend,
@@ -312,6 +315,8 @@ function filterAndRender() {
     });
     // Render new visualizations after filter
     renderAllVisualizations();
+    // Render forecast
+    renderForecast();
     // Render recurring subscriptions and proactive alerts
     renderRecurringSummary();
     renderProactiveInsights();
@@ -319,12 +324,65 @@ function filterAndRender() {
     emit(EVENTS.DATA_FILTERED, { count: STATE.filtered.length, period: STATE.period });
 }
 
+function renderForecast() {
+    renderForecastModule(STATE, { formatNum });
+}
+
+let activeVizTab = 'trend';
 function renderAllVisualizations() {
-    renderSpendingTrend(STATE, { formatNum, SUMMARY_GROUPS });
-    renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS });
-    renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS });
-    renderTimeHeatmap(STATE, { formatNum });
+    // Only render the active viz tab (lazy rendering)
+    renderActiveViz();
     renderSmartMetrics(STATE, { formatNum, SUMMARY_GROUPS });
+}
+
+function renderActiveViz() {
+    switch (activeVizTab) {
+        case 'trend': renderSpendingTrend(STATE, { formatNum, SUMMARY_GROUPS }); break;
+        case 'compare': renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS }); break;
+        case 'merchants': renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS }); break;
+        case 'heatmap': renderTimeHeatmap(STATE, { formatNum }); break;
+    }
+}
+
+function switchVizTab(tabId) {
+    activeVizTab = tabId;
+    // Toggle panels
+    document.querySelectorAll('.viz-panel').forEach(p => p.classList.add('hidden'));
+    const panel = document.getElementById(`viz${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+    if (panel) panel.classList.remove('hidden');
+    // Toggle tab buttons
+    document.querySelectorAll('.viz-tab').forEach(btn => {
+        const isActive = btn.dataset.viz === tabId;
+        btn.classList.toggle('bg-fact-ink', isActive);
+        btn.classList.toggle('dark:bg-fact-dark-ink', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-fact-dark-bg', isActive);
+        btn.classList.toggle('text-fact-muted', !isActive);
+        btn.classList.toggle('dark:text-fact-dark-muted', !isActive);
+    });
+    renderActiveViz();
+}
+
+let activeMainTab = 'breakdown';
+function switchMainTab(tabId) {
+    activeMainTab = tabId;
+    // Toggle panels
+    document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
+    const panel = document.getElementById(`mainTab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+    if (panel) panel.classList.remove('hidden');
+    // Toggle tab buttons
+    document.querySelectorAll('.main-tab').forEach(btn => {
+        const isActive = btn.dataset.mainTab === tabId;
+        btn.classList.toggle('bg-fact-ink', isActive);
+        btn.classList.toggle('dark:bg-fact-dark-ink', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('dark:text-fact-dark-bg', isActive);
+        btn.classList.toggle('text-fact-muted', !isActive);
+        btn.classList.toggle('dark:text-fact-dark-muted', !isActive);
+    });
+    // Show/hide view mode toggle (only on breakdown tab)
+    const viewToggle = document.getElementById('viewModeToggle');
+    if (viewToggle) viewToggle.classList.toggle('hidden', tabId !== 'breakdown');
 }
 
 function renderTodaySection() {
@@ -967,6 +1025,9 @@ window.filterByDimension = filterByDimension;
 window.openGenerositySettings = openGenerositySettings;
 window.openGoals = openGoals;
 window.openHeatmap = openHeatmap;
+window.switchVizTab = switchVizTab;
+window.switchMainTab = switchMainTab;
+window.renderForecast = renderForecast;
 window.openTxnModal = openTxnModal;
 window.openUncatModal = openUncatModal;
 window.refreshInsights = refreshInsights;
@@ -1008,3 +1069,10 @@ window.renderHeatmap = renderHeatmap;
 window.drilldownDate = drilldownDate;
 window.closeCelebration = closeCelebration;
 window.confirmResolve = () => {}; // Placeholder, set dynamically in showConfirm
+
+// Simple modal closers for modals without module functions
+window.closeMerchantModal = () => document.getElementById('merchantModal')?.classList.add('hidden');
+window.filterMerchantModal = () => {}; // Merchant modal filter — placeholder
+window.closeCmdPalette = () => document.getElementById('cmdPalette')?.classList.remove('active');
+window.filterCommands = () => {};
+window.handleCmdKeydown = () => {};

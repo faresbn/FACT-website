@@ -23,6 +23,7 @@ Required fields:
 {
   "amount": <number>,
   "currency": "<3-letter code, default QAR>",
+  "amount_qar_approx": <number or null>,
   "counterparty": "<merchant or recipient name, cleaned>",
   "card": "<last 4 digits or empty string>",
   "direction": "<IN or OUT>",
@@ -40,6 +41,7 @@ Rules:
 - For counterparty: strip "QNB", "POS", terminal IDs, city suffixes. Keep the recognisable merchant name only.
 - Subcategory must be one of the listed values. Pick the closest match. Never return "Uncategorized".
 - If the SMS is informational (balance alert, OTP, promo), set skip=true with reason.
+- For amount_qar_approx: if the SMS mentions a QAR equivalent for a foreign currency transaction (e.g. "USD 17.33 QAR Equiv. 63.15"), extract the QAR amount. For QAR transactions, set to the same value as amount. Otherwise set to null.
 
 ${contextHints ? `Context:\n${contextHints}` : ''}`;
 }
@@ -203,7 +205,9 @@ Deno.serve(async (request) => {
       const amount = Number(extracted.amount);
       if (!Number.isFinite(amount)) throw new Error('Invalid amount');
 
-      const currency = extracted.currency || 'QAR';
+      const VALID_CURRENCIES = ['QAR','USD','EUR','GBP','SAR','AED','KWD','BHD','OMR','EGP','JOD','INR','PKR','PHP','LKR','TRY','CHF','JPY','CAD','AUD','CNY','SGD'];
+      const rawCurrency = (extracted.currency || 'QAR').toUpperCase();
+      const currency = VALID_CURRENCIES.includes(rawCurrency) ? rawCurrency : 'QAR';
       const idempotencySource = buildIdempotencyKey(sms, ts);
       const idempotencyKey = await sha256Hex(idempotencySource);
 
@@ -221,11 +225,15 @@ Deno.serve(async (request) => {
       }
 
       const direction = (extracted.direction || '').toUpperCase();
+      const amountQarApprox = extracted.amount_qar_approx
+        ? Number(extracted.amount_qar_approx)
+        : (currency === 'QAR' ? amount : null);
       const insertPayload = {
         user_id: userId,
         txn_timestamp: ts.toISOString(),
         amount,
         currency,
+        amount_qar_approx: Number.isFinite(amountQarApprox) ? amountQarApprox : null,
         counterparty: extracted.counterparty || null,
         card: extracted.card || null,
         direction: direction || null,

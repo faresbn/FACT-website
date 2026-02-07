@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime
 from urllib import request, parse
 
-XLSX_PATH = os.environ.get('FLOW_XLSX_PATH', 'flow/QNB_TrackerData (3).xlsx')
+XLSX_PATH = os.environ.get('FLOW_XLSX_PATH', 'flow/QNB_TrackerData (4).xlsx')
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
 USER_EMAIL = os.environ.get('FLOW_USER_EMAIL')
@@ -173,6 +173,14 @@ if 'UserContext' in xl.sheet_names:
             'date_added': clean(r.get('DateAdded')),
             'source': clean(r.get('Source')),
         })
+    # App-level dedup: fetch existing rows and skip exact matches
+    status, content = http_request('GET', f"{SUPABASE_URL}/rest/v1/user_context",
+        params={'user_id': f'eq.{user_id}', 'select': 'type,key,value'})
+    existing_ctx = set()
+    if status < 300:
+        for row in json.loads(content):
+            existing_ctx.add((row['type'], row.get('key', ''), row.get('value', '')))
+    rows = [r for r in rows if (r['type'], r.get('key', ''), r.get('value', '')) not in existing_ctx]
     post_rows('user_context', rows)
 
 # Recipients
@@ -193,7 +201,7 @@ if 'Recipients' in xl.sheet_names:
             'short_name': short,
             'long_name': long,
         })
-    post_rows('recipients', rows)
+    post_rows('recipients', rows, on_conflict='user_id,short_name')
 
 # Insights
 if 'Insights' in xl.sheet_names:
@@ -209,6 +217,6 @@ if 'Insights' in xl.sheet_names:
             'date': date,
             'insights': insights,
         })
-    post_rows('insights', rows)
+    post_rows('insights', rows, on_conflict='user_id,date')
 
 print('Import complete')

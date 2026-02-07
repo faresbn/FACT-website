@@ -1001,66 +1001,97 @@ body.dark-mode .health-factor-bar { background: #2A2A2A; }
     transition: width 0.5s ease-out;
 }
 
-/* ─── DOCKED CHAT PANEL ───────────────────────────────────── */
-.chat-panel {
+/* ─── CHAT SIDE PANEL + FAB ──────────────────────────────── */
+.chat-side-panel {
     position: fixed;
-    bottom: 0;
-    left: 0;
+    top: 0;
     right: 0;
+    bottom: 0;
+    width: 380px;
     z-index: 80;
-    transition: height 0.3s ease;
-    height: 48px;
     background: white;
-    border-top: 1px solid #E5E5E5;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    border-left: 1px solid #E5E5E5;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
 }
-.chat-panel.expanded {
-    height: 45vh;
-}
-.chat-panel.full {
-    height: 85vh;
+.chat-side-panel.open {
+    transform: translateX(0);
 }
 @media (prefers-color-scheme: dark) {
-    .chat-panel {
+    .chat-side-panel {
         background: #1A1A1A;
-        border-top-color: #2A2A2A;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        border-left-color: #2A2A2A;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+    }
+}
+body.dark-mode .chat-side-panel {
+    background: #1A1A1A;
+    border-left-color: #2A2A2A;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+}
+
+/* Mobile: full-screen overlay */
+@media (max-width: 768px) {
+    .chat-side-panel {
+        width: 100%;
+        border-left: none;
     }
 }
 
-.chat-toggle-bar {
+/* Desktop: shrink main content when chat open */
+@media (min-width: 769px) {
+    body.chat-open #mainContent {
+        margin-right: 380px;
+        transition: margin-right 0.3s ease;
+    }
+}
+
+.chat-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
-    height: 48px;
-    min-height: 48px;
-    cursor: pointer;
-    user-select: none;
-    border-bottom: 1px solid transparent;
-}
-.chat-panel.expanded .chat-toggle-bar,
-.chat-panel.full .chat-toggle-bar {
-    border-bottom-color: #E5E5E5;
+    padding: 12px 16px;
+    border-bottom: 1px solid #E5E5E5;
+    min-height: 52px;
 }
 @media (prefers-color-scheme: dark) {
-    .chat-panel.expanded .chat-toggle-bar,
-    .chat-panel.full .chat-toggle-bar {
+    .chat-panel-header {
         border-bottom-color: #2A2A2A;
     }
+}
+body.dark-mode .chat-panel-header {
+    border-bottom-color: #2A2A2A;
 }
 
 .chat-body {
     flex: 1;
-    display: none;
+    display: flex;
     flex-direction: column;
     overflow: hidden;
 }
-.chat-panel.expanded .chat-body,
-.chat-panel.full .chat-body {
-    display: flex;
+
+/* FAB button */
+#chatFab {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+#chatFab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+}
+#chatFab .fab-pulse {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid #75B876;
+    animation: fabPulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes fabPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 0; }
 }
 
 .chat-messages {
@@ -1210,22 +1241,31 @@ body.dark-mode .health-factor-bar { background: #2A2A2A; }
 .chat-history-sidebar,
 .chat-history-panel {
     position: absolute;
-    top: 48px;
+    top: 52px;
     left: 0;
     bottom: 0;
-    width: 240px;
+    width: 100%;
     background: white;
-    border-right: 1px solid #E5E5E5;
+    border-top: 1px solid #E5E5E5;
     overflow-y: auto;
     z-index: 10;
-    animation: slideRight 0.2s ease-out;
+    animation: slideDown 0.2s ease-out;
 }
 @media (prefers-color-scheme: dark) {
     .chat-history-sidebar,
     .chat-history-panel {
         background: #1A1A1A;
-        border-right-color: #2A2A2A;
+        border-top-color: #2A2A2A;
     }
+}
+body.dark-mode .chat-history-sidebar,
+body.dark-mode .chat-history-panel {
+    background: #1A1A1A;
+    border-top-color: #2A2A2A;
+}
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 @keyframes slideRight {
     from { transform: translateX(-100%); opacity: 0; }
@@ -1261,8 +1301,7 @@ body.dark-mode .health-factor-bar { background: #2A2A2A; }
     50% { opacity: 0; }
 }
 
-/* Adjust body padding for docked chat */
-body { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+/* No extra body padding needed - chat is side panel now */
 
 /* ─── TIME HEATMAP ────────────────────────────────────────── */
 :root {
