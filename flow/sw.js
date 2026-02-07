@@ -3,27 +3,17 @@
  * Enables offline support and caching for the PWA
  */
 
-const CACHE_NAME = 'fact-flow-v7';
+const CACHE_NAME = 'fact-flow-v8';
 const STATIC_ASSETS = [
   '/flow/',
-  '/flow/index.html',
+  '/flow/flow.html',
   '/flow/manifest.json',
   '/flow/icon-512.png',
-  '/flow/favicon-32x32.png',
-  '/flow/favicon-16x16.png',
-  '/flow/apple-touch-icon.png',
   '/FACTLogo2026.png'
 ];
 
-const CDN_ASSETS = [
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js',
-  'https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js',
-  'https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isBetween.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js',
-  'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Display:wght@500;600;700&display=swap'
-];
+// CDN assets removed — all dependencies are now bundled via Vite
+const CDN_ASSETS = [];
 
 // Install: Cache static assets
 self.addEventListener('install', (event) => {
@@ -97,7 +87,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match('/flow/index.html'))
+        .catch(() => caches.match('/flow/flow.html'))
     );
     return;
   }

@@ -455,10 +455,20 @@ export function categorize(raw, aiMerchantType, STATE, MERCHANT_TYPES, counterpa
 
     // Priority 2: DB category — trust the database if a category was set
     if (dbCategory && dbCategory.trim()) {
-        // Use subcategory if it matches a known MERCHANT_TYPES key, otherwise use parent category
-        const merchantType = (aiMerchantType && MERCHANT_TYPES[aiMerchantType])
-            ? aiMerchantType
-            : dbCategory;
+        // Map DB subcategory values to MERCHANT_TYPES keys (handles legacy/alternate names)
+        const subcatMap = {
+            'Bars & Hotels': 'Bars & Nightlife',
+            'Hobbies': 'Entertainment',
+            'Transfers': 'Transfer',
+            'Income': 'Transfer',
+            'Family Transfers': 'Family',
+            'Fees': 'Transfer'
+        };
+        const mappedType = subcatMap[aiMerchantType] || aiMerchantType;
+        // Use mapped subcategory if it matches a known MERCHANT_TYPES key
+        const merchantType = (mappedType && MERCHANT_TYPES[mappedType])
+            ? mappedType
+            : (subcatMap[dbCategory] || (MERCHANT_TYPES[dbCategory] ? dbCategory : 'Other'));
         return { display: cleanName, consolidated: cleanName, merchantType };
     }
 
