@@ -1,11 +1,21 @@
 // ─── PATTERN/SALARY DETECTION ──────────────────────────────────
 import dayjs from 'dayjs';
 
-// PATTERN DETECTION - runs on all transactions to find clusters
+// PATTERN DETECTION - now primarily uses server-computed patterns from DB.
+// Patterns are set by detect_spending_patterns() DB function via flow-data sync.
+// The server writes pattern values directly to raw_ledger rows, which processTxns
+// reads into dims.pattern. This function is kept as a client-side fallback
+// for when pattern data is not yet available from the server (e.g., after
+// a manual re-categorization before the next sync).
 export function detectPatterns(STATE, isExemptFromSplurge) {
+    // If patterns were already loaded from server (dims.pattern != 'Normal' for some),
+    // skip client-side re-detection to avoid overwriting server values
+    const hasServerPatterns = STATE.allTxns.some(t => t.dims.pattern && t.dims.pattern !== 'Normal');
+    if (hasServerPatterns) return;
+
+    // Fallback: client-side pattern detection (same logic as before)
     const out = STATE.allTxns.filter(t => t.direction === 'OUT');
 
-    // Detect Night Out patterns: multiple bar/dining transactions in same evening
     const byDate = {};
     out.forEach(t => {
         const dateKey = t.date.format('YYYY-MM-DD');
@@ -23,14 +33,12 @@ export function detectPatterns(STATE, isExemptFromSplurge) {
         }
     });
 
-    // Detect Work Expense candidates: work hours dining/coffee
     out.forEach(t => {
         if (t.isWorkHours && ['Dining', 'Coffee'].includes(t.merchantType) && t.dims.pattern === 'Normal') {
             t.dims.pattern = 'Work Expense';
         }
     });
 
-    // Detect Splurges: transactions > 3x average for that merchant type
     const avgByType = {};
     out.forEach(t => {
         if (!avgByType[t.merchantType]) avgByType[t.merchantType] = { sum: 0, count: 0 };
@@ -44,14 +52,12 @@ export function detectPatterns(STATE, isExemptFromSplurge) {
     out.forEach(t => {
         const avg = avgByType[t.merchantType]?.avg || 0;
         if (avg > 0 && t.amount > avg * 3 && t.dims.pattern === 'Normal') {
-            // Check if user has exempted this from splurge detection
             if (!isExemptFromSplurge(t, STATE)) {
                 t.dims.pattern = 'Splurge';
             }
         }
     });
 
-    // Detect Subscriptions: same merchant, similar amount, ~monthly interval
     const byMerchant = {};
     out.forEach(t => {
         if (!byMerchant[t.consolidated]) byMerchant[t.consolidated] = [];
@@ -78,9 +84,25 @@ export function detectPatterns(STATE, isExemptFromSplurge) {
     });
 }
 
-// SALARY DETECTION - Find transactions with SALARY keyword
+// SALARY DETECTION - uses server-provided STATE.salaryInfo when available,
+// falls back to client-side detection from transaction data.
 export function detectSalary(STATE) {
-    // Find all transactions flagged as salary
+    // Use server-provided salary info if available
+    if (STATE.salaryInfo && STATE.salaryInfo.salary_count > 0) {
+        // Build a compatible salaries array from allTxns for setSalaryPeriod
+        const modalAmount = parseFloat(STATE.salaryInfo.modal_salary_amount);
+        const salaries = STATE.allTxns.filter(t =>
+            t.direction === 'IN' && t.isSalary &&
+            Math.abs(t.amount - modalAmount) / modalAmount < 0.1
+        ).sort((a, b) => b.date - a.date);
+
+        return {
+            salaries,
+            avgInterval: Math.round(parseFloat(STATE.salaryInfo.avg_interval_days)) || 30
+        };
+    }
+
+    // Fallback: client-side detection
     const allSalaries = STATE.allTxns.filter(t =>
         t.direction === 'IN' && t.isSalary
     ).sort((a, b) => b.date - a.date);
@@ -89,19 +111,16 @@ export function detectSalary(STATE) {
         return { salaries: [], avgInterval: 30 };
     }
 
-    // Find the most common (modal) salary amount to filter out advances/bonuses
-    const amounts = allSalaries.map(s => Math.round(s.amount / 100) * 100); // Round to nearest 100
+    const amounts = allSalaries.map(s => Math.round(s.amount / 100) * 100);
     const amountCounts = {};
     amounts.forEach(a => amountCounts[a] = (amountCounts[a] || 0) + 1);
     const mainSalaryAmount = Object.entries(amountCounts)
         .sort((a, b) => b[1] - a[1])[0]?.[0];
 
-    // Filter to only main salary amounts (within 10% tolerance)
     const salaries = mainSalaryAmount
         ? allSalaries.filter(s => Math.abs(s.amount - mainSalaryAmount) / mainSalaryAmount < 0.1)
         : allSalaries;
 
-    // Calculate average interval between main salaries
     let avgInterval = 30;
     if (salaries.length >= 2) {
         let totalInterval = 0;
@@ -125,8 +144,13 @@ export function getIncomeDayFromContext(STATE) {
     return isNaN(day) ? null : Math.min(Math.max(day, 1), 31);
 }
 
-// Get projected next salary date - detects day-of-month pattern from history
+// Get projected next salary date - uses server-computed date when available
 export function getNextSalaryDate(STATE) {
+    // Use server-computed next salary date if available
+    if (STATE.salaryInfo?.next_expected_date) {
+        return dayjs(STATE.salaryInfo.next_expected_date);
+    }
+
     const { salaries, avgInterval } = detectSalary(STATE);
     const incomeDay = getIncomeDayFromContext(STATE);
     if (incomeDay) {

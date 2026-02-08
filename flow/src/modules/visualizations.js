@@ -16,23 +16,38 @@ export function renderSpendingTrend(STATE, { formatNum, SUMMARY_GROUPS }) {
     const container = document.getElementById('spendingTrendChart');
     if (!container) return;
 
-    const out = STATE.filtered.filter(t => t.direction === 'OUT');
-    if (out.length === 0) return;
-
-    // Group into weekly buckets by summary group
-    const weeks = {};
     const groups = Object.keys(SUMMARY_GROUPS);
 
-    out.forEach(t => {
-        const weekStart = t.date.startOf('week').format('YYYY-MM-DD');
-        if (!weeks[weekStart]) {
-            weeks[weekStart] = {};
-            groups.forEach(g => weeks[weekStart][g] = 0);
-        }
-        weeks[weekStart][t.summaryGroup] = (weeks[weekStart][t.summaryGroup] || 0) + t.amount;
-    });
+    // Try server-provided weekly data first
+    let sortedWeeks, weeks;
+    if (STATE.chartData?.weekly?.length) {
+        weeks = {};
+        STATE.chartData.weekly.forEach(w => {
+            if (!weeks[w.weekStart]) {
+                weeks[w.weekStart] = {};
+                groups.forEach(g => weeks[w.weekStart][g] = 0);
+            }
+            weeks[w.weekStart][w.group] = (weeks[w.weekStart][w.group] || 0) + w.total;
+        });
+        sortedWeeks = Object.keys(weeks).sort();
+    } else {
+        // Fallback: client-side aggregation
+        const out = STATE.filtered.filter(t => t.direction === 'OUT');
+        if (out.length === 0) return;
 
-    const sortedWeeks = Object.keys(weeks).sort();
+        weeks = {};
+        out.forEach(t => {
+            const weekStart = t.date.startOf('week').format('YYYY-MM-DD');
+            if (!weeks[weekStart]) {
+                weeks[weekStart] = {};
+                groups.forEach(g => weeks[weekStart][g] = 0);
+            }
+            weeks[weekStart][t.summaryGroup] = (weeks[weekStart][t.summaryGroup] || 0) + t.amount;
+        });
+        sortedWeeks = Object.keys(weeks).sort();
+    }
+
+    if (!sortedWeeks.length) return;
     const labels = sortedWeeks.map(w => dayjs(w).format('MMM D'));
     const isDark = document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -111,30 +126,39 @@ export function renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS }) {
     const container = document.getElementById('merchantTreemapChart');
     if (!container) return;
 
-    const out = STATE.filtered.filter(t => t.direction === 'OUT');
-    if (out.length === 0) return;
+    let treeData;
 
-    // Aggregate by merchant within each summary group
-    const merchantData = {};
-    out.forEach(t => {
-        const key = t.consolidated || t.display || 'Unknown';
-        if (!merchantData[key]) {
-            merchantData[key] = {
-                merchant: key,
-                group: t.summaryGroup,
-                total: 0,
-                count: 0,
-                category: t.merchantType,
-            };
-        }
-        merchantData[key].total += t.amount;
-        merchantData[key].count++;
-    });
+    // Try server-provided top merchants first
+    if (STATE.chartData?.topMerchants?.length) {
+        treeData = STATE.chartData.topMerchants;
+    } else {
+        // Fallback: client-side aggregation
+        const out = STATE.filtered.filter(t => t.direction === 'OUT');
+        if (out.length === 0) return;
 
-    const treeData = Object.values(merchantData)
-        .filter(m => m.total > 0)
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 30); // Top 30 merchants
+        const merchantData = {};
+        out.forEach(t => {
+            const key = t.consolidated || t.display || 'Unknown';
+            if (!merchantData[key]) {
+                merchantData[key] = {
+                    merchant: key,
+                    group: t.summaryGroup,
+                    total: 0,
+                    count: 0,
+                    category: t.merchantType,
+                };
+            }
+            merchantData[key].total += t.amount;
+            merchantData[key].count++;
+        });
+
+        treeData = Object.values(merchantData)
+            .filter(m => m.total > 0)
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 30);
+    }
+
+    if (!treeData.length) return;
 
     const groupColors = {};
     Object.entries(SUMMARY_GROUPS).forEach(([name, data]) => {
@@ -223,20 +247,28 @@ export function renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS }) {
     const prevStart = start.subtract(periodLength + 1, 'day');
     const prevEnd = start.subtract(1, 'day');
 
-    const currentOut = STATE.allTxns.filter(t =>
-        t.direction === 'OUT' && t.date.isBetween(start, end, 'day', '[]')
-    );
-    const prevOut = STATE.allTxns.filter(t =>
-        t.direction === 'OUT' && t.date.isBetween(prevStart, prevEnd, 'day', '[]')
-    );
-
     const groups = Object.keys(SUMMARY_GROUPS);
     const currentByGroup = {};
     const prevByGroup = {};
-
     groups.forEach(g => { currentByGroup[g] = 0; prevByGroup[g] = 0; });
-    currentOut.forEach(t => currentByGroup[t.summaryGroup] = (currentByGroup[t.summaryGroup] || 0) + t.amount);
-    prevOut.forEach(t => prevByGroup[t.summaryGroup] = (prevByGroup[t.summaryGroup] || 0) + t.amount);
+
+    // Try server-provided comparison data first
+    if (STATE.chartData?.comparison?.length) {
+        STATE.chartData.comparison.forEach(c => {
+            currentByGroup[c.group] = c.current;
+            prevByGroup[c.group] = c.previous;
+        });
+    } else {
+        // Fallback: client-side aggregation
+        const currentOut = STATE.allTxns.filter(t =>
+            t.direction === 'OUT' && t.date.isBetween(start, end, 'day', '[]')
+        );
+        const prevOut = STATE.allTxns.filter(t =>
+            t.direction === 'OUT' && t.date.isBetween(prevStart, prevEnd, 'day', '[]')
+        );
+        currentOut.forEach(t => currentByGroup[t.summaryGroup] = (currentByGroup[t.summaryGroup] || 0) + t.amount);
+        prevOut.forEach(t => prevByGroup[t.summaryGroup] = (prevByGroup[t.summaryGroup] || 0) + t.amount);
+    }
 
     const activeGroups = groups.filter(g => currentByGroup[g] > 0 || prevByGroup[g] > 0);
     const isDark = document.body.classList.contains('dark-mode') || window.matchMedia('(prefers-color-scheme: dark)').matches;

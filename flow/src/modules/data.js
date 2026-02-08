@@ -76,7 +76,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         // Use incremental sync on subsequent loads
         const lastSync = isFirstLoad ? null : getLastSync(STATE);
         const requestBody = {
-            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive'],
+            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive', 'Patterns', 'SalaryInfo', 'Forecast', 'ChartData'],
         };
         if (lastSync) requestBody.last_sync = lastSync;
 
@@ -144,6 +144,15 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
         if (data.Proactive) {
             STATE.proactiveInsights = data.Proactive;
+        }
+        if (data.SalaryInfo) {
+            STATE.salaryInfo = data.SalaryInfo;
+        }
+        if (data.Forecast) {
+            STATE.forecastData = data.Forecast;
+        }
+        if (data.ChartData) {
+            STATE.chartData = data.ChartData;
         }
 
         // Save sync timestamp for next incremental sync
@@ -420,10 +429,17 @@ export function processTxns(rows, STATE, callbacks) {
         const card = r.card || '';
         const currency = r.currency || 'QAR';
         const amount = parseFloat(r.amount);
-        const rate = STATE.fxRates[currency] || 1;
-        const amtQARApprox = r.amount_qar_approx ? parseFloat(r.amount_qar_approx) : null;
-        const amtQAR = currency === 'QAR' ? amount : (amtQARApprox || amount * rate);
         const txnDate = parseDate(r.txn_timestamp);
+
+        // Use server-computed amount_qar if available, else compute client-side
+        let amtQAR;
+        if (r.amount_qar != null) {
+            amtQAR = parseFloat(r.amount_qar);
+        } else {
+            const rate = STATE.fxRates[currency] || 1;
+            const amtQARApprox = r.amount_qar_approx ? parseFloat(r.amount_qar_approx) : null;
+            amtQAR = currency === 'QAR' ? amount : (amtQARApprox || amount * rate);
+        }
 
         // DB category fields
         const dbCategory = r.category || null;
@@ -439,34 +455,50 @@ export function processTxns(rows, STATE, callbacks) {
         // Get merchant type and display info (pass counterparty as clean display name)
         const meta = categorize(raw, aiMerchantType, counterparty, dbCategory);
 
-        // Check if this is a salary transaction (check multiple fields)
-        const txnType = r.txn_type || '';
-        const allText = `${raw} ${counterparty} ${card} ${txnType}`.toLowerCase();
-        const isSalary = allText.includes('salary');
+        // Use server-computed is_salary if available, else compute client-side
+        const isSalary = r.is_salary != null ? r.is_salary : (() => {
+            const txnType = r.txn_type || '';
+            const allText = `${raw} ${counterparty} ${card} ${txnType}`.toLowerCase();
+            return allText.includes('salary');
+        })();
 
-        // COMPUTE DIMENSIONS
+        // Use server-computed dimensions if available, else compute client-side
+        const timeContext = (r.time_context && r.time_context.length > 0)
+            ? r.time_context
+            : getTimeContext(txnDate);
+        const sizeTier = r.size_tier || getSizeTier(amtQAR);
+
+        // COMPUTE DIMENSIONS — use server-provided pattern if available
         const dims = {
             what: meta.merchantType,
-            when: getTimeContext(txnDate),
-            size: getSizeTier(amtQAR),
-            pattern: 'Normal'
+            when: timeContext,
+            size: sizeTier,
+            pattern: r.pattern || 'Normal'
         };
 
-        // Match recipient for transfers/Fawran (also try on all OUT txns by phone/account)
-        const isTransferType = ['transfer', 'fawran', 'internal transfer'].some(t =>
-            txnType.toLowerCase().includes(t) || raw.toLowerCase().includes(t)
-        );
+        // Use server-resolved recipient_id if available, else fallback to client matching
+        const txnType = r.txn_type || '';
         let recipient = null;
-        if (isTransferType) {
-            // Primary: match by counterparty
-            recipient = matchRecipientFn(counterparty);
-            // Fallback: match by raw_text (catches phone numbers in SMS body)
-            if (!recipient) recipient = matchRecipientFn(raw);
-        } else if (r.direction === 'OUT') {
-            // For non-transfer OUT txns, only do phone/account matching (avoid false-positive name matches)
-            const cpDigits = counterparty.replace(/\D/g, '');
-            if (cpDigits.length >= 8) {
+        if (r.recipient_id) {
+            // Server matched this transaction to a recipient at INSERT time
+            const rec = STATE.recipients.find(rc => rc.id === r.recipient_id);
+            if (rec) {
+                recipient = { ...rec, matchType: 'server' };
+            }
+        }
+        if (!recipient) {
+            // Fallback: client-side matching for rows without server recipient_id
+            const isTransferType = ['transfer', 'fawran', 'internal transfer'].some(t =>
+                txnType.toLowerCase().includes(t) || raw.toLowerCase().includes(t)
+            );
+            if (isTransferType) {
                 recipient = matchRecipientFn(counterparty);
+                if (!recipient) recipient = matchRecipientFn(raw);
+            } else if (r.direction === 'OUT') {
+                const cpDigits = counterparty.replace(/\D/g, '');
+                if (cpDigits.length >= 8) {
+                    recipient = matchRecipientFn(counterparty);
+                }
             }
         }
 

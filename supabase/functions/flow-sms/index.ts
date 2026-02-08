@@ -1,9 +1,32 @@
 import { createAdminClient } from '../_shared/supabase.ts';
-import { buildIdempotencyKey, extractTimeContext, sha256Hex } from '../_shared/utils.ts';
+import { buildIdempotencyKey, extractTimeContext, sha256Hex, normalizeCounterparty } from '../_shared/utils.ts';
 import { resolveCorsOrigin, corsHeaders } from '../_shared/cors.ts';
 
 const MODEL_SMS = Deno.env.get('FLOW_MODEL_SMS') || 'claude-haiku-4';
 const MODEL_SMS_RETRY = Deno.env.get('FLOW_MODEL_SMS_RETRY') || 'claude-sonnet-4-20250514';
+
+// Maps subcategories from merchant_map to parent categories
+const SUBCAT_TO_PARENT: Record<string, string> = {
+  'Groceries': 'Essentials',
+  'Dining': 'Lifestyle',
+  'Coffee': 'Lifestyle',
+  'Delivery': 'Lifestyle',
+  'Shopping': 'Lifestyle',
+  'Transport': 'Essentials',
+  'Health': 'Essentials',
+  'Bills': 'Essentials',
+  'Travel': 'Lifestyle',
+  'Entertainment': 'Lifestyle',
+  'Bars & Nightlife': 'Lifestyle',
+  'Bars & Hotels': 'Lifestyle',
+  'Hobbies': 'Lifestyle',
+  'Transfer': 'Financial',
+  'Transfers': 'Financial',
+  'Family': 'Family',
+  'Family Transfers': 'Family',
+  'Fees': 'Financial',
+  'Other': 'Other',
+};
 
 function jsonResponse(request: Request, body: unknown, status = 200) {
   const origin = resolveCorsOrigin(request);
@@ -92,6 +115,30 @@ function shouldRetry(extracted: any) {
   const confidence = (extracted?.confidence || '').toLowerCase();
   const subcategory = (extracted?.subcategory || '').toLowerCase();
   return confidence === 'low' || subcategory === 'uncategorized' || !subcategory;
+}
+
+/**
+ * Apply merchant_map matching to override AI category if user has a saved mapping.
+ * Returns { category, subcategory, confidence } or null if no match.
+ */
+function applyMerchantMap(
+  counterparty: string,
+  rawText: string,
+  merchants: Array<{ pattern: string; category: string }> | null
+): { category: string; subcategory: string; confidence: string } | null {
+  if (!merchants?.length || !counterparty) return null;
+
+  const cpLower = counterparty.toLowerCase();
+  const rawLower = (rawText || '').toLowerCase();
+
+  for (const m of merchants) {
+    if (cpLower.includes(m.pattern) || rawLower.includes(m.pattern)) {
+      const subcategory = m.category;
+      const category = SUBCAT_TO_PARENT[subcategory] || SUBCAT_TO_PARENT[subcategory] || 'Other';
+      return { category, subcategory, confidence: 'matched' };
+    }
+  }
+  return null;
 }
 
 Deno.serve(async (request) => {
@@ -205,6 +252,9 @@ Deno.serve(async (request) => {
       const amount = Number(extracted.amount);
       if (!Number.isFinite(amount)) throw new Error('Invalid amount');
 
+      // Normalize counterparty at ingest time (title-case, brand consolidation)
+      const counterparty = normalizeCounterparty(extracted.counterparty || '');
+
       const VALID_CURRENCIES = ['QAR','USD','EUR','GBP','SAR','AED','KWD','BHD','OMR','EGP','JOD','INR','PKR','PHP','LKR','TRY','CHF','JPY','CAD','AUD','CNY','SGD'];
       const rawCurrency = (extracted.currency || 'QAR').toUpperCase();
       const currency = VALID_CURRENCIES.includes(rawCurrency) ? rawCurrency : 'QAR';
@@ -228,19 +278,33 @@ Deno.serve(async (request) => {
       const amountQarApprox = extracted.amount_qar_approx
         ? Number(extracted.amount_qar_approx)
         : (currency === 'QAR' ? amount : null);
+
+      // Apply merchant_map override: if user has a saved mapping for this merchant,
+      // use it instead of AI's category (user corrections take priority)
+      let category = extracted.category || null;
+      let subcategory = extracted.subcategory || extracted.category || null;
+      let confidence = extracted.confidence || null;
+
+      const mapMatch = applyMerchantMap(counterparty, sms, merchants);
+      if (mapMatch) {
+        category = mapMatch.category;
+        subcategory = mapMatch.subcategory;
+        confidence = mapMatch.confidence;
+      }
+
       const insertPayload = {
         user_id: userId,
         txn_timestamp: ts.toISOString(),
         amount,
         currency,
         amount_qar_approx: Number.isFinite(amountQarApprox) ? amountQarApprox : null,
-        counterparty: extracted.counterparty || null,
+        counterparty,
         card: extracted.card || null,
         direction: direction || null,
         txn_type: extracted.txnType || null,
-        category: extracted.category || null,
-        subcategory: extracted.subcategory || extracted.category || null,
-        confidence: extracted.confidence || null,
+        category,
+        subcategory,
+        confidence,
         context: extracted.context || { timeContext },
         raw_text: extracted.rawText || sms,
         net: direction === 'OUT' ? -amount : amount,

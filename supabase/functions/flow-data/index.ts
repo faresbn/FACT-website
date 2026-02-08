@@ -67,10 +67,13 @@ Deno.serve(async (request) => {
     total_count: 0,
   };
 
+  // RawLedger select columns (includes enrichment columns + recipient_id)
+  const RAW_LEDGER_COLS = 'id, txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text, amount_qar_approx, amount_qar, time_context, size_tier, is_salary, pattern, recipient_id';
+
   if (sheets.includes('RawLedger')) {
     let query = supabase
       .from('raw_ledger')
-      .select('txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text, amount_qar_approx')
+      .select(RAW_LEDGER_COLS)
       .eq('user_id', user.id)
       .order('txn_timestamp', { ascending: false });
 
@@ -100,7 +103,7 @@ Deno.serve(async (request) => {
 
         let refetchQuery = supabase
           .from('raw_ledger')
-          .select('txn_timestamp, amount, currency, counterparty, card, direction, txn_type, category, subcategory, confidence, context, raw_text, amount_qar_approx')
+          .select(RAW_LEDGER_COLS)
           .eq('user_id', user.id)
           .order('txn_timestamp', { ascending: false });
 
@@ -264,31 +267,105 @@ Deno.serve(async (request) => {
     data.HourlySpend = hourly || [];
   }
 
+  // Server-side computations: run in parallel for performance
+  const adminClient = createAdminClient();
+  const serverComputations: Promise<void>[] = [];
+
   // Recurring transaction detection
   if (sheets.includes('Recurring')) {
-    const adminClient = createAdminClient();
-    const { data: recurring, error: recErr } = await adminClient
-      .rpc('detect_recurring_transactions', { p_user_id: user.id });
-    if (recErr) {
-      console.error('Recurring detection error:', recErr);
-      data.Recurring = [];
-    } else {
-      data.Recurring = recurring || [];
-    }
+    serverComputations.push(
+      adminClient.rpc('detect_recurring_transactions', { p_user_id: user.id })
+        .then(({ data: recurring, error: recErr }) => {
+          if (recErr) { console.error('Recurring detection error:', recErr); data.Recurring = []; }
+          else { data.Recurring = recurring || []; }
+        })
+    );
   }
 
   // Proactive insights (anomalies, budget warnings, new merchants)
   if (sheets.includes('Proactive')) {
-    const adminClient = createAdminClient();
-    const { data: proactive, error: proErr } = await adminClient
-      .rpc('generate_proactive_insights', { p_user_id: user.id });
-    if (proErr) {
-      console.error('Proactive insights error:', proErr);
-      data.Proactive = [];
-    } else {
-      data.Proactive = proactive || [];
-    }
+    serverComputations.push(
+      adminClient.rpc('generate_proactive_insights', { p_user_id: user.id })
+        .then(({ data: proactive, error: proErr }) => {
+          if (proErr) { console.error('Proactive insights error:', proErr); data.Proactive = []; }
+          else { data.Proactive = proactive || []; }
+        })
+    );
   }
+
+  // Pattern detection (Night Out, Work Expense, Splurge, Subscription)
+  if (sheets.includes('Patterns')) {
+    serverComputations.push(
+      adminClient.rpc('detect_spending_patterns', { p_user_id: user.id })
+        .then(({ data: patterns, error: patErr }) => {
+          if (patErr) { console.error('Pattern detection error:', patErr); data.Patterns = []; }
+          else { data.Patterns = patterns || []; }
+        })
+    );
+  }
+
+  // Salary detection and budget info
+  if (sheets.includes('SalaryInfo')) {
+    serverComputations.push(
+      adminClient.rpc('detect_salary_info', { p_user_id: user.id })
+        .then(({ data: salary, error: salErr }) => {
+          if (salErr) { console.error('Salary detection error:', salErr); data.SalaryInfo = null; }
+          else { data.SalaryInfo = salary?.[0] || null; }
+        })
+    );
+  }
+
+  // Forecast data (category trends + confidence stats)
+  if (sheets.includes('Forecast')) {
+    serverComputations.push(
+      adminClient.rpc('generate_forecast_data', { p_user_id: user.id })
+        .then(({ data: forecast, error: foreErr }) => {
+          if (foreErr) { console.error('Forecast data error:', foreErr); data.Forecast = null; }
+          else { data.Forecast = forecast || null; }
+        })
+    );
+  }
+
+  // Chart aggregation data (daily, weekly, top merchants, comparison, summary)
+  // Uses full data range for initial load; client re-aggregates for period changes
+  if (sheets.includes('ChartData')) {
+    serverComputations.push(
+      (async () => {
+        // Get user's full date range
+        const { data: dateRange } = await adminClient
+          .from('raw_ledger')
+          .select('txn_timestamp')
+          .eq('user_id', user.id)
+          .order('txn_timestamp', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (dateRange?.txn_timestamp) {
+          const startDate = dateRange.txn_timestamp;
+          const endDate = new Date().toISOString();
+
+          const { data: chartData, error: chartErr } = await adminClient
+            .rpc('get_chart_data', {
+              p_user_id: user.id,
+              p_start: startDate,
+              p_end: endDate
+            });
+
+          if (chartErr) {
+            console.error('Chart data error:', chartErr);
+            data.ChartData = null;
+          } else {
+            data.ChartData = chartData || null;
+          }
+        } else {
+          data.ChartData = null;
+        }
+      })()
+    );
+  }
+
+  // Wait for all server computations to complete
+  await Promise.all(serverComputations);
 
   return jsonResponse(request, { success: true, data, meta });
 });

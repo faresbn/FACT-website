@@ -29,10 +29,9 @@ export function forecastPeriodEnd(STATE) {
     const projectedTotal = expenses + (dailyBurn * daysRemaining);
     const projectedBalance = income - projectedTotal;
 
-    // Confidence based on data age
-    const monthsOfData = getMonthsOfData(STATE);
-    const variance = getDailyVariance(STATE);
-    const confidence = getConfidence(monthsOfData, variance);
+    // Use server-computed confidence if available, else compute client-side
+    const confidence = STATE.forecastData?.confidenceStats?.confidence
+        || getConfidence(getMonthsOfData(STATE), getDailyVariance(STATE));
 
     return {
         dailyBurn,
@@ -46,17 +45,21 @@ export function forecastPeriodEnd(STATE) {
 }
 
 /**
- * Forecast category trends — 3-month moving average per category
- * Flags rising/falling categories
+ * Forecast category trends — uses server-computed data when available,
+ * falls back to client-side 3-month moving average per category
  */
 export function forecastCategories(STATE) {
+    // Use server-computed category trends if available
+    if (STATE.forecastData?.categoryTrends?.length) {
+        return STATE.forecastData.categoryTrends;
+    }
+
+    // Fallback: client-side computation
     const today = dayjs();
     const trends = [];
     const allTxns = STATE.allTxns || [];
 
-    // Group all transactions by month and category (last 3 months)
     const catMonthly = {};
-
     for (const t of allTxns) {
         if (t.direction !== 'OUT' || !t.merchantType) continue;
         const cat = t.merchantType;
@@ -75,14 +78,12 @@ export function forecastCategories(STATE) {
         const prev = monthly[lastMonth] || 0;
         const prevPrev = monthly[twoMonthsAgo] || 0;
 
-        // Need at least 2 months of data to show a trend
         const hasHistory = prev > 0 || prevPrev > 0;
         if (!hasHistory && current === 0) continue;
 
         const avgPrev = prev > 0 && prevPrev > 0 ? (prev + prevPrev) / 2 : (prev || prevPrev || 0);
         const changePercent = avgPrev > 0 ? ((current - avgPrev) / avgPrev) * 100 : 0;
 
-        // Only flag notable changes (>10%)
         let trend = 'stable';
         if (changePercent > 10) trend = 'rising';
         else if (changePercent < -10) trend = 'falling';
@@ -99,7 +100,6 @@ export function forecastCategories(STATE) {
         });
     }
 
-    // Sort by absolute change
     trends.sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
     return trends;
 }

@@ -42,3 +42,42 @@ export function extractTimeContext(ts: Date) {
     timeOfDay,
   };
 }
+
+/**
+ * Normalize counterparty names for consistent display.
+ * - Title-cases ALL-CAPS names (ANTHROPIC -> Anthropic)
+ * - Consolidates known brand variants (Woqod, Carrefour, etc.)
+ * - Collapses extra whitespace
+ */
+export function normalizeCounterparty(name: string): string {
+  if (!name) return '';
+  let n = name.trim();
+
+  // Collapse whitespace
+  n = n.replace(/\s+/g, ' ');
+
+  // Title-case if entirely uppercase (e.g. ANTHROPIC -> Anthropic)
+  if (n === n.toUpperCase() && n.length > 2) {
+    n = n.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
+  }
+
+  // Known brand consolidations (exact prefix matching)
+  const consolidations = [
+    { prefixes: ['Woqod', 'Woqood', 'WOQOD'], canonical: 'Woqod' },
+    { prefixes: ['Carrefour', 'CARREFOUR'], canonical: 'Carrefour' },
+    { prefixes: ['Lulu ', 'LULU '], canonical: 'Lulu Hypermarket' },
+    { prefixes: ['Al Meera', 'AL MEERA'], canonical: 'Al Meera' },
+    { prefixes: ['Jarir', 'JARIR'], canonical: 'Jarir Bookstore' },
+  ];
+
+  const nLower = n.toLowerCase();
+  for (const rule of consolidations) {
+    for (const prefix of rule.prefixes) {
+      if (nLower.startsWith(prefix.toLowerCase())) {
+        return rule.canonical;
+      }
+    }
+  }
+
+  return n;
+}
