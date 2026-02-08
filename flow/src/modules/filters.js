@@ -92,7 +92,7 @@ export function renderTxnRowEnhanced(t, callbacks) {
             </div>
             <div class="text-right">
                 <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">${isOut ? '' : '+'}${formatNum(t.amount)}</div>
-                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.dims.size}</div>
+                <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.dims.size}${t.currency !== 'QAR' && t.originalAmount != null ? ` · ${t.currency} ${t.originalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : ''}</div>
             </div>
         </div>
     `;

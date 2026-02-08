@@ -510,7 +510,7 @@ function openUncatModal() {
 }
 
 function openCatModal(raw) {
-    openCatModalModule(raw, STATE);
+    openCatModalModule(raw, STATE, { escapeHtml });
 }
 
 function openCatModalSafe(el) {

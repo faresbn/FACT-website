@@ -355,19 +355,20 @@ export function matchRecipient(counterparty, STATE) {
             }
         }
 
-        // Priority 3: Name match (words from longName found in counterparty)
+        // Priority 3: Name match (ALL significant words from longName must appear in counterparty)
         if (rec.longName) {
             const words = rec.longName.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-            for (const word of words) {
-                if (cpLower.includes(word)) {
-                    return { ...rec, matchType: 'name' };
-                }
+            if (words.length > 0 && words.every(word => cpLower.includes(word))) {
+                return { ...rec, matchType: 'name' };
             }
         }
 
-        // Priority 4: ShortName match (exact or partial)
-        if (rec.shortName && cpLower.includes(rec.shortName.toLowerCase())) {
-            return { ...rec, matchType: 'shortName' };
+        // Priority 4: ShortName match (word boundary, min 3 chars)
+        if (rec.shortName && rec.shortName.length >= 3) {
+            const escaped = rec.shortName.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (new RegExp(`\\b${escaped}\\b`, 'i').test(counterparty)) {
+                return { ...rec, matchType: 'shortName' };
+            }
         }
     }
 
@@ -503,8 +504,10 @@ export function processTxns(rows, STATE, callbacks) {
         }
 
         return {
+            dbId: r.id,
             date: txnDate,
             amount: amtQAR,
+            originalAmount: amount,
             currency,
             raw,
             counterparty,

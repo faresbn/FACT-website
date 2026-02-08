@@ -65,7 +65,7 @@ export function renderTxnRow(t, callbacks) {
             </div>
             <div class="text-right flex-shrink-0 ml-2">
                 <div class="font-display font-semibold text-sm ${isOut ? '' : 'text-fact-green'}">${isOut ? '' : '+'}${formatNum(t.amount)}</div>
-                ${t.currency !== 'QAR' ? `<div class="text-[10px] text-fact-muted">${t.currency}</div>` : ''}
+                ${t.currency !== 'QAR' && t.originalAmount != null ? `<div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${t.currency} ${t.originalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
             </div>
         </div>
     `;
@@ -435,7 +435,10 @@ export function closeUncatModal() {
 
 // ============== CATEGORIZE MODAL ==============
 
-export function openCatModal(raw, STATE) {
+export function openCatModal(raw, STATE, callbacks = {}) {
+    const { escapeHtml: escape } = callbacks;
+    const escapeStr = escape || (s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+
     STATE.catTarget = raw;
     // Store previous category for learning feedback loop
     const existingTxn = STATE.allTxns.find(t => t.raw.toLowerCase() === raw.toLowerCase());
@@ -452,11 +455,38 @@ export function openCatModal(raw, STATE) {
             rec.longName || rec.shortName;
         const matchInfo = rec.matchType === 'phone' ? `Phone: ${rec.phone}` :
             rec.matchType === 'account' ? `Account: ...${rec.bankAccount.slice(-4)}` :
+            rec.matchType === 'manual' ? 'Manually assigned' :
             `Name match`;
         document.getElementById('catModalRecipientDetails').textContent = matchInfo;
         recipientSection.classList.remove('hidden');
     } else if (recipientSection) {
         recipientSection.classList.add('hidden');
+    }
+
+    // Show recipient assignment dropdown for transfer-type transactions
+    const recipientSelectSection = document.getElementById('catModalRecipientSelect');
+    const recipientDropdown = document.getElementById('catModalRecipientDropdown');
+    if (recipientSelectSection && recipientDropdown && existingTxn) {
+        const isTransferType = ['transfer', 'fawran', 'internal transfer'].some(t =>
+            (existingTxn.txnType || '').toLowerCase().includes(t) ||
+            existingTxn.raw.toLowerCase().includes(t)
+        );
+
+        if (isTransferType || existingTxn.recipient) {
+            recipientSelectSection.classList.remove('hidden');
+
+            const recipients = STATE.recipients || [];
+            recipientDropdown.innerHTML = '<option value="">None</option>' +
+                recipients.map(r => {
+                    const label = r.longName ? `${r.shortName} (${r.longName})` : r.shortName;
+                    const selected = existingTxn.recipient?.id === r.id ? ' selected' : '';
+                    return `<option value="${r.id}"${selected}>${escapeStr(label)}</option>`;
+                }).join('');
+        } else {
+            recipientSelectSection.classList.add('hidden');
+        }
+    } else if (recipientSelectSection) {
+        recipientSelectSection.classList.add('hidden');
     }
 
     document.getElementById('catModal').classList.remove('hidden');
@@ -491,6 +521,21 @@ export async function saveCategorization(STATE, supabaseClient, CONFIG, callback
     STATE.localMappings[raw.toLowerCase()] = { display: name, consolidated: name, category: cat };
     saveLocal();
 
+    // Check if recipient was reassigned
+    const recipientDropdown = document.getElementById('catModalRecipientDropdown');
+    const recipientSelectSection = document.getElementById('catModalRecipientSelect');
+    let newRecipientId = undefined; // undefined = no change, null = cleared, string = new id
+    if (recipientSelectSection && !recipientSelectSection.classList.contains('hidden') && recipientDropdown) {
+        const selectedValue = recipientDropdown.value || null;
+        // Find the existing txn to compare
+        const existingTxn = STATE.allTxns.find(t => t.raw.toLowerCase() === raw.toLowerCase());
+        const currentId = existingTxn?.recipient?.id || null;
+        if (selectedValue !== currentId) {
+            newRecipientId = selectedValue;
+        }
+    }
+
+    // Update local state for category
     STATE.allTxns.forEach(t => {
         if (t.raw.toLowerCase() === raw.toLowerCase()) {
             t.display = name;
@@ -498,6 +543,21 @@ export async function saveCategorization(STATE, supabaseClient, CONFIG, callback
             t.merchantType = cat;
         }
     });
+
+    // Update local state for recipient if changed
+    if (newRecipientId !== undefined) {
+        const matchingRecipient = newRecipientId
+            ? STATE.recipients.find(r => r.id === newRecipientId)
+            : null;
+
+        STATE.allTxns.forEach(t => {
+            if (t.raw.toLowerCase() === raw.toLowerCase()) {
+                t.recipient = matchingRecipient ? { ...matchingRecipient, matchType: 'manual' } : null;
+                t.resolvedName = matchingRecipient?.shortName || null;
+                t.resolvedLongName = matchingRecipient?.longName || null;
+            }
+        });
+    }
 
     // Re-detect patterns so insights reflect the new category
     if (typeof detectPatterns === 'function') detectPatterns();
@@ -527,6 +587,23 @@ export async function saveCategorization(STATE, supabaseClient, CONFIG, callback
         STATE.catTargetPreviousType = null;
     } catch (_err) {
         // Silently fail — local mapping is already saved
+    }
+
+    // Update recipient_id in DB if changed (fire and forget)
+    if (newRecipientId !== undefined) {
+        try {
+            const dbIds = STATE.allTxns
+                .filter(t => t.raw.toLowerCase() === raw.toLowerCase() && t.dbId)
+                .map(t => t.dbId);
+            if (dbIds.length > 0) {
+                await supabaseClient
+                    .from('raw_ledger')
+                    .update({ recipient_id: newRecipientId || null })
+                    .in('id', dbIds);
+            }
+        } catch (_err) {
+            // Silently fail — local state already updated
+        }
     }
 }
 

@@ -797,6 +797,13 @@
                     <div class="text-sm font-medium" id="catModalRecipientName">--</div>
                     <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted" id="catModalRecipientDetails">--</div>
                 </div>
+                <!-- Recipient reassignment (shown for transfer-type txns) -->
+                <div id="catModalRecipientSelect" class="hidden">
+                    <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-1">Assign Recipient</label>
+                    <select id="catModalRecipientDropdown" class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card focus:outline-none focus:ring-2 focus:ring-fact-yellow text-sm">
+                        <option value="">None</option>
+                    </select>
+                </div>
                 <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted mb-1">Original</div>
                     <div class="text-sm font-medium break-all" id="catModalRaw">--</div>
