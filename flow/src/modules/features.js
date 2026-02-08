@@ -162,6 +162,303 @@ export function exportCSV(STATE, callbacks) {
     }
 }
 
+// ============== XLSX EXPORT ==============
+
+/**
+ * Export transactions as a proper .xlsx file (Office Open XML).
+ * Uses a lightweight XML builder — no external library needed.
+ */
+export function exportXLSX(STATE, callbacks) {
+    const { formatNum, showToast, trackAchievement } = callbacks;
+
+    try {
+        const headers = ['Date', 'Time', 'Amount (QAR)', 'Original Amount', 'Currency', 'Merchant', 'Category', 'Direction', 'Pattern', 'Type'];
+        const rows = STATE.filtered.map(t => [
+            t.date.format('YYYY-MM-DD'),
+            t.date.format('HH:mm'),
+            t.amount.toFixed(2),
+            t.originalAmount.toFixed(2),
+            t.currency,
+            t.display || t.counterparty || '',
+            t.merchantType,
+            t.direction,
+            t.dims?.pattern || '',
+            t.txnType || ''
+        ]);
+
+        // Build xlsx XML
+        const escXml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const sheetRows = [headers, ...rows].map((row, ri) => {
+            const cells = row.map((cell, ci) => {
+                const ref = String.fromCharCode(65 + ci) + (ri + 1);
+                // Numbers: try to parse as number for proper Excel handling
+                const num = parseFloat(cell);
+                if (!isNaN(num) && String(cell).trim() === String(num)) {
+                    return `<c r="${ref}"><v>${num}</v></c>`;
+                }
+                return `<c r="${ref}" t="inlineStr"><is><t>${escXml(cell)}</t></is></c>`;
+            }).join('');
+            return `<row r="${ri + 1}">${cells}</row>`;
+        }).join('');
+
+        const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetData>${sheetRows}</sheetData>
+</worksheet>`;
+
+        const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>`;
+
+        const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Transactions" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+        const relsRoot = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+        const relsWb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+</Relationships>`;
+
+        // Build ZIP using Blob (minimal zip structure)
+        const zip = buildSimpleZip({
+            '[Content_Types].xml': contentTypes,
+            '_rels/.rels': relsRoot,
+            'xl/workbook.xml': workbook,
+            'xl/_rels/workbook.xml.rels': relsWb,
+            'xl/worksheets/sheet1.xml': sheetXml,
+        });
+
+        const blob = new Blob([zip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        downloadBlob(blob, `fact-flow-${STATE.dateRange.start.format('YYYY-MM-DD')}-to-${STATE.dateRange.end.format('YYYY-MM-DD')}.xlsx`);
+
+        showToast(`Exported ${rows.length} transactions as Excel`, 'success');
+        trackAchievement('fact_exported');
+    } catch (err) {
+        showToast('Excel export failed: ' + err.message, 'error');
+    }
+}
+
+// ============== PDF EXPORT ==============
+
+/**
+ * Export transactions as a printable PDF using a new window.
+ * Uses the browser's built-in print-to-PDF capability for clean formatting.
+ */
+export function exportPDF(STATE, callbacks) {
+    const { formatNum, showToast, trackAchievement } = callbacks;
+
+    try {
+        const dateLabel = `${STATE.dateRange.start.format('MMM D, YYYY')} – ${STATE.dateRange.end.format('MMM D, YYYY')}`;
+        const totalOut = STATE.filtered.filter(t => t.direction === 'OUT').reduce((s, t) => s + t.amount, 0);
+        const totalIn = STATE.filtered.filter(t => t.direction === 'IN').reduce((s, t) => s + t.amount, 0);
+
+        // Category summary
+        const catSummary = {};
+        STATE.filtered.filter(t => t.direction === 'OUT').forEach(t => {
+            catSummary[t.merchantType] = (catSummary[t.merchantType] || 0) + t.amount;
+        });
+        const sortedCats = Object.entries(catSummary).sort((a, b) => b[1] - a[1]);
+
+        const txnRows = STATE.filtered.map(t => `
+            <tr>
+                <td>${t.date.format('MMM D')}</td>
+                <td>${t.date.format('HH:mm')}</td>
+                <td style="text-align:right; color:${t.direction === 'IN' ? '#4CAF50' : '#333'}">${t.direction === 'IN' ? '+' : '-'}${formatNum(t.amount)}</td>
+                <td>${escapeForPdf(t.display || t.counterparty)}</td>
+                <td>${t.merchantType}</td>
+            </tr>`).join('');
+
+        const catRows = sortedCats.map(([cat, amt]) => `
+            <tr><td>${cat}</td><td style="text-align:right">QAR ${formatNum(amt)}</td>
+            <td style="text-align:right">${totalOut > 0 ? Math.round((amt / totalOut) * 100) : 0}%</td></tr>`).join('');
+
+        const html = `<!DOCTYPE html><html><head><title>FACT/Flow Report</title>
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #1a1a1a; font-size: 11px; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    .subtitle { color: #888; font-size: 12px; margin-bottom: 20px; }
+    .summary { display: flex; gap: 32px; margin-bottom: 20px; }
+    .summary-item { text-align: center; }
+    .summary-item .value { font-size: 18px; font-weight: 700; }
+    .summary-item .label { color: #888; font-size: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; }
+    th { font-weight: 600; font-size: 10px; color: #888; text-transform: uppercase; border-bottom: 2px solid #ddd; }
+    @media print { body { margin: 20px; } .no-print { display: none; } }
+</style></head><body>
+<h1>FACT/Flow Transaction Report</h1>
+<div class="subtitle">${dateLabel} &middot; ${STATE.filtered.length} transactions</div>
+<div class="summary">
+    <div class="summary-item"><div class="value" style="color:#E57373">QAR ${formatNum(totalOut)}</div><div class="label">Total Spent</div></div>
+    <div class="summary-item"><div class="value" style="color:#4CAF50">QAR ${formatNum(totalIn)}</div><div class="label">Total Income</div></div>
+    <div class="summary-item"><div class="value">QAR ${formatNum(totalIn - totalOut)}</div><div class="label">Net</div></div>
+</div>
+<h2>Spending by Category</h2>
+<table><thead><tr><th>Category</th><th style="text-align:right">Amount</th><th style="text-align:right">%</th></tr></thead>
+<tbody>${catRows}</tbody></table>
+<h2>All Transactions</h2>
+<table><thead><tr><th>Date</th><th>Time</th><th style="text-align:right">Amount (QAR)</th><th>Merchant</th><th>Category</th></tr></thead>
+<tbody>${txnRows}</tbody></table>
+<div class="no-print" style="margin-top:24px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 24px;font-size:14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer">
+        Save as PDF
+    </button>
+</div>
+<script>setTimeout(()=>window.print(), 500);</script>
+</body></html>`;
+
+        const pdfWindow = window.open('', '_blank');
+        if (pdfWindow) {
+            pdfWindow.document.write(html);
+            pdfWindow.document.close();
+            showToast('PDF report opened — use Save as PDF in the print dialog', 'info', 5000);
+        } else {
+            showToast('Pop-up blocked. Please allow pop-ups for this site.', 'error');
+        }
+
+        trackAchievement('fact_exported');
+    } catch (err) {
+        showToast('PDF export failed: ' + err.message, 'error');
+    }
+}
+
+// Helper: escape text for PDF HTML
+function escapeForPdf(text) {
+    return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Helper: download a blob as a file
+function downloadBlob(blob, filename) {
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Minimal ZIP file builder (for XLSX)
+function buildSimpleZip(files) {
+    const encoder = new TextEncoder();
+    const entries = Object.entries(files).map(([name, content]) => ({
+        name: encoder.encode(name),
+        data: encoder.encode(content),
+    }));
+
+    const parts = [];
+    const centralDir = [];
+    let offset = 0;
+
+    for (const entry of entries) {
+        // Local file header
+        const header = new Uint8Array(30 + entry.name.length);
+        const view = new DataView(header.buffer);
+        view.setUint32(0, 0x04034b50, true);  // signature
+        view.setUint16(4, 20, true);           // version needed
+        view.setUint16(6, 0, true);            // flags
+        view.setUint16(8, 0, true);            // compression (none)
+        view.setUint16(10, 0, true);           // mod time
+        view.setUint16(12, 0, true);           // mod date
+        view.setUint32(14, crc32(entry.data), true);
+        view.setUint32(18, entry.data.length, true);  // compressed
+        view.setUint32(22, entry.data.length, true);  // uncompressed
+        view.setUint16(26, entry.name.length, true);
+        view.setUint16(28, 0, true);           // extra field length
+        header.set(entry.name, 30);
+
+        // Central directory entry
+        const cdEntry = new Uint8Array(46 + entry.name.length);
+        const cdView = new DataView(cdEntry.buffer);
+        cdView.setUint32(0, 0x02014b50, true);
+        cdView.setUint16(4, 20, true);
+        cdView.setUint16(6, 20, true);
+        cdView.setUint16(8, 0, true);
+        cdView.setUint16(10, 0, true);
+        cdView.setUint16(12, 0, true);
+        cdView.setUint16(14, 0, true);
+        cdView.setUint32(16, crc32(entry.data), true);
+        cdView.setUint32(20, entry.data.length, true);
+        cdView.setUint32(24, entry.data.length, true);
+        cdView.setUint16(28, entry.name.length, true);
+        cdView.setUint16(30, 0, true);
+        cdView.setUint16(32, 0, true);
+        cdView.setUint16(34, 0, true);
+        cdView.setUint16(36, 0, true);
+        cdView.setUint32(38, 0, true);
+        cdView.setUint32(42, offset, true);
+        cdEntry.set(entry.name, 46);
+
+        centralDir.push(cdEntry);
+        parts.push(header, entry.data);
+        offset += header.length + entry.data.length;
+    }
+
+    const cdOffset = offset;
+    let cdSize = 0;
+    for (const cd of centralDir) {
+        parts.push(cd);
+        cdSize += cd.length;
+    }
+
+    // End of central directory
+    const eocd = new Uint8Array(22);
+    const eocdView = new DataView(eocd.buffer);
+    eocdView.setUint32(0, 0x06054b50, true);
+    eocdView.setUint16(4, 0, true);
+    eocdView.setUint16(6, 0, true);
+    eocdView.setUint16(8, entries.length, true);
+    eocdView.setUint16(10, entries.length, true);
+    eocdView.setUint32(12, cdSize, true);
+    eocdView.setUint32(16, cdOffset, true);
+    eocdView.setUint16(20, 0, true);
+    parts.push(eocd);
+
+    // Combine all parts
+    const totalLength = parts.reduce((s, p) => s + p.length, 0);
+    const result = new Uint8Array(totalLength);
+    let pos = 0;
+    for (const part of parts) {
+        result.set(part, pos);
+        pos += part.length;
+    }
+    return result;
+}
+
+// CRC32 table and function
+const crc32Table = (() => {
+    const table = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let j = 0; j < 8; j++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        table[i] = c;
+    }
+    return table;
+})();
+
+function crc32(data) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < data.length; i++) {
+        crc = crc32Table[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
 // ============== ACHIEVEMENTS ==============
 
 export const ACHIEVEMENTS = {

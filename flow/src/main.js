@@ -21,6 +21,9 @@ import {
     escapeHtml,
     sanitizeHTML,
     showToast,
+    fetchWithTimeout,
+    friendlyError,
+    initGlobalErrorHandler,
     initServiceWorker,
     initPWAInstall,
     installPWA,
@@ -222,6 +225,8 @@ import {
     renderHeatmap as renderHeatmapModule,
     drilldownDate as drilldownDateModule,
     exportCSV as exportCSVModule,
+    exportXLSX as exportXLSXModule,
+    exportPDF as exportPDFModule,
     ACHIEVEMENTS,
     getUnlockedAchievements,
     saveUnlockedAchievements,
@@ -709,6 +714,14 @@ function exportCSV() {
     exportCSVModule(STATE, { formatNum, showToast, trackAchievement });
 }
 
+function exportXLSX() {
+    exportXLSXModule(STATE, { formatNum, showToast, trackAchievement });
+}
+
+function exportPDF() {
+    exportPDFModule(STATE, { formatNum, showToast, trackAchievement });
+}
+
 function checkAchievements() {
     return checkAchievementsModule(STATE, { getGoals, getStreakData, celebrate });
 }
@@ -923,7 +936,9 @@ async function showApp(user, session) {
     });
 
     // Migrate localStorage goals to DB if needed
-    migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch(() => {});
+    migrateGoalsToDb(STATE, supabaseClient, CONFIG).catch((err) => {
+        console.warn('Goals migration skipped:', err.message);
+    });
 
     checkOnboarding(supabaseClient);
 
@@ -940,6 +955,7 @@ async function logout() {
 
 // Initialize enhancements
 document.addEventListener('DOMContentLoaded', () => {
+    initGlobalErrorHandler(showToast);
     initFocusMode(STATE);
     initDarkMode();
     initServiceWorker();
@@ -1026,6 +1042,8 @@ window.closeAiInsights = closeAiInsights;
 window.closeGenerositySettings = closeGenerositySettings;
 window.closeHealthScore = closeHealthScore;
 window.exportCSV = exportCSV;
+window.exportXLSX = exportXLSX;
+window.exportPDF = exportPDF;
 window.filterByDimension = filterByDimension;
 window.openGenerositySettings = openGenerositySettings;
 window.openGoals = openGoals;
@@ -1061,6 +1079,8 @@ window.showConfirm = showConfirm;
 window.renderSettingsGoalsList = renderSettingsGoalsList;
 window.addNewGoal = addNewGoal;
 window.closeAddGoal = closeAddGoal;
+window.closeGoals = () => closeGoals(closeSettings);
+window.closeShortcuts = () => document.getElementById('shortcutsModal')?.classList.add('hidden');
 window.saveGoal = saveGoal;
 window.deleteGoal = deleteGoal;
 window.renderRecipientsList = renderRecipientsList;

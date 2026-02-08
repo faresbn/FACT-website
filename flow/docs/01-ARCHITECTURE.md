@@ -154,6 +154,8 @@ STATE.allTxns --> filterAndRender() --> STATE.filtered
 | `user_keys` | API keys for SMS ingest | Yes |
 | `conversations` | Chat conversation metadata | Yes |
 | `messages` | Chat message history | Yes |
+| `rate_limits` | Per-user per-function request counts per hour | Yes |
+| `rate_limit_config` | Configurable rate limits per function | Yes |
 
 ### Views (all `security_invoker = true`)
 | View | Used By |
@@ -174,6 +176,14 @@ STATE.allTxns --> filterAndRender() --> STATE.filtered
 | `handle_new_user()` | Trigger | Create profile on signup |
 | `set_updated_at()` | Trigger | Auto-update timestamps |
 | `update_conversation_timestamp()` | Trigger | Update conversation.updated_at on message |
+| `enrich_transaction()` | Trigger | Compute amount_qar, time_context, size_tier, is_salary on INSERT |
+| `match_recipient_on_insert()` | Trigger | Set recipient_id FK on INSERT |
+| `detect_spending_patterns(p_user_id)` | DML | Detect Night Out/Work Expense/Splurge/Subscription patterns |
+| `detect_salary_info(p_user_id)` | Query | Modal salary amount, avg interval, next expected date |
+| `generate_forecast_data(p_user_id)` | Query | Category trends + confidence stats |
+| `get_chart_data(p_user_id, p_start, p_end)` | Query | Pre-aggregated daily, weekly, topMerchants, comparison, summary |
+| `check_rate_limit(p_user_id, p_function_name)` | DML | Increment + check rate limit (SECURITY DEFINER) |
+| `cleanup_rate_limits()` | DML | Remove expired rate limit windows |
 
 ### RLS
 All tables have SELECT/INSERT/UPDATE/DELETE policies using `(select auth.uid()) = user_id` with WITH CHECK on INSERT. The `(select ...)` wrapper ensures the initplan optimization (computed once per query, not per row).
@@ -182,11 +192,11 @@ All tables have SELECT/INSERT/UPDATE/DELETE policies using `(select auth.uid()) 
 
 | Function | Version | Auth | Purpose |
 |----------|---------|------|---------|
-| `flow-sms` | v11 | API key | Parse SMS, insert transaction |
-| `flow-data` | v13 | JWT | Fetch all user data, incremental sync, FX auto-refresh |
+| `flow-sms` | v14 | API key | Parse SMS, insert transaction |
+| `flow-data` | v19 | JWT | Fetch all user data, incremental sync, FX auto-refresh, rate limited |
 | `flow-backfill` | v3 | JWT | Categorize uncategorized txns |
 | `flow-learn` | v7 | JWT | Save user category corrections |
-| `flow-chat` | v6 | JWT | Streaming AI chat with SSE + 4 tools |
+| `flow-chat` | v7 | JWT | Streaming AI chat with SSE + 4 tools, rate limited |
 | `flow-profile` | v3 | JWT | CRUD for profile/goals/streaks/insights |
 | `flow-remember` | v6 | JWT | Save user context entries |
 | `flow-recipients` | v6 | JWT | CRUD for transfer recipients |
@@ -203,7 +213,7 @@ All tables have SELECT/INSERT/UPDATE/DELETE policies using `(select auth.uid()) 
 - **Typography**: `@tailwindcss/typography` for chat markdown
 - **Entry**: `flow/flow.html` (NOT index.html)
 
-### Module Map (17 modules)
+### Module Map (18 modules)
 
 | Module | Responsibility |
 |--------|----------------|
@@ -211,7 +221,7 @@ All tables have SELECT/INSERT/UPDATE/DELETE policies using `(select auth.uid()) 
 | `data.js` | Sync, parse, categorize (with subcategory mapping), FX, recipients |
 | `constants.js` | MERCHANT_TYPES, TIME_CONTEXTS, SIZE_TIERS, PATTERNS, SUMMARY_GROUPS |
 | `modals.js` | Transaction rows, drilldowns, categorization modal |
-| `features.js` | Achievements, heatmap, CSV export, health score, generosity |
+| `features.js` | Achievements, heatmap, XLSX/PDF/CSV export, health score, generosity |
 | `visualizations.js` | Spending trend, treemap, period comparison, heatmap, smart metrics |
 | `chat.js` | Streaming SSE chat UI, conversation management |
 | `settings.js` | Periods, settings modal, backfill, FX overrides, profile |
@@ -224,7 +234,7 @@ All tables have SELECT/INSERT/UPDATE/DELETE policies using `(select auth.uid()) 
 | `render.js` | Filter, render, category breakdown, metrics |
 | `goals.js` | Goal CRUD, localStorage-to-DB migration |
 | `filters.js` | Dimension-based filtering, filtered results modal |
-| `utils.js` | formatNum, escapeHtml, showToast, dark mode, PWA |
+| `utils.js` | formatNum, escapeHtml, showToast, dark mode, PWA, fetchWithTimeout, friendlyError, global error handler |
 | `events.js` | EventTarget-based event bus |
 
 ### State Management

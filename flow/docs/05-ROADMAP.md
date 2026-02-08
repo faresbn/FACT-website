@@ -181,6 +181,34 @@ Work is organized into parallel phases. Each phase is independent and can be don
 
 ---
 
+## Phase G: Production Hardening -- COMPLETE
+
+**Goal**: Make the app resilient, user-friendly for all digital literacy levels, and ready for sharing with family users.
+
+### G1. DB-Backed Rate Limiting -- DONE
+- Created `rate_limits` and `rate_limit_config` tables with generous defaults
+- `check_rate_limit()` PL/pgSQL function (SECURITY DEFINER, search_path=public)
+- `_shared/rate-limit.ts` shared module with fail-open pattern
+- Deployed on flow-data (v19) and flow-chat (v7)
+- Client handles 429: user-friendly "Too many requests" message
+- Limits configurable via `rate_limit_config` table without redeploying
+
+### G2. Fetch Timeouts, Retries & Error Handling -- DONE
+- `fetchWithTimeout()` in utils.js: AbortController-based timeout, auto-retry on network/5xx, no retry on 4xx
+- data.js: 45s timeout, 1 retry, 3s delay; on first-load failure shows app shell instead of stuck loading
+- chat.js: 90s timeout for SSE streaming, no retry
+- `friendlyError()`: translates technical errors to plain language
+- `initGlobalErrorHandler()`: catches unhandled promise rejections + window errors
+- Service worker: update detection with user notification, no longer silently swallows errors
+- Fixed `migrateGoalsToDb()` and `loadLocal()` empty catch blocks
+
+### G3. Data Export (XLSX + PDF) -- DONE
+- `exportXLSX()`: Office Open XML with zero-dependency custom ZIP builder + CRC32
+- `exportPDF()`: browser print-to-PDF via new window with category summary + full transaction list
+- Settings > Data tab: 3 export buttons (Excel, PDF, CSV) replacing single CSV button
+
+---
+
 ## Priority Matrix (Updated)
 
 | Phase | Impact | Effort | Priority | Status |
@@ -210,3 +238,6 @@ Work is organized into parallel phases. Each phase is independent and can be don
 | F5 (Data quality) | High | Medium | P1 | DONE |
 | F6 (Code hygiene) | Medium | Low | P3 | DONE |
 | E4 (Receipt capture) | Medium | High | P5 | Not started |
+| G1 (Rate limiting) | High | Medium | P0 | DONE |
+| G2 (Error handling) | High | Medium | P0 | DONE |
+| G3 (Data export) | Medium | Medium | P2 | DONE |

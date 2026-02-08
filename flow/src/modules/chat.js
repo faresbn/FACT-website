@@ -3,6 +3,7 @@
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { fetchWithTimeout, friendlyError } from './utils.js';
 
 // Configure marked for safe rendering
 marked.setOptions({
@@ -155,8 +156,8 @@ function setupChatEvents(CONFIG, supabaseClient) {
         }
     });
 
-    // Quick action chips
-    document.getElementById('chatQuickActions')?.addEventListener('click', (e) => {
+    // Quick action chips (delegate on chatMessages so it survives innerHTML replacement)
+    document.getElementById('chatMessages')?.addEventListener('click', (e) => {
         const btn = e.target.closest('.chat-quick-action');
         if (btn) {
             const query = btn.dataset.query;
@@ -337,7 +338,7 @@ async function sendMessage(message, CONFIG, supabaseClient) {
         const token = session?.session?.access_token;
         if (!token) throw new Error('Not authenticated');
 
-        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-chat`, {
+        const response = await fetchWithTimeout(`${CONFIG.FUNCTIONS_BASE}/flow-chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -347,7 +348,7 @@ async function sendMessage(message, CONFIG, supabaseClient) {
                 message,
                 conversation_id: currentConversationId,
             }),
-        });
+        }, { timeoutMs: 90000, retries: 0 }); // SSE streaming: long timeout, no retry
 
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
@@ -409,7 +410,8 @@ async function sendMessage(message, CONFIG, supabaseClient) {
     } catch (err) {
         const aiMsgEl = document.getElementById(aiMsgId);
         if (aiMsgEl) {
-            aiMsgEl.innerHTML = `<div class="chat-ai-msg"><div class="text-sm text-fact-red">Error: ${DOMPurify.sanitize(err.message)}</div></div>`;
+            const userMsg = friendlyError(err);
+            aiMsgEl.innerHTML = `<div class="chat-ai-msg"><div class="text-sm text-fact-red">${DOMPurify.sanitize(userMsg)}</div></div>`;
         }
     } finally {
         isStreaming = false;

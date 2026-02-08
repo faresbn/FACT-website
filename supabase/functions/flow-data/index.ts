@@ -1,5 +1,6 @@
 import { createUserClient, createAdminClient } from '../_shared/supabase.ts';
 import { resolveCorsOrigin, corsHeaders } from '../_shared/cors.ts';
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
 
 function jsonResponse(request: Request, body: unknown, status = 200) {
   const origin = resolveCorsOrigin(request);
@@ -53,6 +54,12 @@ Deno.serve(async (request) => {
   const { data: { user }, error } = await supabase.auth.getUser(jwt);
   if (error || !user) {
     return jsonResponse(request, { error: 'AUTH_REQUIRED', code: 'AUTH_REQUIRED' }, 401);
+  }
+
+  // Rate limit check
+  const rl = await checkRateLimit(user.id, 'flow-data');
+  if (!rl.allowed) {
+    return rateLimitResponse(request, corsHeaders, resolveCorsOrigin, rl.retryAfterSeconds);
   }
 
   const payload = await request.json().catch(() => ({}));

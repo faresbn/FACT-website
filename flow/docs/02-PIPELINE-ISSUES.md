@@ -89,6 +89,33 @@
 **Was**: Missing `flex-direction: column`
 **Fix**: Added, input area now stacks correctly
 
+## Production Hardening (Fixed)
+
+### 18. Rate Limiting (FIXED)
+**Where**: `_shared/rate-limit.ts`, `rate_limits` + `rate_limit_config` tables
+**Was**: No rate limiting on any edge function
+**Fix**: DB-backed rate limiting with configurable limits per function. Deployed on flow-data (v19) and flow-chat (v7). Fail-open pattern. Client shows friendly 429 message.
+
+### 19. Fetch Timeouts & Retries (FIXED)
+**Where**: `utils.js`, `data.js`, `chat.js`
+**Was**: Raw `fetch()` with no timeouts, no retries, silent error swallowing
+**Fix**: `fetchWithTimeout()` with AbortController timeout, auto-retry on 5xx/network. data.js: 45s/1 retry. chat.js: 90s/no retry. First-load failure shows app shell instead of stuck loading.
+
+### 20. Global Error Handling (FIXED)
+**Where**: `utils.js`, `main.js`
+**Was**: No global error handler; unhandled promise rejections silently lost
+**Fix**: `initGlobalErrorHandler()` catches unhandled rejections + window errors. `friendlyError()` translates technical errors to plain language.
+
+### 21. Data Export (FIXED)
+**Where**: `features.js`, `flow.html`
+**Was**: Only CSV export available
+**Fix**: XLSX (zero-dependency Office Open XML), PDF (browser print-to-PDF), CSV. Three buttons in Settings > Data tab.
+
+### 22. Service Worker Silent Failures (FIXED)
+**Where**: `utils.js` `initServiceWorker()`
+**Was**: `.catch(() => {})` silently swallowed all errors; no update notification
+**Fix**: Logs errors, detects updates, shows user notification toast for new versions.
+
 ## Remaining Issues (Low Priority)
 
 ### Leaked Password Protection
@@ -102,6 +129,12 @@
 **Where**: `flow-data` response
 **Issue**: `RawLedger` returns JSON objects; `MerchantMap`, `FXRates`, `UserContext`, `Recipients` still return array-of-arrays with header row
 **Impact**: Frontend has separate parsing logic for each format
+
+### Rate Limiting Not Yet Wired on 8 Edge Functions
+**Severity**: Low (config exists, just needs wiring)
+**Where**: flow-sms, flow-backfill, flow-learn, flow-ai, flow-profile, flow-remember, flow-recipients, flow-keys
+**Issue**: `rate_limit_config` rows exist for all 10 functions, but only flow-data and flow-chat have the `checkRateLimit()` call wired
+**Fix**: Add rate-limit import + check to remaining 8 functions as needed
 
 ## Categorization Priority (Current)
 ```

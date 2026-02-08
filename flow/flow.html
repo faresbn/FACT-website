@@ -1145,11 +1145,25 @@
 
                     <!-- Export Data -->
                     <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
-                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">Export</label>
-                        <button onclick="exportCSV()"
-                            class="w-full px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px]">
-                            Export Transactions as CSV
-                        </button>
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">Download Your Data</label>
+                        <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-3">Export your current transactions in the format you prefer.</p>
+                        <div class="space-y-2">
+                            <button onclick="exportXLSX()"
+                                class="w-full px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px] flex items-center justify-between">
+                                <span>Excel Spreadsheet (.xlsx)</span>
+                                <span class="text-[10px] text-fact-muted">Opens in Excel, Numbers, Sheets</span>
+                            </button>
+                            <button onclick="exportPDF()"
+                                class="w-full px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px] flex items-center justify-between">
+                                <span>PDF Report</span>
+                                <span class="text-[10px] text-fact-muted">Print-ready summary</span>
+                            </button>
+                            <button onclick="exportCSV()"
+                                class="w-full px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px] flex items-center justify-between">
+                                <span>CSV</span>
+                                <span class="text-[10px] text-fact-muted">Raw data for developers</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Backfill Section -->

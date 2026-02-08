@@ -1,6 +1,7 @@
 // ─── DATA FETCHING ──────────────────────────────────────────────
 import Papa from 'papaparse';
 import dayjs from 'dayjs';
+import { fetchWithTimeout, friendlyError } from './utils.js';
 
 // Parse date that might be ISO string or Excel serial number
 export function parseDate(value) {
@@ -80,16 +81,20 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         };
         if (lastSync) requestBody.last_sync = lastSync;
 
-        const response = await fetch(`${CONFIG.FUNCTIONS_BASE}/flow-data`, {
+        const response = await fetchWithTimeout(`${CONFIG.FUNCTIONS_BASE}/flow-data`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
             },
             body: JSON.stringify(requestBody)
-        });
+        }, { timeoutMs: 45000, retries: 1, retryDelay: 3000 });
 
         if (response.status === 401) throw new Error('AUTH_REQUIRED');
+        if (response.status === 429) {
+            const retryData = await response.json().catch(() => ({}));
+            throw new Error('RATE_LIMITED');
+        }
         const result = await response.json();
         if (result?.code === 'AUTH_REQUIRED' || result?.error === 'AUTH_REQUIRED') {
             throw new Error('AUTH_REQUIRED');
@@ -195,17 +200,33 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
 
     } catch (err) {
-        // Sync error — user is notified via toast below
-        if (String(err.message || err).includes('AUTH_REQUIRED')) {
+        const errMsg = String(err.message || err);
+
+        // Auth failure — sign out and show login
+        if (errMsg.includes('AUTH_REQUIRED')) {
             await supabaseClient.auth.signOut();
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
             return;
         }
+
+        // Rate limited — show specific helpful message
+        if (errMsg.includes('RATE_LIMITED')) {
+            if (typeof showToast === 'function') {
+                showToast('You\'re syncing too frequently. Please wait a moment and try again.', 'info');
+            }
+            return;
+        }
+
+        // Show user-friendly error (translated from technical message)
         if (typeof showToast === 'function') {
-            showToast('Sync failed: ' + err.message, 'error');
-        } else {
-            alert('Sync failed. Check your connection.');
+            showToast(friendlyError(err), 'error');
+        }
+
+        // On first load failure, still show the app shell so user isn't stuck on loading screen
+        if (!STATE.hasLoaded) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
         }
     }
 }
@@ -612,7 +633,10 @@ export function loadLocal(CONFIG, STATE) {
             const data = JSON.parse(stored);
             STATE.localMappings = data.mappings || {};
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn('Failed to load local settings:', e.message);
+        // Non-critical — continue with default empty mappings
+    }
 }
 
 export function saveLocal(CONFIG, STATE) {

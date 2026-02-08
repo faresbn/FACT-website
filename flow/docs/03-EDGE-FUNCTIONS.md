@@ -6,6 +6,7 @@ All edge functions share `_shared/` utilities:
 - `supabase.ts`: `createUserClient(request)` and `createAdminClient()`
 - `cors.ts`: `resolveCorsOrigin()`, `corsHeaders()` from `FLOW_ALLOWED_ORIGINS` env var
 - `utils.ts`: `sha256Hex()`, `normalizePhone()`, `buildIdempotencyKey()`, `extractTimeContext()`
+- `rate-limit.ts`: `checkRateLimit(userId, functionName)`, `rateLimitResponse()` -- DB-backed rate limiting
 
 ### Auth Patterns
 | Pattern | Functions | How |
@@ -15,9 +16,29 @@ All edge functions share `_shared/` utilities:
 
 All deployed with `verify_jwt: false` (explicit JWT validation in function code).
 
+### Rate Limiting
+DB-backed via `rate_limits` + `rate_limit_config` tables. Configurable per function without redeployment.
+
+| Function | Max Requests | Window |
+|----------|-------------|--------|
+| flow-sms | 500 | 60 min |
+| flow-data | 120 | 60 min |
+| flow-chat | 100 | 60 min |
+| flow-backfill | 10 | 60 min |
+| flow-learn | 200 | 60 min |
+| flow-ai | 60 | 60 min |
+| flow-profile | 120 | 60 min |
+| flow-remember | 120 | 60 min |
+| flow-recipients | 120 | 60 min |
+| flow-keys | 30 | 60 min |
+
+**Implementation**: `_shared/rate-limit.ts` calls `check_rate_limit()` PL/pgSQL function. Fails open (allows request if rate limit check itself errors). Returns 429 with `Retry-After` header when limit exceeded.
+
+**Currently active on**: flow-data (v19), flow-chat (v7). Other functions have config rows but rate-limit code not yet wired.
+
 ---
 
-## flow-sms (v11) -- SMS Ingest
+## flow-sms (v14) -- SMS Ingest
 
 **Endpoint**: POST `/flow-sms`
 **Auth**: API key in body (`key`, `apiKey`, or `token`)
@@ -72,28 +93,31 @@ Or batch: `{ "key": "...", "entries": [{ "sms": "...", "timestamp": "..." }, ...
 
 ---
 
-## flow-data (v13) -- Data Sync
+## flow-data (v19) -- Data Sync
 
 **Endpoint**: POST `/flow-data`
 **Auth**: JWT Bearer
+**Rate Limited**: Yes (120 requests/hour, configurable)
 
 ### Request
 ```json
 {
-  "sheets": ["RawLedger", "MerchantMap", "FXRates", "UserContext", "Recipients", "Profile", "Goals", "Insights", "Streaks", "Recurring", "HourlySpend", "Proactive"],
+  "sheets": ["RawLedger", "MerchantMap", "FXRates", "UserContext", "Recipients", "Profile", "Goals", "Insights", "Streaks", "Recurring", "HourlySpend", "Proactive", "Patterns", "SalaryInfo", "Forecast", "ChartData"],
   "last_sync": "2026-02-06T10:00:00Z"  // optional, for incremental
 }
 ```
 
 ### Processing
-1. Fetch RawLedger (optionally filtered by `created_at > last_sync` for incremental)
-2. If >10% uncategorized, trigger `categorize_from_merchant_map` RPC, then re-fetch
-3. Check FX rates staleness (>24h) and auto-refresh from `open.er-api.com/v6/latest/QAR`
-4. Fetch all other requested sheets including Recurring, HourlySpend, Proactive
-5. Return everything in a single response
+1. Authenticate user (JWT extraction) and check rate limit
+2. Fetch RawLedger (optionally filtered by `created_at > last_sync` for incremental)
+3. If >10% uncategorized, trigger `categorize_from_merchant_map` RPC, then re-fetch
+4. Check FX rates staleness (>24h) and auto-refresh from `open.er-api.com/v6/latest/QAR`
+5. Fetch all other requested sheets
+6. Run 6 parallel server computations: Recurring, Proactive, Patterns, SalaryInfo, Forecast, ChartData
+7. Return everything in a single response
 
 ### Response Format
-- `RawLedger`: Array of JSON objects (13 columns including `amount_qar_approx`)
+- `RawLedger`: Array of JSON objects (20+ columns including enrichment: amount_qar, time_context, size_tier, is_salary, pattern, recipient_id)
 - `MerchantMap`: Array-of-arrays (header + rows, 4 columns)
 - `FXRates`: Array-of-arrays (header + rows, 3 columns: Currency, RateToQAR, Formula)
 - `UserContext`: Array-of-arrays (header + rows, 6 columns)
@@ -102,6 +126,11 @@ Or batch: `{ "key": "...", "entries": [{ "sms": "...", "timestamp": "..." }, ...
 - `Recurring`: Array from `detect_recurring_transactions()` RPC
 - `HourlySpend`: Array from `hourly_spend` view
 - `Proactive`: Array from `generate_proactive_insights()` RPC
+- `Patterns`: Array from `detect_spending_patterns()` RPC
+- `SalaryInfo`: Object from `detect_salary_info()` RPC
+- `Forecast`: Object from `generate_forecast_data()` RPC
+- `ChartData`: Object from `get_chart_data()` RPC
+- `meta`: `{ is_incremental, backfill_applied, uncategorized_count, total_count, fx_refreshed }`
 
 ---
 
@@ -154,10 +183,11 @@ The user_context corrections are included in future flow-sms prompts, so the AI 
 
 ---
 
-## flow-chat (v6) -- Streaming AI Chat
+## flow-chat (v7) -- Streaming AI Chat
 
 **Endpoint**: POST `/flow-chat`
 **Auth**: JWT Bearer
+**Rate Limited**: Yes (100 requests/hour, configurable)
 
 ### Actions
 | Action | Purpose |

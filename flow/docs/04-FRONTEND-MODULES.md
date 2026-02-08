@@ -31,12 +31,12 @@ SUMMARY_GROUPS = {
 
 ---
 
-## data.js (~570 lines) -- Data Layer
+## data.js (~600 lines) -- Data Layer
 
 ### Functions
 | Function | Purpose |
 |----------|---------|
-| `syncData()` | POST to flow-data, process all sheets, incremental sync |
+| `syncData()` | POST to flow-data via fetchWithTimeout (45s, 1 retry), process all sheets, incremental sync, handles 429 rate limiting |
 | `processTxns()` | Parse raw_ledger rows into transaction objects |
 | `categorize()` | 3-tier categorization: localMappings > DB category > merchantMap |
 | `normalizeCounterparty()` | Title-case ALL-CAPS names, consolidate brand variants (Woqod, Carrefour, etc.) |
@@ -129,14 +129,14 @@ SUMMARY_GROUPS = {
 
 ---
 
-## chat.js (456 lines) -- Streaming Chat (Side Panel + FAB)
+## chat.js (~480 lines) -- Streaming Chat (Side Panel + FAB)
 
 | Function | Purpose |
 |----------|---------|
 | `initChat()` | Render chat UI, set up events |
 | `toggleChat()` | Toggle panel expand/collapse |
 | `openChat()` / `closeChat()` | Explicit open/close |
-| `sendMessage()` | POST to flow-chat, read SSE stream, render markdown |
+| `sendMessage()` | POST to flow-chat via fetchWithTimeout (90s), read SSE stream, render markdown |
 | `loadConversationList()` | Fetch conversation history |
 | `loadConversation()` | Load messages for a conversation |
 | `startNewConversation()` | Reset to welcome state |
@@ -236,7 +236,7 @@ All canvas charts stored in `vizCharts` object with `.destroy()` before recreate
 | **Budget** | Salary day, salary amount, monthly budget, family names |
 | **Goals** | Budget goals CRUD with progress bars |
 | **Contacts** | Recipients CRUD (phone, bank account, names) |
-| **Data** | iOS shortcut keys, FX rates, backfill, export CSV |
+| **Data** | iOS shortcut keys, FX rates, backfill, export (XLSX, PDF, CSV) |
 
 ---
 
@@ -255,8 +255,8 @@ Client-side spending forecasts. No edge functions needed — all computation fro
 
 Confidence levels: High (3+ months, low variance), Medium (2 months), Low (<2 months or high variance).
 
-### features.js (522 lines)
-Donut chart, budget projection rendering, quick insights, pattern warnings, generosity budget, check achievements.
+### features.js (~700 lines)
+Donut chart, budget projection rendering, quick insights, pattern warnings, generosity budget, check achievements. Data export: XLSX (Office Open XML with zero-dependency ZIP builder), PDF (browser print-to-PDF via new window), CSV.
 
 ### charts.js (269 lines)
 Donut chart canvas rendering with Chart.js. Animated, responsive, dark-mode aware.
@@ -273,8 +273,14 @@ First-run welcome flow, guided setup.
 ### constants.js (~100 lines)
 Extracted from main.js. Contains `MERCHANT_TYPES`, `SUMMARY_GROUPS`, `CAT_COLORS`, `PATTERNS`, `TIME_CONTEXTS`, `SIZE_TIERS` and helper functions.
 
-### utils.js (139 lines)
-`formatNum()`, `escapeHtml()`, `showToast()`, `showConfirm()`, `initServiceWorker()`, `initPWAInstall()`, `initDarkMode()`, `toggleDarkMode()`.
+### utils.js (~250 lines)
+`formatNum()`, `escapeHtml()`, `showToast()`, `showConfirm()`, `initServiceWorker()`, `initPWAInstall()`, `initDarkMode()`, `toggleDarkMode()`, `fetchWithTimeout()`, `friendlyError()`, `initGlobalErrorHandler()`.
+
+**fetchWithTimeout(url, options, {timeoutMs, retries, retryDelay})**: Wraps fetch with AbortController timeout, automatic retry on network/5xx errors, no retry on 4xx. Used by data.js (45s/1 retry) and chat.js (90s/no retry).
+
+**friendlyError(err)**: Translates technical error messages to plain language for non-technical users (e.g., "AbortError" -> "Request timed out").
+
+**initGlobalErrorHandler(showToastFn)**: Catches unhandled promise rejections and window errors, shows user-friendly toast notifications.
 
 ### events.js (29 lines)
 EventTarget-based pub/sub. Events: `DATA_FILTERED`, `PERIOD_CHANGED`, `DATA_SYNCED`, `TOAST`.
