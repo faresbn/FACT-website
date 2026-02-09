@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nicole Daou Bou-Nassif — Legal Architecture &amp; Operations</title>
-    <meta name="description" content="Portfolio of Nicole Daou Bou-Nassif — legal architecture, M&A governance, and corporate operations from Doha, Qatar.">
+    <title>Nicole Daou Bou-Nassif — Legal & Operations</title>
+    <meta name="description" content="Nicole Daou Bou-Nassif — legal operations, M&A governance, and corporate administration across the GCC. Based in Doha, Qatar.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
-           NICOLE DAOU BOU-NASSIF — DETAIL PANEL 2026
-           Design: Slide-out inner page
-           Accent: Green (Legal Architecture)
+           NICOLE DAOU BOU-NASSIF — PROFILE 2026
+           Design: Detail panel (inner page)
+           Accent: Green (Legal & Operations)
            ═══════════════════════════════════════ */
 
         :root {
@@ -81,7 +81,6 @@
             border-bottom: 1px solid rgba(0,0,0,0.04);
         }
         .topbar-back {
-            font-family: 'Noto Sans', sans-serif;
             font-size: 0.68rem; font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
@@ -93,7 +92,6 @@
         .topbar-back:hover { color: var(--ink); }
         .topbar-back .arrow { font-size: 0.8rem; }
         .topbar-name {
-            font-family: 'Noto Sans', sans-serif;
             font-size: 0.62rem; font-weight: 500;
             letter-spacing: 0.14em;
             text-transform: uppercase;
@@ -110,7 +108,6 @@
         }
         .si { width: 100%; max-width: 720px; margin: 0 auto; }
 
-        /* ── DIVIDER STRIP ── */
         .divider-strip {
             max-width: 720px; margin: 0 auto;
             height: 1px; background: var(--ink-06);
@@ -122,22 +119,18 @@
             background: var(--accent);
         }
 
-        /* ═══════════════════════════════════════
-           IDENTITY STRIP
-           ═══════════════════════════════════════ */
+        /* ═══ HERO / PROFILE ═══ */
         .hero {
             padding-top: calc(52px + clamp(3rem, 6vh, 5rem));
             padding-bottom: clamp(2rem, 4vh, 3rem);
         }
         .identity-accent {
-            height: 3px;
-            width: 48px;
+            height: 3px; width: 48px;
             background: var(--accent);
             margin-bottom: 2rem;
             opacity: 0;
             animation: fu 0.3s 0.1s ease-out forwards;
         }
-
         .hero h1 {
             font-weight: 900;
             font-size: clamp(2.2rem, 5vw, 3.5rem);
@@ -147,7 +140,6 @@
             opacity: 0;
             animation: fu 0.5s 0.15s ease-out forwards;
         }
-
         .hero-tagline {
             font-family: 'Noto Serif', serif;
             font-size: clamp(0.9rem, 1.3vw, 1.1rem);
@@ -158,7 +150,6 @@
             opacity: 0;
             animation: fu 0.4s 0.35s ease-out forwards;
         }
-
         .hero-text {
             font-size: 0.88rem;
             color: var(--ink-60);
@@ -167,13 +158,26 @@
             opacity: 0;
             animation: fu 0.4s 0.5s ease-out forwards;
         }
-
+        .cv-link {
+            display: inline-flex;
+            align-items: center; gap: 4px;
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.06em;
+            color: var(--ink-25);
+            text-decoration: none;
+            margin-top: 1.25rem;
+            transition: color 0.3s;
+            opacity: 0;
+            animation: fu 0.3s 0.6s ease-out forwards;
+        }
+        .cv-link:hover { color: var(--ink); }
         .hero-location {
             font-size: 0.6rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--ink-25);
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
             opacity: 0;
             animation: fu 0.3s 0.65s ease-out forwards;
         }
@@ -183,292 +187,44 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ═══════════════════════════════════════
-           CURRENT
-           ═══════════════════════════════════════ */
-        .current { background: var(--cream); }
-
-        .current-label {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
-        }
-
-        .current-grid {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(0.75rem, 1.5vw, 1.25rem);
-        }
-
-        .current-card {
-            padding: clamp(1.5rem, 2.5vw, 2.25rem);
-            background: var(--bone);
-            position: relative;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .current-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-        }
-        .current-card:first-child::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 3px;
-            background: var(--green);
-        }
-        .current-card:last-child::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 3px;
-            background: var(--yellow);
-        }
-
-        .current-card .org {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.58rem; font-weight: 500;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.75rem;
-        }
-        .current-card h3 {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(1rem, 1.4vw, 1.15rem);
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            line-height: 1.3;
-        }
-        .current-card .dates {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.65rem;
-            color: var(--ink-25);
-            letter-spacing: 0.06em;
-            margin-bottom: 0.8rem;
-        }
-        .current-card p {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-
-        /* ═══════════════════════════════════════
-           EXPERTISE
-           ═══════════════════════════════════════ */
-        .expertise {
+        /* ═══ CAPABILITIES ═══ */
+        .capabilities {
             background: var(--ink);
             color: var(--cream);
         }
-
-        .exp-label {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-40);
-            margin-bottom: 1.25rem;
-        }
-        .exp-heading {
-            font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
-            line-height: 1.15;
-        }
-
-        .exp-grid {
+        .cap-strip {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0;
         }
-        .exp-card {
-            padding: clamp(1.25rem, 2vw, 1.75rem);
+        .cap-item {
+            padding: clamp(1rem, 1.8vw, 1.4rem) clamp(1.25rem, 2vw, 1.75rem);
             border-bottom: 1px solid rgba(255,255,255,0.04);
-            position: relative;
-            transition: background 0.2s;
         }
-        .exp-card:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
-        .exp-card:hover { background: rgba(255,255,255,0.02); }
-        .exp-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 3px; height: 100%;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .exp-card:hover::before { opacity: 1; }
-        .exp-card:nth-child(1)::before { background: var(--green); }
-        .exp-card:nth-child(2)::before { background: var(--yellow); }
-        .exp-card:nth-child(3)::before { background: var(--green); }
-        .exp-card:nth-child(4)::before { background: var(--purple); }
-
-        .exp-num {
-            font-family: 'Noto Sans Display', sans-serif;
-            font-size: clamp(1.4rem, 2.2vw, 1.8rem);
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.03em;
-        }
-        .exp-card:nth-child(1) .exp-num { color: var(--green); }
-        .exp-card:nth-child(2) .exp-num { color: var(--yellow); }
-        .exp-card:nth-child(3) .exp-num { color: var(--green); }
-        .exp-card:nth-child(4) .exp-num { color: var(--purple); }
-
-        .exp-card h3 {
-            font-family: 'Noto Serif', serif;
-            font-size: clamp(0.9rem, 1.2vw, 1rem);
-            font-weight: 500;
-            margin-bottom: 0.4rem;
+        .cap-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
+        .cap-title {
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.8rem; font-weight: 500;
+            margin-bottom: 0.2rem;
             line-height: 1.3;
         }
-        .exp-card .desc {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.45);
-            line-height: 1.6;
-            margin-bottom: 0.75rem;
-        }
-        .exp-list { list-style: none; }
-        .exp-list li {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.55);
-            padding-left: 1rem;
-            margin-bottom: 0.25rem;
-            position: relative;
-        }
-        .exp-list li::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0.55em;
-            width: 4px; height: 4px;
-            border-radius: 50%;
-        }
-        .exp-card:nth-child(1) .exp-list li::before { background: var(--green); }
-        .exp-card:nth-child(2) .exp-list li::before { background: var(--yellow); }
-        .exp-card:nth-child(3) .exp-list li::before { background: var(--green); }
-        .exp-card:nth-child(4) .exp-list li::before { background: var(--purple); }
-
-        /* ═══════════════════════════════════════
-           BACKGROUND
-           ═══════════════════════════════════════ */
-        .background { background: var(--cream); }
-
-        .bg-label {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
+        .cap-desc {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.5;
         }
 
-        .bg-grid {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(2rem, 4vh, 3rem);
-        }
-
-        /* Timeline */
-        .timeline { position: relative; }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 1px; height: 100%;
-            background: var(--ink-06);
-        }
-        .tl-item {
-            padding-left: 1.5rem;
-            padding-bottom: 1.5rem;
-            position: relative;
-        }
-        .tl-item:last-child { padding-bottom: 0; }
-        .tl-item::before {
-            content: '';
-            position: absolute;
-            left: -3px; top: 6px;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--ink-12);
-            transition: background 0.3s;
-        }
-        .tl-item:first-child::before { background: var(--accent); }
-        .tl-item .tl-year {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.6rem; font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.15rem;
-        }
-        .tl-item .tl-role {
-            font-size: 0.85rem;
-            font-weight: 600;
-            line-height: 1.35;
-            margin-bottom: 0.1rem;
-        }
-        .tl-item .tl-org {
-            font-size: 0.78rem;
-            color: var(--ink-60);
-        }
-
-        /* Info blocks */
-        .bg-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(1rem, 2vw, 1.5rem);
-        }
-        .bg-block { margin-bottom: 0; }
-        .bg-block-label {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.58rem; font-weight: 500;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.6rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1px solid var(--ink-06);
-        }
-        .bg-block p, .bg-block li {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-        .bg-block ul { list-style: none; }
-        .bg-block li {
-            padding-left: 1rem;
-            position: relative;
-            margin-bottom: 0.25rem;
-        }
-        .bg-block li::before {
-            content: '\2192';
-            position: absolute;
-            left: 0;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--ink-12);
-        }
-
-        /* ═══════════════════════════════════════
-           CONTACT
-           ═══════════════════════════════════════ */
+        /* ═══ CONTACT ═══ */
         .contact-section {
             background: var(--ink);
             color: var(--cream);
             padding: clamp(2.5rem, 5vh, 3.5rem) clamp(1.5rem, 6vw, 5rem);
         }
         .contact-section .si {
-            display: flex;
-            flex-direction: row;
+            display: flex; flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            flex-wrap: wrap; gap: 1rem;
         }
         .contact-left h2 {
             font-size: clamp(1.1rem, 2vw, 1.4rem);
@@ -477,28 +233,23 @@
             margin-bottom: 0.4rem;
         }
         .contact-left .email {
-            font-family: 'Noto Serif', serif;
+            font-family: 'Noto Sans Mono', monospace;
             font-size: clamp(0.85rem, 1.2vw, 1rem);
             color: var(--ink-40);
             text-decoration: none;
             transition: color 0.3s;
         }
         .contact-left .email:hover { color: var(--cream); }
-
         .contact-right { text-align: right; }
         .contact-location {
-            font-family: 'Noto Serif', serif;
-            font-size: 0.58rem;
-            font-weight: 500;
+            font-size: 0.58rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.14);
             margin-bottom: 0.5rem;
         }
         .contact-fact-link {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem;
-            font-weight: 500;
+            font-size: 0.62rem; font-weight: 500;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.2);
@@ -514,16 +265,12 @@
             transition: opacity 0.4s ease-out, transform 0.4s ease-out;
         }
         .reveal.visible { opacity: 1; transform: translateY(0); }
-        .rd1 { transition-delay: 0.06s; }
-        .rd2 { transition-delay: 0.12s; }
 
         /* ═══ RESPONSIVE ═══ */
         @media (max-width: 820px) {
-            .exp-grid { grid-template-columns: 1fr; }
-            .exp-card:nth-child(odd) { border-right: none; }
-            .bg-info-grid { grid-template-columns: 1fr; }
+            .cap-strip { grid-template-columns: 1fr; }
+            .cap-item:nth-child(odd) { border-right: none; }
         }
-
         @media (max-width: 520px) {
             section { padding-left: 1.25rem; padding-right: 1.25rem; }
             .topbar { padding: 0 1.25rem; }
@@ -540,171 +287,39 @@
         <span class="topbar-name label">Nicole Daou Bou-Nassif</span>
     </nav>
 
-    <!-- ═══ IDENTITY STRIP ═══ -->
+    <!-- ═══ HERO / PROFILE ═══ -->
     <section class="hero" id="hero">
         <div class="si">
             <div class="identity-accent"></div>
             <h1>Nicole Daou<br>Bou-Nassif</h1>
-            <p class="hero-tagline">Legal architecture and operations. Three decades building the structures that hold complex organisations&nbsp;together.</p>
+            <p class="hero-tagline label-legal">Legal architecture and operations. Three decades building the structures that hold complex organisations&nbsp;together.</p>
             <p class="hero-text">From executive coordination at one of the Gulf&rsquo;s largest engineering firms to sixteen years managing legal operations, M&amp;A due diligence, and corporate governance at a multinational telecom group. A career defined by precision, institutional knowledge, and the ability to manage complexity at&nbsp;scale.</p>
+            <a href="nicole/Nicole Bou Nassif CV - 2023 2.pdf" target="_blank" class="cv-link label-tech">Download CV (PDF) &rarr;</a>
             <div class="hero-location label">Doha &mdash; Qatar</div>
         </div>
     </section>
 
     <div class="divider-strip"></div>
 
-    <!-- ═══ CURRENT ═══ -->
-    <section class="current" id="current">
+    <!-- ═══ CAPABILITIES ═══ -->
+    <section class="capabilities" id="capabilities">
         <div class="si">
-            <div class="current-label reveal label-legal">Current</div>
-            <div class="current-grid reveal rd1">
-                <div class="current-card">
-                    <div class="org label-legal">KLME LLP &mdash; Abu Dhabi (Remote)</div>
-                    <h3>Senior Paralegal</h3>
-                    <div class="dates label-legal">June 2023 &mdash; Present</div>
-                    <p>Corporate legal agreements, M&amp;A transaction support, due diligence coordination, and case management for an Abu Dhabi-based law&nbsp;firm.</p>
+            <div class="cap-strip reveal">
+                <div class="cap-item">
+                    <div class="cap-title">Legal &amp; M&amp;A Support</div>
+                    <div class="cap-desc">Due diligence, VDR management, corporate agreements</div>
                 </div>
-                <div class="current-card">
-                    <div class="org label-legal">FACT Special Projects &mdash; Doha</div>
-                    <h3>Specialist &mdash; Legal Architecture</h3>
-                    <div class="dates label-legal">2024 &mdash; Present</div>
-                    <p>Corporate formation, contract architecture, and operational compliance through a multidisciplinary consultancy&nbsp;model.</p>
+                <div class="cap-item">
+                    <div class="cap-title">Corporate Governance</div>
+                    <div class="cap-desc">Board materials, subsidiary management, compliance</div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider-strip"></div>
-
-    <!-- ═══ EXPERTISE ═══ -->
-    <section class="expertise" id="expertise">
-        <div class="si">
-            <div class="reveal">
-                <div class="exp-label label-legal">Focus Areas</div>
-                <h2 class="exp-heading">The framework behind<br>every transaction.</h2>
-            </div>
-            <div class="exp-grid reveal rd1">
-                <div class="exp-card">
-                    <div class="exp-num">01</div>
-                    <h3>Legal &amp; M&amp;A Support</h3>
-                    <p class="desc">Due diligence management, virtual data rooms, transaction coordination, and corporate legal agreements across jurisdictions.</p>
-                    <ul class="exp-list">
-                        <li>Due Diligence &amp; VDR Management</li>
-                        <li>M&amp;A Transaction Support</li>
-                        <li>Corporate Legal Agreements</li>
-                        <li>RFP &amp; Procurement Processes</li>
-                    </ul>
+                <div class="cap-item">
+                    <div class="cap-title">Dispute Resolution</div>
+                    <div class="cap-desc">ICC arbitration, litigation coordination, case management</div>
                 </div>
-                <div class="exp-card">
-                    <div class="exp-num">02</div>
-                    <h3>Corporate Governance</h3>
-                    <p class="desc">Board materials, corporate records, subsidiary management, and securities law compliance for multinational groups.</p>
-                    <ul class="exp-list">
-                        <li>Board of Directors Support</li>
-                        <li>Corporate Records Management</li>
-                        <li>Securities Law Compliance</li>
-                        <li>Subsidiary Governance</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">03</div>
-                    <h3>Dispute Resolution</h3>
-                    <p class="desc">ICC arbitration and Delaware litigation support, case management, and coordination with external counsel.</p>
-                    <ul class="exp-list">
-                        <li>ICC Arbitration Support</li>
-                        <li>Litigation Coordination</li>
-                        <li>Case Management Systems</li>
-                        <li>Client Billing &amp; Reporting</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">04</div>
-                    <h3>Operations &amp; Administration</h3>
-                    <p class="desc">Department budget management, legal department operations, document systems architecture, and cross-functional coordination.</p>
-                    <ul class="exp-list">
-                        <li>Department Budget Management</li>
-                        <li>Document Systems</li>
-                        <li>Translation &amp; Proofreading</li>
-                        <li>Cross-functional Coordination</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider-strip"></div>
-
-    <!-- ═══ BACKGROUND ═══ -->
-    <section class="background" id="background">
-        <div class="si">
-            <div class="bg-label reveal label-legal">Background</div>
-            <div class="bg-grid reveal rd1">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2024 &mdash; Present</div>
-                        <div class="tl-role">Specialist, Legal Architecture</div>
-                        <div class="tl-org">FACT Special Projects, Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2023 &mdash; Present</div>
-                        <div class="tl-role">Senior Paralegal (Remote)</div>
-                        <div class="tl-org">KLME LLP, Abu Dhabi</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2007 &mdash; 2023</div>
-                        <div class="tl-role">Senior Specialist, Legal &amp; M&amp;A</div>
-                        <div class="tl-org">Ooredoo Group LLC, Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2007</div>
-                        <div class="tl-role">Student Affairs Officer</div>
-                        <div class="tl-org">Academic Bridge Program, Qatar Foundation</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2006 &mdash; 2007</div>
-                        <div class="tl-role">Cast Coordinator, 15th Asian Games Ceremonies</div>
-                        <div class="tl-org">David Atkins Enterprises, Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2003 &mdash; 2005</div>
-                        <div class="tl-role">Assistant Division Manager, Special Projects</div>
-                        <div class="tl-org">Saud Bin Khalid Co., Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">2000 &mdash; 2003</div>
-                        <div class="tl-role">Sales &amp; Marketing Manager</div>
-                        <div class="tl-org">Continent Trading &amp; Industry, Beirut</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label-legal">1992 &mdash; 2000</div>
-                        <div class="tl-role">Executive Secretary</div>
-                        <div class="tl-org">FACT Engineering &amp; Contracting Co., Abu Dhabi</div>
-                    </div>
-                </div>
-                <div class="bg-info-grid">
-                    <div class="bg-block">
-                        <div class="bg-block-label label-legal">Education</div>
-                        <ul>
-                            <li>Administrative Office Management (incl. Statistics &amp; Economics) &mdash; YWCA College, 1981&ndash;1983</li>
-                            <li>Baccalaur&eacute;at 2e Partie &mdash; Mont La Salle, 1980</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label-legal">Languages</div>
-                        <ul>
-                            <li>English &mdash; Fluent</li>
-                            <li>French &mdash; Fluent</li>
-                            <li>Arabic &mdash; Fluent</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label-legal">Skills</div>
-                        <ul>
-                            <li>Interpersonal &amp; Communication</li>
-                            <li>Management &amp; Organizational</li>
-                            <li>MS Office &amp; Databasing Software</li>
-                        </ul>
-                    </div>
+                <div class="cap-item">
+                    <div class="cap-title">Operations &amp; Administration</div>
+                    <div class="cap-desc">Department budgets, document systems, coordination</div>
                 </div>
             </div>
         </div>
@@ -716,10 +331,10 @@
         <div class="si">
             <div class="contact-left">
                 <h2>Get in Touch</h2>
-                <a href="mailto:info@fact.qa" class="email label-legal">info@fact.qa</a>
+                <a href="mailto:info@fact.qa" class="email label-tech">info@fact.qa</a>
             </div>
             <div class="contact-right">
-                <div class="contact-location label-legal">Doha &mdash; Qatar</div>
+                <div class="contact-location label">Doha &mdash; Qatar</div>
                 <a href="index.html" class="contact-fact-link">&larr; FACT Special Projects</a>
             </div>
         </div>
@@ -729,7 +344,6 @@
     <script>
         const heroEl = document.getElementById('hero');
         const nameEl = document.querySelector('.topbar-name');
-
         const nameObs = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 nameEl.classList.toggle('visible', !e.isIntersecting);

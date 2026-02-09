@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fares Bou Nassif — Copywriter, Strategist, Builder</title>
-    <meta name="description" content="Portfolio of Fares Bou Nassif — copywriting, communications strategy, and creative technology from Doha, Qatar. The through-line is structural thinking.">
+    <meta name="description" content="Portfolio of Fares Bou Nassif — copywriting, communications strategy, and creative technology from Doha, Qatar.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
-           FARES BOU NASSIF — DETAIL PANEL 2026
-           Design: Slide-out inner page
+           FARES BOU NASSIF — PORTFOLIO 2026
+           Design: Detail panel (inner page)
            Accent: Purple (Story & Technology)
            ═══════════════════════════════════════ */
 
@@ -44,7 +44,7 @@
             overflow-x: hidden;
         }
 
-        /* Fractal noise — kept but subtle */
+        /* Fractal noise */
         body::before {
             content: '';
             position: fixed; inset: 0; z-index: -1;
@@ -53,7 +53,7 @@
             pointer-events: none;
         }
 
-        /* Left-edge accent line — signals "detail panel" */
+        /* Left-edge accent line */
         body::after {
             content: '';
             position: fixed; left: 0; top: 0;
@@ -70,7 +70,7 @@
 
         a { color: inherit; }
 
-        /* ── TOP BAR (simplified — no nav dots) ── */
+        /* ── TOP BAR ── */
         .topbar {
             position: fixed; top: 0; left: 0; right: 0;
             height: 52px;
@@ -105,14 +105,14 @@
         }
         .topbar-name.visible { opacity: 1; }
 
-        /* ── SECTIONS (document flow — no viewport locking) ── */
+        /* ── SECTIONS ── */
         section {
             padding: clamp(3rem, 6vh, 5rem) clamp(1.5rem, 6vw, 5rem);
             position: relative;
         }
         .si { width: 100%; max-width: 720px; margin: 0 auto; }
 
-        /* ── DIVIDER STRIP (single accent dash) ── */
+        /* ── DIVIDER ── */
         .divider-strip {
             max-width: 720px; margin: 0 auto;
             height: 1px; background: var(--ink-06);
@@ -125,21 +125,19 @@
         }
 
         /* ═══════════════════════════════════════
-           IDENTITY STRIP (compact hero)
+           HERO / PROFILE
            ═══════════════════════════════════════ */
         .hero {
             padding-top: calc(52px + clamp(3rem, 6vh, 5rem));
             padding-bottom: clamp(2rem, 4vh, 3rem);
         }
         .identity-accent {
-            height: 3px;
-            width: 48px;
+            height: 3px; width: 48px;
             background: var(--accent);
             margin-bottom: 2rem;
             opacity: 0;
             animation: fu 0.3s 0.1s ease-out forwards;
         }
-
         .hero h1 {
             font-weight: 900;
             font-size: clamp(2.2rem, 5vw, 3.5rem);
@@ -149,7 +147,6 @@
             opacity: 0;
             animation: fu 0.5s 0.15s ease-out forwards;
         }
-
         .hero-tagline {
             font-family: 'Noto Serif', serif;
             font-size: clamp(0.9rem, 1.3vw, 1.1rem);
@@ -160,7 +157,6 @@
             opacity: 0;
             animation: fu 0.4s 0.35s ease-out forwards;
         }
-
         .hero-text {
             font-size: 0.88rem;
             color: var(--ink-60);
@@ -169,13 +165,26 @@
             opacity: 0;
             animation: fu 0.4s 0.5s ease-out forwards;
         }
-
+        .cv-link {
+            display: inline-flex;
+            align-items: center; gap: 4px;
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.06em;
+            color: var(--ink-25);
+            text-decoration: none;
+            margin-top: 1.25rem;
+            transition: color 0.3s;
+            opacity: 0;
+            animation: fu 0.3s 0.6s ease-out forwards;
+        }
+        .cv-link:hover { color: var(--ink); }
         .hero-location {
             font-size: 0.6rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--ink-25);
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
             opacity: 0;
             animation: fu 0.3s 0.65s ease-out forwards;
         }
@@ -186,233 +195,59 @@
         }
 
         /* ═══════════════════════════════════════
-           CURRENT
+           CAPABILITIES (compact strip)
            ═══════════════════════════════════════ */
-        .current { background: var(--cream); }
-
-        .current-label {
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
-        }
-
-        .current-grid {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(1rem, 2vw, 1.5rem);
-        }
-        .current-card {
-            padding: clamp(1.5rem, 2.5vw, 2.25rem);
-            background: var(--bone);
-            position: relative;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .current-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-        }
-        .current-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 3px;
-        }
-        .current-card:nth-child(1)::before { background: var(--green); }
-        .current-card:nth-child(2)::before { background: var(--yellow); }
-
-        .current-card .org {
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.58rem; font-weight: 500;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.75rem;
-        }
-        .current-card h3 {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(1rem, 1.4vw, 1.15rem);
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            line-height: 1.3;
-        }
-        .current-card .dates {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.65rem;
-            color: var(--ink-25);
-            letter-spacing: 0.06em;
-            margin-bottom: 0.8rem;
-        }
-        .current-card p {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-
-        /* ═══════════════════════════════════════
-           EXPERTISE
-           ═══════════════════════════════════════ */
-        .expertise {
+        .capabilities {
             background: var(--ink);
             color: var(--cream);
         }
-
-        .exp-label {
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-40);
-            margin-bottom: 1.25rem;
-        }
-        .exp-heading {
-            font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
-            line-height: 1.15;
-        }
-
-        .exp-grid {
+        .cap-strip {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0;
         }
-        .exp-card {
-            padding: clamp(1.25rem, 2vw, 1.75rem);
+        .cap-item {
+            padding: clamp(1rem, 1.8vw, 1.4rem) clamp(1.25rem, 2vw, 1.75rem);
             border-bottom: 1px solid rgba(255,255,255,0.04);
-            position: relative;
-            transition: background 0.2s;
         }
-        .exp-card:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
-        .exp-card:hover { background: rgba(255,255,255,0.02); }
-        .exp-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 3px; height: 100%;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .exp-card:hover::before { opacity: 1; }
-        .exp-card:nth-child(1)::before { background: var(--yellow); }
-        .exp-card:nth-child(2)::before { background: var(--purple); }
-        .exp-card:nth-child(3)::before { background: var(--purple); }
-        .exp-card:nth-child(4)::before { background: var(--green); }
-
-        .exp-num {
-            font-family: 'Noto Sans Display', sans-serif;
-            font-size: clamp(1.4rem, 2.2vw, 1.8rem);
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.03em;
-        }
-        .exp-card:nth-child(1) .exp-num { color: var(--yellow); }
-        .exp-card:nth-child(2) .exp-num { color: var(--purple); }
-        .exp-card:nth-child(3) .exp-num { color: var(--purple); }
-        .exp-card:nth-child(4) .exp-num { color: var(--green); }
-
-        .exp-card h3 {
+        .cap-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
+        .cap-title {
             font-family: 'Noto Sans Mono', monospace;
-            font-size: clamp(0.85rem, 1.2vw, 0.95rem);
-            font-weight: 500;
-            margin-bottom: 0.4rem;
+            font-size: 0.8rem; font-weight: 500;
+            margin-bottom: 0.2rem;
             line-height: 1.3;
         }
-        .exp-card .desc {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.45);
-            line-height: 1.6;
-            margin-bottom: 0.75rem;
+        .cap-desc {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.5;
         }
-        .exp-list { list-style: none; }
-        .exp-list li {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.55);
-            padding-left: 1rem;
-            margin-bottom: 0.25rem;
-            position: relative;
-        }
-        .exp-list li::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0.55em;
-            width: 4px; height: 4px;
-            border-radius: 50%;
-        }
-        .exp-card:nth-child(1) .exp-list li::before { background: var(--yellow); }
-        .exp-card:nth-child(2) .exp-list li::before { background: var(--purple); }
-        .exp-card:nth-child(3) .exp-list li::before { background: var(--purple); }
-        .exp-card:nth-child(4) .exp-list li::before { background: var(--green); }
 
         /* ═══════════════════════════════════════
-           PORTFOLIO (COLLAPSIBLE)
+           PORTFOLIO (always visible, tabbed)
            ═══════════════════════════════════════ */
-        .portfolio-section {
-            background: var(--bone);
-        }
+        .portfolio-section { background: var(--bone); }
 
-        .portfolio-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            background: none;
-            border: 1px solid var(--ink-12);
-            padding: 0.9rem 1.5rem;
-            cursor: pointer;
+        .portfolio-label {
             font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.06em;
-            color: var(--ink-60);
-            transition: all 0.3s;
-            width: 100%;
-            text-align: left;
-        }
-        .portfolio-toggle:hover {
-            border-color: var(--ink-25);
-            color: var(--ink);
-        }
-        .portfolio-toggle .toggle-arrow {
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            font-size: 0.8rem;
-        }
-        .portfolio-toggle.open .toggle-arrow {
-            transform: rotate(180deg);
+            font-size: 0.62rem; font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 1.25rem;
         }
 
-        .portfolio-collapse {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .portfolio-collapse.open {
-            max-height: 6000px;
-            transition: max-height 0.8s ease-in;
-        }
-
-        .portfolio-inner {
-            padding-top: clamp(2rem, 4vh, 3rem);
-        }
-
-        /* Work tabs & panels (inside collapsible) */
         .work-tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: clamp(2rem, 4vh, 3.5rem);
+            display: flex; gap: 0;
+            margin-bottom: clamp(2rem, 4vh, 3rem);
             border-bottom: 1px solid var(--ink-12);
         }
         .work-tab {
             font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 500;
+            font-size: 0.7rem; font-weight: 500;
             letter-spacing: 0.06em;
             color: var(--ink-40);
-            background: none;
-            border: none;
+            background: none; border: none;
             padding: 0.75rem 1.25rem;
             cursor: pointer;
             position: relative;
@@ -426,16 +261,13 @@
             position: absolute;
             bottom: -1px; left: 0;
             width: 100%; height: 2px;
-            opacity: 0;
-            transition: opacity 0.3s;
+            opacity: 0; transition: opacity 0.3s;
         }
         .work-tab.active::after { opacity: 1; }
+        .work-tab[data-tab="writing"]::after { background: var(--purple); }
         .work-tab[data-tab="brand"]::after { background: var(--yellow); }
         .work-tab[data-tab="govt"]::after { background: var(--green); }
-        .work-tab[data-tab="journalism"]::after { background: var(--purple); }
-        .work-tab[data-tab="fiction"]::after { background: var(--yellow); }
 
-        /* Work panels */
         .work-panel {
             display: none;
             animation: panelIn 0.35s ease-out;
@@ -447,32 +279,27 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Work cards */
-        .work-grid {
+        /* Showcase cards — image + text side-by-side */
+        .showcase-card {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0;
-        }
-        .work-card {
+            grid-template-columns: 180px 1fr;
+            gap: clamp(1rem, 2vw, 1.5rem);
             padding: clamp(1.2rem, 2vw, 1.75rem);
             border-bottom: 1px solid var(--ink-06);
-            position: relative;
-            padding-left: clamp(1.5rem, 2.5vw, 2rem);
             transition: background 0.2s;
+            align-items: start;
         }
-        .work-card:nth-child(odd) { border-right: 1px solid var(--ink-06); }
-        .work-card:hover { background: var(--cream); }
-        .work-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 3px; height: 100%;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .showcase-card:hover { background: var(--cream); }
+        .showcase-thumb {
+            width: 100%;
+            aspect-ratio: auto;
+            max-height: 220px;
+            object-fit: cover;
+            object-position: top left;
+            border: 1px solid var(--ink-06);
+            background: white;
         }
-        .work-card:hover::before { opacity: 1; }
-
-        .work-card .tag {
+        .showcase-text .tag {
             display: inline-flex;
             align-items: center; gap: 6px;
             font-family: 'Noto Sans Mono', monospace;
@@ -487,14 +314,93 @@
             border-radius: 50%;
             display: inline-block;
         }
+        .showcase-text h4 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.92rem; font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--ink); line-height: 1.35;
+        }
+        .showcase-text .pub {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.62rem;
+            color: var(--ink-40);
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+        .showcase-text p {
+            font-size: 0.78rem;
+            color: var(--ink-60);
+            line-height: 1.6;
+        }
+        .read-link {
+            display: inline-flex;
+            align-items: center; gap: 4px;
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.06em;
+            color: var(--ink-25);
+            text-decoration: none;
+            margin-top: 0.6rem;
+            transition: color 0.3s;
+        }
+        .read-link:hover { color: var(--ink); }
 
+        /* Compact list — additional work items */
+        .work-list {
+            list-style: none;
+        }
+        .work-list-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            padding: 0.6rem clamp(1.2rem, 2vw, 1.75rem);
+            border-bottom: 1px solid var(--ink-06);
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .work-list-item:hover { background: var(--cream); }
+        .work-list-item .wl-title {
+            font-weight: 600;
+            color: var(--ink);
+            flex: 1;
+        }
+        .work-list-item .wl-pub {
+            font-size: 0.65rem;
+            color: var(--ink-40);
+            white-space: nowrap;
+        }
+        .work-list-item .wl-link {
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--ink-25);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .work-list-item .wl-link:hover { color: var(--ink); }
+
+        /* Text-only work cards (for items without samples) */
+        .work-card {
+            padding: clamp(1.2rem, 2vw, 1.75rem);
+            border-bottom: 1px solid var(--ink-06);
+            position: relative;
+            transition: background 0.2s;
+        }
+        .work-card:hover { background: var(--cream); }
+        .work-card .tag {
+            display: inline-flex;
+            align-items: center; gap: 6px;
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.55rem; font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.10em;
+            color: var(--ink-40);
+            margin-bottom: 0.5rem;
+        }
         .work-card h4 {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 0.92rem;
-            font-weight: 600;
+            font-size: 0.92rem; font-weight: 600;
             margin-bottom: 0.25rem;
-            color: var(--ink);
-            line-height: 1.35;
+            color: var(--ink); line-height: 1.35;
         }
         .work-card .pub {
             font-family: 'Noto Sans', sans-serif;
@@ -508,32 +414,6 @@
             color: var(--ink-60);
             line-height: 1.6;
         }
-        .work-card .read-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.65rem;
-            font-weight: 500;
-            letter-spacing: 0.06em;
-            color: var(--ink-25);
-            text-decoration: none;
-            margin-top: 0.6rem;
-            transition: color 0.3s;
-        }
-        .work-card .read-link:hover { color: var(--ink); }
-
-        /* Full-width card variant */
-        .work-card.full {
-            grid-column: 1 / -1;
-            border-right: none;
-        }
-
-        /* Color coding per tab */
-        .panel-brand .work-card::before { background: var(--yellow); }
-        .panel-govt .work-card::before { background: var(--green); }
-        .panel-journalism .work-card::before { background: var(--purple); }
-        .panel-fiction .work-card::before { background: var(--yellow); }
 
         /* Sub-section label within a panel */
         .panel-sub {
@@ -542,16 +422,14 @@
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--ink-40);
-            padding: 1.25rem 0 0.5rem clamp(1.5rem, 2.5vw, 2rem);
+            padding: 1.25rem 0 0.5rem clamp(1.2rem, 2vw, 1.75rem);
             border-bottom: 1px solid var(--ink-06);
         }
 
         /* ═══════════════════════════════════════
            PRODUCTS
            ═══════════════════════════════════════ */
-        .products {
-            background: var(--cream);
-        }
+        .products { background: var(--cream); }
 
         .products-label {
             font-family: 'Noto Sans Mono', monospace;
@@ -574,7 +452,6 @@
             margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
             max-width: 520px;
         }
-
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -622,7 +499,6 @@
             line-height: 1.7;
             margin-bottom: 1.25rem;
         }
-
         .product-stack {
             display: flex;
             flex-wrap: wrap;
@@ -638,121 +514,17 @@
             background: var(--bone-deep);
             color: var(--ink-60);
         }
-
         .product-card .product-link {
             font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.65rem;
-            font-weight: 500;
+            font-size: 0.65rem; font-weight: 500;
             letter-spacing: 0.04em;
             color: var(--ink-40);
             text-decoration: none;
             display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            align-items: center; gap: 4px;
             transition: color 0.3s;
         }
         .product-card .product-link:hover { color: var(--ink); }
-
-        /* ═══════════════════════════════════════
-           BACKGROUND
-           ═══════════════════════════════════════ */
-        .background { background: var(--cream); }
-
-        .bg-label {
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.62rem; font-weight: 500;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
-        }
-
-        .bg-grid {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(2rem, 4vh, 3rem);
-        }
-
-        /* Timeline */
-        .timeline { position: relative; }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 1px; height: 100%;
-            background: var(--ink-06);
-        }
-        .tl-item {
-            padding-left: 1.5rem;
-            padding-bottom: 1.5rem;
-            position: relative;
-        }
-        .tl-item:last-child { padding-bottom: 0; }
-        .tl-item::before {
-            content: '';
-            position: absolute;
-            left: -3px; top: 6px;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--ink-12);
-            transition: background 0.3s;
-        }
-        .tl-item:first-child::before { background: var(--accent); }
-        .tl-item .tl-year {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.6rem; font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.15rem;
-        }
-        .tl-item .tl-role {
-            font-size: 0.85rem;
-            font-weight: 600;
-            line-height: 1.35;
-            margin-bottom: 0.1rem;
-        }
-        .tl-item .tl-org {
-            font-size: 0.78rem;
-            color: var(--ink-60);
-        }
-
-        /* Info blocks — 2-col grid below timeline */
-        .bg-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(1rem, 2vw, 1.5rem);
-        }
-        .bg-block { margin-bottom: 0; }
-        .bg-block-label {
-            font-family: 'Noto Sans Mono', monospace;
-            font-size: 0.58rem; font-weight: 500;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.6rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1px solid var(--ink-06);
-        }
-        .bg-block p, .bg-block li {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-        .bg-block ul { list-style: none; }
-        .bg-block li {
-            padding-left: 1rem;
-            position: relative;
-            margin-bottom: 0.25rem;
-        }
-        .bg-block li::before {
-            content: '\2192';
-            position: absolute;
-            left: 0;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--ink-12);
-        }
 
         /* ═══════════════════════════════════════
            CONTACT (compact horizontal footer)
@@ -785,28 +557,22 @@
         }
         .contact-left .email:hover { color: var(--cream); }
         .contact-links {
-            display: flex;
-            gap: 1rem;
+            display: flex; gap: 1rem;
             margin-top: 0.75rem;
         }
         .contact-links a {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 500;
+            font-size: 0.65rem; font-weight: 500;
             letter-spacing: 0.08em;
             color: var(--ink-40);
             text-decoration: none;
             transition: color 0.3s;
         }
         .contact-links a:hover { color: var(--cream); }
-
-        .contact-right {
-            text-align: right;
-        }
+        .contact-right { text-align: right; }
         .contact-location {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 0.58rem;
-            font-weight: 500;
+            font-size: 0.58rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.14);
@@ -814,8 +580,7 @@
         }
         .contact-fact-link {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem;
-            font-weight: 500;
+            font-size: 0.62rem; font-weight: 500;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.2);
@@ -824,7 +589,7 @@
         }
         .contact-fact-link:hover { color: var(--cream); }
 
-        /* ═══ REVEAL (faster for inner pages) ═══ */
+        /* ═══ REVEAL ═══ */
         .reveal {
             opacity: 0;
             transform: translateY(10px);
@@ -836,13 +601,10 @@
 
         /* ═══ RESPONSIVE ═══ */
         @media (max-width: 820px) {
-            .exp-grid { grid-template-columns: 1fr; }
-            .exp-card:nth-child(odd) { border-right: none; }
-            .work-grid { grid-template-columns: 1fr; }
-            .work-card:nth-child(odd) { border-right: none; }
+            .cap-strip { grid-template-columns: 1fr; }
+            .cap-item:nth-child(odd) { border-right: none; }
+            .showcase-card { grid-template-columns: 140px 1fr; }
             .products-grid { grid-template-columns: 1fr; }
-            .bg-info-grid { grid-template-columns: 1fr; }
-
             .work-tabs {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
@@ -858,6 +620,8 @@
             .contact-section .si { flex-direction: column; align-items: flex-start; }
             .contact-right { text-align: left; }
             .work-tab { padding: 0.75rem 0.75rem; font-size: 0.62rem; }
+            .showcase-card { grid-template-columns: 1fr; }
+            .showcase-thumb { max-height: 180px; }
         }
     </style>
 </head>
@@ -868,35 +632,39 @@
         <span class="topbar-name label">Fares Bou Nassif</span>
     </nav>
 
-    <!-- ═══ IDENTITY STRIP ═══ -->
+    <!-- ═══ HERO / PROFILE ═══ -->
     <section class="hero" id="hero">
         <div class="si">
             <div class="identity-accent"></div>
-            <h1>Fares<br>Bou Nassif</h1>
-            <p class="hero-tagline">Copywriter. Strategist. Builder. &mdash; the through-line is structural&nbsp;thinking.</p>
-            <p class="hero-text">Fifteen years of the same instinct across different mediums. Editorial systems at a magazine. Brand narrative systems for a national tourism authority. Content production systems for an EdTech company. Now software systems &mdash; full-stack applications, AI agents, creative-tech tools. Still a copywriter. Still a strategist. The builder identity is what was always underneath, and now it&rsquo;s on the surface too.</p>
+            <h1 class="display">Fares<br>Bou Nassif</h1>
+            <p class="hero-tagline label-tech">Copywriter. Strategist. Builder.</p>
+            <p class="hero-text">Fifteen years building narrative systems &mdash; from editorial and government communications to full-stack applications and AI tools. The through-line is structural thinking applied to language, technology, and design.</p>
+            <a href="fares/Fares BN CV (2026).pdf" target="_blank" class="cv-link label-tech">Download CV (PDF) &rarr;</a>
             <div class="hero-location label">Doha &mdash; Qatar</div>
         </div>
     </section>
 
     <div class="divider-strip"></div>
 
-    <!-- ═══ CURRENT ═══ -->
-    <section class="current" id="current">
+    <!-- ═══ CAPABILITIES ═══ -->
+    <section class="capabilities" id="capabilities">
         <div class="si">
-            <div class="current-label reveal label-tech">Current</div>
-            <div class="current-grid reveal rd1">
-                <div class="current-card">
-                    <div class="org label-tech">Ministry of Communications &amp; IT &mdash; Qatar</div>
-                    <h3>Communications Consultant, Digital Industry Affairs</h3>
-                    <div class="dates label">October 2025 &mdash; Present</div>
-                    <p>Speeches, strategic decks, and briefing materials for senior leadership on Qatar&rsquo;s digital industry priorities, including TASMU Smart Qatar. Press releases, video scripts, and social content for national digital transformation programmes.</p>
+            <div class="cap-strip reveal">
+                <div class="cap-item">
+                    <div class="cap-title">Communications Strategy</div>
+                    <div class="cap-desc">Government comms, brand voice, strategic positioning</div>
                 </div>
-                <div class="current-card">
-                    <div class="org label-tech">FACT Special Projects &mdash; Doha</div>
-                    <h3>Founder &mdash; Story &amp; Technology</h3>
-                    <div class="dates label">April 2024 &mdash; Present</div>
-                    <p>Building creative intelligence tools and AI-assisted production workflows. App development across Supabase, Claude Code, and the Google Cloud ecosystem. Strategic consultancy focused on applied narrative research and AI-assisted creativity.</p>
+                <div class="cap-item">
+                    <div class="cap-title">Copywriting &amp; Content</div>
+                    <div class="cap-desc">Campaigns, editorial, journalism, bilingual production</div>
+                </div>
+                <div class="cap-item">
+                    <div class="cap-title">Creative Technology</div>
+                    <div class="cap-desc">Full-stack apps, AI agents, production automation</div>
+                </div>
+                <div class="cap-item">
+                    <div class="cap-title">Research &amp; Theory</div>
+                    <div class="cap-desc">Cultural criticism, speculative fiction, design theory</div>
                 </div>
             </div>
         </div>
@@ -904,294 +672,261 @@
 
     <div class="divider-strip"></div>
 
-    <!-- ═══ EXPERTISE ═══ -->
-    <section class="expertise" id="expertise">
-        <div class="si">
-            <div class="reveal">
-                <div class="exp-label label-tech">Focus Areas</div>
-                <h2 class="exp-heading">Three disciplines,<br>one structural instinct.</h2>
-            </div>
-            <div class="exp-grid reveal rd1">
-                <div class="exp-card">
-                    <div class="exp-num">01</div>
-                    <h3>Communications Strategy</h3>
-                    <p class="desc">Government comms, brand voice, strategic positioning, content systems.</p>
-                    <ul class="exp-list">
-                        <li>Government Communications</li>
-                        <li>Brand Voice Architecture</li>
-                        <li>Strategic Positioning</li>
-                        <li>Content Systems Design</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">02</div>
-                    <h3>Copywriting &amp; Content</h3>
-                    <p class="desc">Campaign copy, editorial, journalism &mdash; across languages and registers.</p>
-                    <ul class="exp-list">
-                        <li>Campaign Copywriting</li>
-                        <li>Editorial &amp; Journalism</li>
-                        <li>Bilingual Production</li>
-                        <li>AI-Augmented Writing</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">03</div>
-                    <h3>Creative Technology</h3>
-                    <p class="desc">Full-stack applications, AI agents, production tools &mdash; systems as software.</p>
-                    <ul class="exp-list">
-                        <li>Full-Stack Development</li>
-                        <li>AI Agent Architecture</li>
-                        <li>Production Automation</li>
-                        <li>Creative-Tech Tooling</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">04</div>
-                    <h3>Research &amp; Theory</h3>
-                    <p class="desc">Cultural criticism, academic writing, speculative fiction.</p>
-                    <ul class="exp-list">
-                        <li>Cultural Criticism</li>
-                        <li>Academic Research</li>
-                        <li>Speculative Fiction</li>
-                        <li>Design Theory</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider-strip"></div>
-
-    <!-- ═══ PORTFOLIO (COLLAPSIBLE) ═══ -->
+    <!-- ═══ PORTFOLIO (always visible, tabbed) ═══ -->
     <section class="portfolio-section" id="portfolio">
         <div class="si">
-            <button class="portfolio-toggle reveal" id="portfolioToggle" aria-expanded="false" aria-controls="portfolioCollapse">
-                <span class="toggle-arrow">&#9660;</span>
-                View Selected Work
-            </button>
-            <div class="portfolio-collapse" id="portfolioCollapse">
-                <div class="portfolio-inner">
-                    <div class="work-tabs">
-                        <button class="work-tab active label-tech" data-tab="brand">Brand &amp; Campaigns</button>
-                        <button class="work-tab label-tech" data-tab="govt">Government &amp; Institutional</button>
-                        <button class="work-tab label-tech" data-tab="journalism">Journalism &amp; Culture</button>
-                        <button class="work-tab label-tech" data-tab="fiction">Fiction &amp; Research</button>
+            <div class="portfolio-label reveal label-tech">Selected Work</div>
+
+            <div class="work-tabs reveal rd1">
+                <button class="work-tab active label-tech" data-tab="writing">Writing &amp; Editorial</button>
+                <button class="work-tab label-tech" data-tab="brand">Brand &amp; Strategy</button>
+                <button class="work-tab label-tech" data-tab="govt">Government</button>
+            </div>
+
+            <!-- ── WRITING & EDITORIAL ── -->
+            <div class="work-panel panel-writing active" id="panel-writing">
+                <div class="panel-sub label-tech">Journalism</div>
+
+                <!-- Showcase: Brownbook -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/brownbook-arabs-in-mokum.png" alt="Arabs in Mokum — Brownbook Magazine" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--purple)"></span> Cultural Essay</div>
+                        <h4>Arabs in Mokum: Our Little Secret</h4>
+                        <div class="pub">Brownbook Magazine</div>
+                        <p>An exploration of Arab expatriate life in Amsterdam &mdash; how the city absorbs difference without erasing it.</p>
+                        <a href="fares/portfolio/journalism/brownbook-arabs-in-mokum.pdf" target="_blank" class="read-link">Read &rarr;</a>
                     </div>
+                </div>
 
-                    <!-- ── BRAND & CAMPAIGNS ── -->
-                    <div class="work-panel panel-brand active" id="panel-brand">
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--yellow)"></span> Content Strategy</div>
-                                <h4>Ooredoo Group</h4>
-                                <div class="pub">Leo Burnett &middot; GCC Telecom &middot; 2018</div>
-                                <p>Strategic content framework for a major GCC telecommunications group. Built on a methodology of three communication registers &mdash; Connecting, Caring, Challenging &mdash; with monthly calendar structures and tone guidelines.</p>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--yellow)"></span> Brand Strategy</div>
-                                <h4>Sadia</h4>
-                                <div class="pub">UM MENA / IPG Mediabrands &middot; 2016</div>
-                                <p>Brand positioning and social content strategy pitch for regional consumer food brand. Integrated campaign concept across digital and social channels.</p>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--yellow)"></span> Content Strategy</div>
-                                <h4>Sprite</h4>
-                                <div class="pub">UM MENA / IPG Mediabrands &middot; 2015</div>
-                                <p>Content strategy pitch for global beverage brand. Social-first campaign architecture and engagement framework for regional market.</p>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--yellow)"></span> EdTech</div>
-                                <h4>Crossover &mdash; GT School, 2Hr Learning, Alpha School</h4>
-                                <div class="pub">Senior Content Writer &middot; 2023&ndash;2024</div>
-                                <p>In-house copywriter for EdTech brands: launch campaigns, landing pages, product messaging, and video scripts including LLM-driven scriptwriting and generative video. Built AI-assisted production workflows, scaling creative output 3x.</p>
-                            </div>
-                            <div class="work-card full">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--yellow)"></span> Agency Portfolio</div>
-                                <h4>Campaign Copy &amp; New Business Pitches</h4>
-                                <div class="pub">UM MENA &middot; Omnicom Group &middot; Leo Burnett &middot; DDB &middot; 2012&ndash;2024</div>
-                                <p>Campaign copy and content strategy for Coca-Cola, Fanta, Reckitt Benckiser, Reese&rsquo;s, and Hershey&rsquo;s. New business pitch content including wins for Audi, Sprite, and Sadia. Long-running freelance collaborations with major agency networks across the Gulf and MENA region.</p>
-                            </div>
-                        </div>
+                <!-- Showcase: Red Bull -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/redbull-jay-wud-2014.png" alt="Jay Wud — World of Red Bull" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--purple)"></span> Artist Profile</div>
+                        <h4>Jay Wud: He (Kind of) Walks The Line</h4>
+                        <div class="pub">World of Red Bull &middot; 2014</div>
+                        <p>Profile of Lebanese rock guitarist Jay Wud, navigating a regional music scene with almost no infrastructure for his art.</p>
+                        <a href="fares/portfolio/journalism/redbull-jay-wud-2014.pdf" target="_blank" class="read-link">Read &rarr;</a>
                     </div>
+                </div>
 
-                    <!-- ── GOVERNMENT & INSTITUTIONAL ── -->
-                    <div class="work-panel panel-govt" id="panel-govt">
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--green)"></span> Government Comms</div>
-                                <h4>Ministry of Communications &amp; IT &mdash; Qatar</h4>
-                                <div class="pub">Communications Consultant &middot; 2025&ndash;Present</div>
-                                <p>Speeches, strategic decks, and briefing materials for senior leadership on Qatar&rsquo;s digital industry priorities, including TASMU Smart Qatar. Press releases, video scripts, and social content for programmes including the TASMU Accelerator Demo Day. Translation of complex technology and ecosystem initiatives into clear, strategic narratives for government and partner audiences.</p>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--green)"></span> Brand Voice</div>
-                                <h4>Department of Culture &amp; Tourism &mdash; Abu Dhabi</h4>
-                                <div class="pub">Al Sayegh Media &middot; Senior Copywriter &middot; 2017&ndash;2022</div>
-                                <p>Built the brand voice for DCT Abu Dhabi from the ground up, defining narrative identity across Abu Dhabi Culture and Manarat Al Saadiyat arts centre. Press communications, speeches, and video scripts for government and cultural leadership. Campaign copy and editorial content across Arabic and English, working within design, curatorial, and production teams.</p>
-                            </div>
-                            <div class="work-card full">
-                                <div class="tag label"><span class="tag-dot" style="background:var(--green)"></span> Corporate Communications</div>
-                                <h4>Qatar Development Bank</h4>
-                                <div class="pub">Frame Magazine &middot; 2018</div>
-                                <p>Corporate communications and programme launch materials for national development initiatives. Press releases and event announcements for industry conferences including AgriteQ.</p>
-                            </div>
-                        </div>
+                <!-- Showcase: Time Out -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/timeout-beirut-2011.png" alt="Counterfeit Products — Time Out Beirut" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--purple)"></span> Investigative</div>
+                        <h4>Could Your Pepsi Be a Fake?</h4>
+                        <div class="pub">Time Out Beirut &middot; 2011</div>
+                        <p>An investigation into counterfeit consumer products in Lebanon.</p>
+                        <a href="fares/portfolio/journalism/timeout-beirut-2011.pdf" target="_blank" class="read-link">Read &rarr;</a>
                     </div>
+                </div>
 
-                    <!-- ── JOURNALISM & CULTURE ── -->
-                    <div class="work-panel panel-journalism" id="panel-journalism">
-                        <div class="panel-sub label-legal">Editorial</div>
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Cultural Essay</div>
-                                <h4>Arabs in Mokum: Our Little Secret</h4>
-                                <div class="pub">Brownbook Magazine</div>
-                                <p>An exploration of Arab expatriate life in Amsterdam &mdash; how the city absorbs difference without erasing it. Place-based storytelling with embedded interviews.</p>
-                                <a href="fares/portfolio/journalism/brownbook-arabs-in-mokum.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Artist Profile</div>
-                                <h4>Jay Wud: He (Kind of) Walks The Line</h4>
-                                <div class="pub">World of Red Bull &middot; 2014</div>
-                                <p>Profile of Lebanese rock guitarist Jay Wud, navigating a regional music scene with almost no infrastructure for his art. Interview-driven narrative about perseverance and artistic identity.</p>
-                                <a href="fares/portfolio/journalism/redbull-jay-wud-2014.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Investigative</div>
-                                <h4>Could Your Pepsi Be a Fake?</h4>
-                                <div class="pub">Time Out Beirut &middot; 2011</div>
-                                <p>An investigation into counterfeit consumer products in Lebanon, exploring the organisations working to combat consumer fraud.</p>
-                                <a href="fares/portfolio/journalism/timeout-beirut-2011.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Festival Report</div>
-                                <h4>Don&rsquo;t Say But, Shake Your Butt!</h4>
-                                <div class="pub">quint &middot; 2012</div>
-                                <p>Field report from Picnic Festival 2012 in Amsterdam. Dispatches on open design, sustainability, and hacker culture from one of Europe&rsquo;s leading cross-disciplinary conferences.</p>
-                                <a href="fares/portfolio/journalism/quint-picnic-festival-2012.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Criticism</div>
-                                <h4>Mommy, I Want to Be a Critic</h4>
-                                <div class="pub">quint</div>
-                                <p>An essay on the nature of criticism as professional practice versus curation &mdash; arguing for rigorous critical analysis over social media praise culture.</p>
-                                <a href="fares/portfolio/journalism/quint-critic.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Book Reviews</div>
-                                <h4>Book Reviews</h4>
-                                <div class="pub">quint &middot; 2012</div>
-                                <p>Critical reviews of Tom Wolfe&rsquo;s <em>The Electric Kool-Aid Acid Test</em> and Thaler &amp; Sunstein&rsquo;s <em>Nudge</em>.</p>
-                                <a href="fares/portfolio/journalism/quint-book-reviews-2012.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                        </div>
+                <!-- Additional journalism -->
+                <ul class="work-list">
+                    <li class="work-list-item">
+                        <span class="wl-title">Don&rsquo;t Say But, Shake Your Butt!</span>
+                        <span class="wl-pub">quint &middot; 2012</span>
+                        <a href="fares/portfolio/journalism/quint-picnic-festival-2012.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Mommy, I Want to Be a Critic</span>
+                        <span class="wl-pub">quint</span>
+                        <a href="fares/portfolio/journalism/quint-critic.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Book Reviews</span>
+                        <span class="wl-pub">quint &middot; 2012</span>
+                        <a href="fares/portfolio/journalism/quint-book-reviews-2012.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                </ul>
 
-                        <div class="panel-sub label-legal">Corporate &amp; PR</div>
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Press Release</div>
-                                <h4>QDB Home Farming Programme</h4>
-                                <div class="pub">Frame Magazine &middot; 2018</div>
-                                <p>Launch announcement for Qatar Development Bank&rsquo;s agricultural lending and training programme. Corporate announcement balancing programme detail with national vision alignment.</p>
-                                <a href="fares/portfolio/pr/qdb-home-farming-frame-2018.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Business Profile</div>
-                                <h4>Creative Zone</h4>
-                                <div class="pub">PX &middot; 2014</div>
-                                <p>Milestone profile for Dubai-based business setup service, framing their 2,500-company achievement within a customer-first philosophy.</p>
-                                <a href="fares/portfolio/pr/creative-zone-px-2014.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Product Launch</div>
-                                <h4>Slice and Dice</h4>
-                                <div class="pub">PX &middot; 2014</div>
-                                <p>Launch announcement for a Dubai-based meal-planning and grocery delivery service. Startup origin story positioned around health, convenience, and waste reduction.</p>
-                                <a href="fares/portfolio/pr/slice-and-dice-px-2014.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Music Press Release</div>
-                                <h4>Nohijo &mdash; Too Strong EP</h4>
-                                <div class="pub">Techfui Label &middot; 2016</div>
-                                <p>Release announcement for electronic music EP on independent label. Track-by-track descriptions with artist biography and production context.</p>
-                                <a href="fares/portfolio/pr/nohijo-press-release-2016.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Company Profile</div>
-                                <h4>WSM Events</h4>
-                                <div class="pub">2015</div>
-                                <p>Company profile for event production and management firm. Philosophy, workflow, services, and heritage &mdash; including Qatar Film Festival, Formula 1, and concert production.</p>
-                                <a href="fares/portfolio/pr/wsm-profile-2015.png" target="_blank" class="read-link">View &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--purple)"></span> Company Profile</div>
-                                <h4>Naseem Al Bahar</h4>
-                                <div class="pub">2016</div>
-                                <p>Company profile for international livestock trading firm. Brand narrative covering supply chain, global operations, and values-driven positioning.</p>
-                                <a href="fares/portfolio/pr/naseem-al-bahar-2016.png" target="_blank" class="read-link">View &rarr;</a>
-                            </div>
-                        </div>
+                <div class="panel-sub label-tech">Fiction</div>
+
+                <!-- Showcase: Tuesday -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/tuesday-2008.png" alt="Tuesday — Short Story" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> Short Story</div>
+                        <h4>Tuesday</h4>
+                        <div class="pub">2008</div>
+                        <p>A university student&rsquo;s first month, told week by week. Psychologically detailed, introspective prose with philosophical undertones.</p>
+                        <a href="fares/portfolio/fiction/tuesday-2008.pdf" target="_blank" class="read-link">Read &rarr;</a>
                     </div>
+                </div>
 
-                    <!-- ── FICTION & RESEARCH ── -->
-                    <div class="work-panel panel-fiction" id="panel-fiction">
-                        <div class="panel-sub label-legal">Fiction</div>
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> Short Story</div>
-                                <h4>Tuesday</h4>
-                                <div class="pub">2008</div>
-                                <p>A university student&rsquo;s first month, told week by week. Tracks the journey from alienation and imposter syndrome to gradual integration &mdash; psychologically detailed, introspective prose with philosophical undertones.</p>
-                                <a href="fares/portfolio/fiction/tuesday-2008.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> Short Story</div>
-                                <h4>An Ordinary Day</h4>
-                                <div class="pub">quint</div>
-                                <p>A young man&rsquo;s day in Beirut. Mundane romantic encounter intercut with reflection on desire, nostalgia, and modern life. Darkly observational, intimate yet detached.</p>
-                                <a href="fares/portfolio/fiction/quint-ordinary-day.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card full">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> Travel Writing</div>
-                                <h4>Western Australia</h4>
-                                <div class="pub">YTG Travel Guide &middot; 2013</div>
-                                <p>Destination guide to Western Australia and Perth. Geography, climate, dining, and a 48-hour itinerary &mdash; practical travel writing that balances description with actionable recommendations.</p>
-                                <a href="fares/portfolio/fiction/ytg-western-australia-2013.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                        </div>
+                <ul class="work-list">
+                    <li class="work-list-item">
+                        <span class="wl-title">An Ordinary Day</span>
+                        <span class="wl-pub">quint</span>
+                        <a href="fares/portfolio/fiction/quint-ordinary-day.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Western Australia</span>
+                        <span class="wl-pub">YTG Travel Guide &middot; 2013</span>
+                        <a href="fares/portfolio/fiction/ytg-western-australia-2013.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                </ul>
 
-                        <div class="panel-sub label-legal">Academic &amp; Research</div>
-                        <div class="work-grid">
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> MA Thesis</div>
-                                <h4>Graphic Design History&rsquo;s Adulthood</h4>
-                                <div class="pub">Vrije Universiteit Amsterdam &middot; 2012</div>
-                                <p>A historical survey of the birth and adolescence of graphic design history through a study of discourses and published texts. MA in Comparative Arts &amp; Media: Design Cultures.</p>
-                                <a href="fares/portfolio/academic/ma-thesis-2012.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> Symposium Paper</div>
-                                <h4>The Transnarrative Novel</h4>
-                                <div class="pub">Trans- and Cross-media Storytelling Mini Symposium &middot; 2012</div>
-                                <p>Theoretical exploration of narrative structures beyond traditional linear storytelling. Examines how novel-length fiction can operate across and between media forms.</p>
-                                <a href="fares/portfolio/academic/transnarrative-novel-2012.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> Research Essay</div>
-                                <h4>Walking from New York to Universal Urbanism</h4>
-                                <div class="pub">quint &middot; 2010</div>
-                                <p>A post-structuralist reading of Paul Auster&rsquo;s <em>City of Glass</em> through urban theory &mdash; examining the fl&acirc;neur, nomadic method, and the dissolution of the literary canon. Engages Foucault, de Certeau, and Baudrillard.</p>
-                                <a href="fares/portfolio/academic/urbanism-essay-2010.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                            <div class="work-card">
-                                <div class="tag label-legal"><span class="tag-dot" style="background:var(--yellow)"></span> PhD Proposal</div>
-                                <h4>Identity &amp; The Insult among Marginalised Queer Minorities</h4>
-                                <div class="pub">University of Bologna &middot; 2018</div>
-                                <p>Doctoral research proposal examining identity formation and social insult within marginalised queer communities. A sociological study grounded in political and social science.</p>
-                                <a href="fares/portfolio/academic/phd-proposal-2018.pdf" target="_blank" class="read-link">Read &rarr;</a>
-                            </div>
-                        </div>
+                <div class="panel-sub label-tech">Academic &amp; Research</div>
+
+                <!-- Showcase: MA Thesis -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/ma-thesis-2012.png" alt="MA Thesis — Graphic Design History" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> MA Thesis</div>
+                        <h4>Graphic Design History&rsquo;s Adulthood</h4>
+                        <div class="pub">Vrije Universiteit Amsterdam &middot; 2012</div>
+                        <p>A historical survey of the birth and adolescence of graphic design history through a study of discourses and published texts.</p>
+                        <a href="fares/portfolio/academic/ma-thesis-2012.pdf" target="_blank" class="read-link">Read &rarr;</a>
                     </div>
+                </div>
+
+                <ul class="work-list">
+                    <li class="work-list-item">
+                        <span class="wl-title">The Transnarrative Novel</span>
+                        <span class="wl-pub">Mini Symposium &middot; 2012</span>
+                        <a href="fares/portfolio/academic/transnarrative-novel-2012.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Walking from New York to Universal Urbanism</span>
+                        <span class="wl-pub">quint &middot; 2010</span>
+                        <a href="fares/portfolio/academic/urbanism-essay-2010.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Identity &amp; The Insult among Marginalised Queer Minorities</span>
+                        <span class="wl-pub">PhD Proposal &middot; 2018</span>
+                        <a href="fares/portfolio/academic/phd-proposal-2018.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                </ul>
+
+                <div class="panel-sub label-tech">Corporate &amp; PR</div>
+
+                <!-- Showcase: WSM (PNG — direct embed) -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/pr/wsm-profile-2015.png" alt="WSM Events — Company Profile" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--purple)"></span> Company Profile</div>
+                        <h4>WSM Events</h4>
+                        <div class="pub">2015</div>
+                        <p>Company profile for event production firm. Qatar Film Festival, Formula 1, and concert production.</p>
+                        <a href="fares/portfolio/pr/wsm-profile-2015.png" target="_blank" class="read-link">View &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Showcase: Naseem Al Bahar (PNG — direct embed) -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/pr/naseem-al-bahar-2016.png" alt="Naseem Al Bahar — Company Profile" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--purple)"></span> Company Profile</div>
+                        <h4>Naseem Al Bahar</h4>
+                        <div class="pub">2016</div>
+                        <p>Brand narrative for international livestock trading firm. Supply chain, global operations, and values-driven positioning.</p>
+                        <a href="fares/portfolio/pr/naseem-al-bahar-2016.png" target="_blank" class="read-link">View &rarr;</a>
+                    </div>
+                </div>
+
+                <ul class="work-list">
+                    <li class="work-list-item">
+                        <span class="wl-title">QDB Home Farming Programme</span>
+                        <span class="wl-pub">Frame Magazine &middot; 2018</span>
+                        <a href="fares/portfolio/pr/qdb-home-farming-frame-2018.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Creative Zone</span>
+                        <span class="wl-pub">PX &middot; 2014</span>
+                        <a href="fares/portfolio/pr/creative-zone-px-2014.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Slice and Dice</span>
+                        <span class="wl-pub">PX &middot; 2014</span>
+                        <a href="fares/portfolio/pr/slice-and-dice-px-2014.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                    <li class="work-list-item">
+                        <span class="wl-title">Nohijo &mdash; Too Strong EP</span>
+                        <span class="wl-pub">Techfui Label &middot; 2016</span>
+                        <a href="fares/portfolio/pr/nohijo-press-release-2016.pdf" target="_blank" class="wl-link">Read &rarr;</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ── BRAND & STRATEGY ── -->
+            <div class="work-panel panel-brand" id="panel-brand">
+
+                <!-- Showcase: Ooredoo -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/ooredoo-2018.png" alt="Ooredoo Group — Content Strategy" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> Content Strategy</div>
+                        <h4>Ooredoo Group</h4>
+                        <div class="pub">Leo Burnett &middot; GCC Telecom &middot; 2018</div>
+                        <p>Strategic content framework for a major GCC telecommunications group. Three communication registers &mdash; Connecting, Caring, Challenging &mdash; with monthly calendar structures and tone guidelines.</p>
+                        <a href="fares/content strategy %26 social media/Ooredoo Group %E2%80%93 LB - social pitch (2018).pdf" target="_blank" class="read-link">View Deck &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Showcase: Sadia -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/sadia-2016.png" alt="Sadia — Brand Strategy" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> Brand Strategy</div>
+                        <h4>Sadia</h4>
+                        <div class="pub">UM MENA / IPG Mediabrands &middot; 2016</div>
+                        <p>Brand positioning and social content strategy pitch for regional consumer food brand. Integrated campaign concept across digital and social channels.</p>
+                        <a href="fares/content strategy %26 social media/Sadia - UM - social pitch (2016) low res.pdf" target="_blank" class="read-link">View Deck &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Showcase: Sprite -->
+                <div class="showcase-card">
+                    <img src="fares/portfolio/thumbs/sprite-2015.png" alt="Sprite — Content Strategy" class="showcase-thumb" loading="lazy">
+                    <div class="showcase-text">
+                        <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> Content Strategy</div>
+                        <h4>Sprite</h4>
+                        <div class="pub">UM MENA / IPG Mediabrands &middot; 2015</div>
+                        <p>Content strategy pitch for global beverage brand. Social-first campaign architecture and engagement framework for regional market.</p>
+                        <a href="fares/content strategy %26 social media/Sprite - UM - 2016 pitch (2015) low res.pdf" target="_blank" class="read-link">View Deck &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Additional brand work (text only — no samples) -->
+                <div class="work-card">
+                    <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> EdTech</div>
+                    <h4>Crossover &mdash; GT School, 2Hr Learning, Alpha School</h4>
+                    <div class="pub">Senior Content Writer &middot; 2023&ndash;2024</div>
+                    <p>In-house copywriter for EdTech brands: launch campaigns, landing pages, product messaging, and video scripts. Built AI-assisted production workflows, scaling creative output 3&times;.</p>
+                </div>
+
+                <div class="work-card">
+                    <div class="tag"><span class="tag-dot" style="background:var(--yellow)"></span> Agency Portfolio</div>
+                    <h4>Campaign Copy &amp; New Business Pitches</h4>
+                    <div class="pub">UM MENA &middot; Omnicom Group &middot; Leo Burnett &middot; DDB &middot; 2012&ndash;2024</div>
+                    <p>Campaign copy and content strategy for Coca-Cola, Fanta, Reckitt Benckiser, Reese&rsquo;s, and Hershey&rsquo;s. New business pitch content including wins for Audi, Sprite, and Sadia.</p>
+                </div>
+            </div>
+
+            <!-- ── GOVERNMENT ── -->
+            <div class="work-panel panel-govt" id="panel-govt">
+                <div class="work-card">
+                    <div class="tag"><span class="tag-dot" style="background:var(--green)"></span> Government Comms</div>
+                    <h4>Ministry of Communications &amp; IT &mdash; Qatar</h4>
+                    <div class="pub">Communications Consultant &middot; 2025&ndash;Present</div>
+                    <p>Speeches, strategic decks, and briefing materials on Qatar&rsquo;s digital industry priorities, including TASMU Smart Qatar. Press releases, video scripts, and social content for programmes including the TASMU Accelerator Demo Day.</p>
+                </div>
+
+                <div class="work-card">
+                    <div class="tag"><span class="tag-dot" style="background:var(--green)"></span> Brand Voice</div>
+                    <h4>Department of Culture &amp; Tourism &mdash; Abu Dhabi</h4>
+                    <div class="pub">Al Sayegh Media &middot; Senior Copywriter &middot; 2017&ndash;2022</div>
+                    <p>Built the brand voice for DCT Abu Dhabi from the ground up. Press communications, speeches, and video scripts for government and cultural leadership. Campaign copy across Arabic and English.</p>
+                </div>
+
+                <div class="work-card">
+                    <div class="tag"><span class="tag-dot" style="background:var(--green)"></span> Corporate Communications</div>
+                    <h4>Qatar Development Bank</h4>
+                    <div class="pub">Frame Magazine &middot; 2018</div>
+                    <p>Corporate communications and programme launch materials for national development initiatives.</p>
                 </div>
             </div>
         </div>
@@ -1261,79 +996,6 @@
         </div>
     </section>
 
-    <div class="divider-strip"></div>
-
-    <!-- ═══ BACKGROUND ═══ -->
-    <section class="background" id="background">
-        <div class="si">
-            <div class="bg-label reveal label-tech">Background</div>
-            <div class="bg-grid reveal rd1">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-year label">2025 &mdash; Present</div>
-                        <div class="tl-role">Communications Consultant</div>
-                        <div class="tl-org">Ministry of Communications &amp; IT, Qatar</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2024 &mdash; Present</div>
-                        <div class="tl-role">Founder &mdash; Story &amp; Technology</div>
-                        <div class="tl-org">FACT Special Projects, Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2023 &mdash; 2024</div>
-                        <div class="tl-role">Senior Content Writer</div>
-                        <div class="tl-org">Crossover (EdTech)</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2017 &mdash; 2022</div>
-                        <div class="tl-role">Senior Copywriter</div>
-                        <div class="tl-org">Al Sayegh Media &mdash; DCT Abu Dhabi</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2015 &mdash; 2016</div>
-                        <div class="tl-role">Senior Strategic Copywriter</div>
-                        <div class="tl-org">UM MENA / IPG Mediabrands, Dubai</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2012 &mdash; Present</div>
-                        <div class="tl-role">Narrative Strategist &amp; Creative Consultant</div>
-                        <div class="tl-org">Freelance &mdash; Omnicom, Leo Burnett, DDB</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2010 &mdash; 2015</div>
-                        <div class="tl-role">Deputy Editor</div>
-                        <div class="tl-org">Quint Magazine</div>
-                    </div>
-                </div>
-                <div class="bg-info-grid">
-                    <div class="bg-block">
-                        <div class="bg-block-label label-tech">Education</div>
-                        <ul>
-                            <li>MA Comparative Arts &amp; Media: Design Cultures &mdash; Vrije Universiteit Amsterdam, 2012</li>
-                            <li>BA Graphic Design: Typography &mdash; Notre Dame University Louaize, 2011</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label-tech">Languages</div>
-                        <ul>
-                            <li>English &mdash; Native. Primary working language.</li>
-                            <li>Arabic &mdash; Native speaker. Professional copy produced through AI-augmented workflows.</li>
-                            <li>French &amp; Spanish &mdash; Basic.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label-tech">Tools</div>
-                        <p>Claude, GPT, Gemini &middot; Python &middot; Local LLMs &middot; ML APIs &middot; Google Cloud &middot; Supabase &middot; HTML/CSS &middot; Replit &middot; Presentation design &middot; AI-assisted creative production</p>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label-tech">Interests</div>
-                        <p>Cultural trends, speculative fiction, critical theory, gaming, and typography.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- ═══ CONTACT ═══ -->
     <footer>
     <section class="contact-section" id="contact">
@@ -1395,22 +1057,6 @@
                     }
                 });
             });
-        });
-
-        /* ═══ PORTFOLIO COLLAPSE ═══ */
-        const toggleBtn = document.getElementById('portfolioToggle');
-        const collapseEl = document.getElementById('portfolioCollapse');
-
-        toggleBtn.addEventListener('click', () => {
-            const isOpen = collapseEl.classList.contains('open');
-            collapseEl.classList.toggle('open');
-            toggleBtn.classList.toggle('open');
-            toggleBtn.setAttribute('aria-expanded', !isOpen);
-            toggleBtn.querySelector('.toggle-arrow').textContent = isOpen ? '\u25BC' : '\u25B2';
-
-            /* Update button text */
-            const textNode = toggleBtn.childNodes[toggleBtn.childNodes.length - 1];
-            textNode.textContent = isOpen ? '\n                View Selected Work\n            ' : '\n                Hide Selected Work\n            ';
         });
     </script>
 </body>

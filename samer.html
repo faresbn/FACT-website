@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Samer Bou Nassif — Finance Transformation &amp; Advisory</title>
-    <meta name="description" content="Portfolio of Samer Bou Nassif — finance transformation, M&A advisory, and ESG assurance from Doha, Qatar.">
+    <title>Samer Bou Nassif — Finance & Advisory</title>
+    <meta name="description" content="Samer Bou Nassif — finance transformation, M&A advisory, and ESG assurance across the GCC. Based in Doha, Qatar.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
-           SAMER BOU NASSIF — DETAIL PANEL 2026
-           Design: Slide-out inner page
-           Accent: Yellow (Commercial Strategy)
+           SAMER BOU NASSIF — PROFILE 2026
+           Design: Detail panel (inner page)
+           Accent: Yellow (Finance & Advisory)
            ═══════════════════════════════════════ */
 
         :root {
@@ -44,7 +44,6 @@
             overflow-x: hidden;
         }
 
-        /* Fractal noise — kept but subtle */
         body::before {
             content: '';
             position: fixed; inset: 0; z-index: -1;
@@ -53,7 +52,6 @@
             pointer-events: none;
         }
 
-        /* Left-edge accent line — signals "detail panel" */
         body::after {
             content: '';
             position: fixed; left: 0; top: 0;
@@ -65,12 +63,11 @@
 
         h1, h2, h3, .display { font-family: 'Noto Sans Display', 'Noto Sans', sans-serif; }
         .label { font-family: 'Noto Sans', sans-serif; }
-        .label-legal { font-family: 'Noto Serif', serif; }
         .label-tech { font-family: 'Noto Sans Mono', monospace; }
 
         a { color: inherit; }
 
-        /* ── TOP BAR (simplified — no nav dots) ── */
+        /* ── TOP BAR ── */
         .topbar {
             position: fixed; top: 0; left: 0; right: 0;
             height: 52px;
@@ -83,7 +80,6 @@
             border-bottom: 1px solid rgba(0,0,0,0.04);
         }
         .topbar-back {
-            font-family: 'Noto Sans', sans-serif;
             font-size: 0.68rem; font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
@@ -95,7 +91,6 @@
         .topbar-back:hover { color: var(--ink); }
         .topbar-back .arrow { font-size: 0.8rem; }
         .topbar-name {
-            font-family: 'Noto Sans', sans-serif;
             font-size: 0.62rem; font-weight: 500;
             letter-spacing: 0.14em;
             text-transform: uppercase;
@@ -105,14 +100,13 @@
         }
         .topbar-name.visible { opacity: 1; }
 
-        /* ── SECTIONS (document flow — no viewport locking) ── */
+        /* ── SECTIONS ── */
         section {
             padding: clamp(3rem, 6vh, 5rem) clamp(1.5rem, 6vw, 5rem);
             position: relative;
         }
         .si { width: 100%; max-width: 720px; margin: 0 auto; }
 
-        /* ── DIVIDER STRIP (single accent dash) ── */
         .divider-strip {
             max-width: 720px; margin: 0 auto;
             height: 1px; background: var(--ink-06);
@@ -124,22 +118,18 @@
             background: var(--accent);
         }
 
-        /* ═══════════════════════════════════════
-           IDENTITY STRIP (compact hero)
-           ═══════════════════════════════════════ */
+        /* ═══ HERO / PROFILE ═══ */
         .hero {
             padding-top: calc(52px + clamp(3rem, 6vh, 5rem));
             padding-bottom: clamp(2rem, 4vh, 3rem);
         }
         .identity-accent {
-            height: 3px;
-            width: 48px;
+            height: 3px; width: 48px;
             background: var(--accent);
             margin-bottom: 2rem;
             opacity: 0;
             animation: fu 0.3s 0.1s ease-out forwards;
         }
-
         .hero h1 {
             font-weight: 900;
             font-size: clamp(2.2rem, 5vw, 3.5rem);
@@ -149,7 +139,6 @@
             opacity: 0;
             animation: fu 0.5s 0.15s ease-out forwards;
         }
-
         .hero-tagline {
             font-family: 'Noto Serif', serif;
             font-size: clamp(0.9rem, 1.3vw, 1.1rem);
@@ -160,7 +149,6 @@
             opacity: 0;
             animation: fu 0.4s 0.35s ease-out forwards;
         }
-
         .hero-text {
             font-size: 0.88rem;
             color: var(--ink-60);
@@ -169,13 +157,26 @@
             opacity: 0;
             animation: fu 0.4s 0.5s ease-out forwards;
         }
-
+        .cv-link {
+            display: inline-flex;
+            align-items: center; gap: 4px;
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.06em;
+            color: var(--ink-25);
+            text-decoration: none;
+            margin-top: 1.25rem;
+            transition: color 0.3s;
+            opacity: 0;
+            animation: fu 0.3s 0.6s ease-out forwards;
+        }
+        .cv-link:hover { color: var(--ink); }
         .hero-location {
             font-size: 0.6rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--ink-25);
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
             opacity: 0;
             animation: fu 0.3s 0.65s ease-out forwards;
         }
@@ -185,279 +186,44 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ═══════════════════════════════════════
-           CURRENT
-           ═══════════════════════════════════════ */
-        .current { background: var(--cream); }
-
-        .current-label {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem; font-weight: 600;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
-        }
-
-        .current-card {
-            padding: clamp(1.5rem, 2.5vw, 2.25rem);
-            background: var(--bone);
-            position: relative;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .current-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-        }
-        .current-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 3px;
-            background: var(--accent);
-        }
-
-        .current-card .org {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.58rem; font-weight: 600;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.75rem;
-        }
-        .current-card h3 {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(1rem, 1.4vw, 1.15rem);
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            line-height: 1.3;
-        }
-        .current-card .dates {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.65rem;
-            color: var(--ink-25);
-            letter-spacing: 0.06em;
-            margin-bottom: 0.8rem;
-        }
-        .current-card p {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-
-        /* ═══════════════════════════════════════
-           EXPERTISE
-           ═══════════════════════════════════════ */
-        .expertise {
+        /* ═══ CAPABILITIES ═══ */
+        .capabilities {
             background: var(--ink);
             color: var(--cream);
         }
-
-        .exp-label {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem; font-weight: 600;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-40);
-            margin-bottom: 1.25rem;
-        }
-        .exp-heading {
-            font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
-            line-height: 1.15;
-        }
-
-        .exp-grid {
+        .cap-strip {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0;
         }
-        .exp-card {
-            padding: clamp(1.25rem, 2vw, 1.75rem);
+        .cap-item {
+            padding: clamp(1rem, 1.8vw, 1.4rem) clamp(1.25rem, 2vw, 1.75rem);
             border-bottom: 1px solid rgba(255,255,255,0.04);
-            position: relative;
-            transition: background 0.2s;
         }
-        .exp-card:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
-        .exp-card:hover { background: rgba(255,255,255,0.02); }
-        .exp-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 3px; height: 100%;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .exp-card:hover::before { opacity: 1; }
-        .exp-card:nth-child(1)::before { background: var(--yellow); }
-        .exp-card:nth-child(2)::before { background: var(--green); }
-        .exp-card:nth-child(3)::before { background: var(--yellow); }
-        .exp-card:nth-child(4)::before { background: var(--purple); }
-
-        .exp-num {
-            font-family: 'Noto Sans Display', sans-serif;
-            font-size: clamp(1.4rem, 2.2vw, 1.8rem);
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.03em;
-        }
-        .exp-card:nth-child(1) .exp-num { color: var(--yellow); }
-        .exp-card:nth-child(2) .exp-num { color: var(--green); }
-        .exp-card:nth-child(3) .exp-num { color: var(--yellow); }
-        .exp-card:nth-child(4) .exp-num { color: var(--purple); }
-
-        .exp-card h3 {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(0.9rem, 1.2vw, 1rem);
-            font-weight: 600;
-            margin-bottom: 0.4rem;
+        .cap-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
+        .cap-title {
+            font-family: 'Noto Sans Mono', monospace;
+            font-size: 0.8rem; font-weight: 500;
+            margin-bottom: 0.2rem;
             line-height: 1.3;
         }
-        .exp-card .desc {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.45);
-            line-height: 1.6;
-            margin-bottom: 0.75rem;
-        }
-        .exp-list { list-style: none; }
-        .exp-list li {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.55);
-            padding-left: 1rem;
-            margin-bottom: 0.25rem;
-            position: relative;
-        }
-        .exp-list li::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0.55em;
-            width: 4px; height: 4px;
-            border-radius: 50%;
-        }
-        .exp-card:nth-child(1) .exp-list li::before { background: var(--yellow); }
-        .exp-card:nth-child(2) .exp-list li::before { background: var(--green); }
-        .exp-card:nth-child(3) .exp-list li::before { background: var(--yellow); }
-        .exp-card:nth-child(4) .exp-list li::before { background: var(--purple); }
-
-        /* ═══════════════════════════════════════
-           BACKGROUND
-           ═══════════════════════════════════════ */
-        .background { background: var(--cream); }
-
-        .bg-label {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem; font-weight: 600;
-            letter-spacing: 0.20em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 1.25rem;
+        .cap-desc {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.5;
         }
 
-        .bg-grid {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(2rem, 4vh, 3rem);
-        }
-
-        /* Timeline */
-        .timeline { position: relative; }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0;
-            width: 1px; height: 100%;
-            background: var(--ink-06);
-        }
-        .tl-item {
-            padding-left: 1.5rem;
-            padding-bottom: 1.5rem;
-            position: relative;
-        }
-        .tl-item:last-child { padding-bottom: 0; }
-        .tl-item::before {
-            content: '';
-            position: absolute;
-            left: -3px; top: 6px;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--ink-12);
-            transition: background 0.3s;
-        }
-        .tl-item:first-child::before { background: var(--accent); }
-        .tl-item .tl-year {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.6rem; font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.15rem;
-        }
-        .tl-item .tl-role {
-            font-size: 0.85rem;
-            font-weight: 600;
-            line-height: 1.35;
-            margin-bottom: 0.1rem;
-        }
-        .tl-item .tl-org {
-            font-size: 0.78rem;
-            color: var(--ink-60);
-        }
-
-        /* Info blocks — 2-col grid below timeline */
-        .bg-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(1rem, 2vw, 1.5rem);
-        }
-        .bg-block { margin-bottom: 0; }
-        .bg-block-label {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.58rem; font-weight: 600;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--ink-25);
-            margin-bottom: 0.6rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1px solid var(--ink-06);
-        }
-        .bg-block p, .bg-block li {
-            font-size: 0.82rem;
-            color: var(--ink-60);
-            line-height: 1.7;
-        }
-        .bg-block ul { list-style: none; }
-        .bg-block li {
-            padding-left: 1rem;
-            position: relative;
-            margin-bottom: 0.25rem;
-        }
-        .bg-block li::before {
-            content: '\2192';
-            position: absolute;
-            left: 0;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--ink-12);
-        }
-
-        /* ═══════════════════════════════════════
-           CONTACT (compact horizontal footer)
-           ═══════════════════════════════════════ */
+        /* ═══ CONTACT ═══ */
         .contact-section {
             background: var(--ink);
             color: var(--cream);
             padding: clamp(2.5rem, 5vh, 3.5rem) clamp(1.5rem, 6vw, 5rem);
         }
         .contact-section .si {
-            display: flex;
-            flex-direction: row;
+            display: flex; flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            flex-wrap: wrap; gap: 1rem;
         }
         .contact-left h2 {
             font-size: clamp(1.1rem, 2vw, 1.4rem);
@@ -466,30 +232,23 @@
             margin-bottom: 0.4rem;
         }
         .contact-left .email {
-            font-family: 'Noto Sans', sans-serif;
+            font-family: 'Noto Sans Mono', monospace;
             font-size: clamp(0.85rem, 1.2vw, 1rem);
             color: var(--ink-40);
             text-decoration: none;
             transition: color 0.3s;
         }
         .contact-left .email:hover { color: var(--cream); }
-
-        .contact-right {
-            text-align: right;
-        }
+        .contact-right { text-align: right; }
         .contact-location {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.58rem;
-            font-weight: 500;
+            font-size: 0.58rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.14);
             margin-bottom: 0.5rem;
         }
         .contact-fact-link {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.62rem;
-            font-weight: 500;
+            font-size: 0.62rem; font-weight: 500;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.2);
@@ -498,23 +257,19 @@
         }
         .contact-fact-link:hover { color: var(--cream); }
 
-        /* ═══ REVEAL (faster for inner pages) ═══ */
+        /* ═══ REVEAL ═══ */
         .reveal {
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.4s ease-out, transform 0.4s ease-out;
         }
         .reveal.visible { opacity: 1; transform: translateY(0); }
-        .rd1 { transition-delay: 0.06s; }
-        .rd2 { transition-delay: 0.12s; }
 
         /* ═══ RESPONSIVE ═══ */
         @media (max-width: 820px) {
-            .exp-grid { grid-template-columns: 1fr; }
-            .exp-card:nth-child(odd) { border-right: none; }
-            .bg-info-grid { grid-template-columns: 1fr; }
+            .cap-strip { grid-template-columns: 1fr; }
+            .cap-item:nth-child(odd) { border-right: none; }
         }
-
         @media (max-width: 520px) {
             section { padding-left: 1.25rem; padding-right: 1.25rem; }
             .topbar { padding: 0 1.25rem; }
@@ -531,141 +286,39 @@
         <span class="topbar-name label">Samer Bou Nassif</span>
     </nav>
 
-    <!-- ═══ IDENTITY STRIP ═══ -->
+    <!-- ═══ HERO / PROFILE ═══ -->
     <section class="hero" id="hero">
         <div class="si">
             <div class="identity-accent"></div>
             <h1>Samer<br>Bou Nassif</h1>
             <p class="hero-tagline">Finance transformation strategist. Seven years advising sovereign entities and regional institutions across the&nbsp;GCC.</p>
-            <p class="hero-text">Built a practice at the intersection of financial modelling, regulatory readiness, and operational design &mdash; from M&amp;A carve-outs and IFRS advisory for sovereign wealth funds to ESG assurance and green bond reporting for national institutions. Now applying that rigour through FACT Special&nbsp;Projects.</p>
+            <p class="hero-text">Built a practice at the intersection of financial modelling, regulatory readiness, and operational design &mdash; from M&amp;A carve-outs and IFRS advisory for sovereign wealth funds to ESG assurance and green bond reporting for national institutions.</p>
+            <a href="samer/Samer_Bou_Nassif _Consulting_CV.pdf" target="_blank" class="cv-link label-tech">Download CV (PDF) &rarr;</a>
             <div class="hero-location label">Doha &mdash; Qatar</div>
         </div>
     </section>
 
     <div class="divider-strip"></div>
 
-    <!-- ═══ CURRENT ═══ -->
-    <section class="current" id="current">
+    <!-- ═══ CAPABILITIES ═══ -->
+    <section class="capabilities" id="capabilities">
         <div class="si">
-            <div class="current-label reveal label">Current</div>
-            <div class="reveal rd1">
-                <div class="current-card">
-                    <div class="org label">FACT Special Projects &mdash; Doha</div>
-                    <h3>Specialist &mdash; Commercial Strategy</h3>
-                    <div class="dates label">2026 &mdash; Present</div>
-                    <p>Finance transformation, M&amp;A advisory, and ESG assurance. Deploying operational rigour and capital-markets experience through a multidisciplinary consultancy model.</p>
+            <div class="cap-strip reveal">
+                <div class="cap-item">
+                    <div class="cap-title">Finance Transformation</div>
+                    <div class="cap-desc">CFO advisory, target operating models, AI-enabled diagnostics</div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider-strip"></div>
-
-    <!-- ═══ EXPERTISE ═══ -->
-    <section class="expertise" id="expertise">
-        <div class="si">
-            <div class="reveal">
-                <div class="exp-label label">Focus Areas</div>
-                <h2 class="exp-heading">Where rigour meets<br>complexity.</h2>
-            </div>
-            <div class="exp-grid reveal rd1">
-                <div class="exp-card">
-                    <div class="exp-num">01</div>
-                    <h3>Finance Transformation</h3>
-                    <p class="desc">CFO advisory, target operating model design, process optimisation, and finance maturity assessments for complex organisations.</p>
-                    <ul class="exp-list">
-                        <li>Target Operating Models</li>
-                        <li>PMO &amp; Process Design</li>
-                        <li>Financial Modelling</li>
-                        <li>AI-Enabled Diagnostics</li>
-                    </ul>
+                <div class="cap-item">
+                    <div class="cap-title">Accounting &amp; Reporting Advisory</div>
+                    <div class="cap-desc">IFRS advisory, financial reporting, sovereign wealth fund assurance</div>
                 </div>
-                <div class="exp-card">
-                    <div class="exp-num">02</div>
-                    <h3>M&amp;A &amp; Restructuring</h3>
-                    <p class="desc">Carve-outs, pro forma financials, and transaction support for regional telecom, banking, and sovereign entities.</p>
-                    <ul class="exp-list">
-                        <li>Carve-Out Execution</li>
-                        <li>Pro Forma Financials</li>
-                        <li>Due Diligence Support</li>
-                        <li>Transaction Advisory</li>
-                    </ul>
+                <div class="cap-item">
+                    <div class="cap-title">M&amp;A &amp; Restructuring</div>
+                    <div class="cap-desc">Carve-outs, pro forma financials, due diligence, transaction support</div>
                 </div>
-                <div class="exp-card">
-                    <div class="exp-num">03</div>
-                    <h3>ESG &amp; Sustainable Finance</h3>
-                    <p class="desc">Green bond reporting, ESG assurance, and regulatory readiness for banks, government entities, and public-sector-linked organisations.</p>
-                    <ul class="exp-list">
-                        <li>Green Bond Frameworks</li>
-                        <li>ESG Assurance</li>
-                        <li>Sustainability Reporting</li>
-                        <li>Regulatory Readiness</li>
-                    </ul>
-                </div>
-                <div class="exp-card">
-                    <div class="exp-num">04</div>
-                    <h3>Tools &amp; Innovation</h3>
-                    <p class="desc">Applying generative AI and automation to finance workflows &mdash; from diagnostic tooling to intelligent reporting.</p>
-                    <ul class="exp-list">
-                        <li>Generative AI</li>
-                        <li>Finance Diagnostics</li>
-                        <li>Workflow Automation</li>
-                        <li>Data-Driven Reporting</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider-strip"></div>
-
-    <!-- ═══ BACKGROUND ═══ -->
-    <section class="background" id="background">
-        <div class="si">
-            <div class="bg-label reveal label">Background</div>
-            <div class="bg-grid reveal rd1">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-year label">2026 &mdash; Present</div>
-                        <div class="tl-role">Specialist, Commercial Strategy</div>
-                        <div class="tl-org">FACT Special Projects, Doha</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-year label">2018 &mdash; 2026</div>
-                        <div class="tl-role">Assistant Manager, Finance Transformation &amp; Advisory</div>
-                        <div class="tl-org">Deloitte &amp; Touche (M.E.), Doha</div>
-                    </div>
-                </div>
-                <div class="bg-info-grid">
-                    <div class="bg-block">
-                        <div class="bg-block-label label">Education</div>
-                        <ul>
-                            <li>BBA in Financial Engineering &mdash; Notre Dame University, Lebanon</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label">Credentials</div>
-                        <ul>
-                            <li>CMA Candidate (Certified Management Accountant)</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label">Languages</div>
-                        <ul>
-                            <li>Arabic &mdash; Native</li>
-                            <li>English &mdash; Native</li>
-                            <li>French &mdash; Basic</li>
-                        </ul>
-                    </div>
-                    <div class="bg-block">
-                        <div class="bg-block-label label">Key Sectors</div>
-                        <ul>
-                            <li>Sovereign Wealth Funds</li>
-                            <li>GCC Telecom</li>
-                            <li>National Banks</li>
-                            <li>Government-linked Entities</li>
-                        </ul>
-                    </div>
+                <div class="cap-item">
+                    <div class="cap-title">ESG &amp; Sustainable Finance</div>
+                    <div class="cap-desc">Green bond frameworks, sustainability reporting, regulatory readiness</div>
                 </div>
             </div>
         </div>
@@ -677,7 +330,7 @@
         <div class="si">
             <div class="contact-left">
                 <h2>Get in Touch</h2>
-                <a href="mailto:info@fact.qa" class="email label">info@fact.qa</a>
+                <a href="mailto:info@fact.qa" class="email label-tech">info@fact.qa</a>
             </div>
             <div class="contact-right">
                 <div class="contact-location label">Doha &mdash; Qatar</div>
@@ -688,10 +341,8 @@
     </footer>
 
     <script>
-        /* Topbar name fade-in when hero scrolls away */
         const heroEl = document.getElementById('hero');
         const nameEl = document.querySelector('.topbar-name');
-
         const nameObs = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 nameEl.classList.toggle('visible', !e.isIntersecting);
@@ -699,7 +350,6 @@
         }, { threshold: 0.1 });
         nameObs.observe(heroEl);
 
-        /* Reveal observer */
         const revObs = new IntersectionObserver((es) => {
             es.forEach(e => {
                 if (e.isIntersecting) {
