@@ -25,3 +25,7 @@ node_modules/
 *.log
 *.tmp
 /tmp/
+
+# Oversized portfolio files (>100MB, GitHub limit)
+fares/content strategy & social media/Sadia - UM - social pitch (2016).pdf
+fares/content strategy & social media/Sprite - UM - 2016 pitch (2015).pdf
