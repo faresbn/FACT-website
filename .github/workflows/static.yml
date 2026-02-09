@@ -54,6 +54,10 @@ jobs:
           cp *.png _site/ 2>/dev/null || true
           cp *.ico _site/ 2>/dev/null || true
           cp *.svg _site/ 2>/dev/null || true
+          # Copy individual portfolio pages
+          cp -r fares/ _site/fares/
+          cp -r samer/ _site/samer/
+          cp -r nicole/ _site/nicole/
           # Copy built Flow app into /flow/
           mkdir -p _site/flow
           cp -r flow/dist/* _site/flow/
