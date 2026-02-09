@@ -7,13 +7,13 @@
     <meta name="description" content="FACT Special Projects — Strategy, Structure, Story. Applied intelligence from Doha, Qatar.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
            FACT SPECIAL PROJECTS — 2026
-           Type: Noto Sans / Noto Sans Display / Jost
+           Type: Noto Sans / Noto Sans Display / Noto Serif / Noto Sans Mono
            Palette: Warm bone + Y/G/P triad
-           Final Draft — All panel notes resolved
+           Final Draft — Font migration complete
            ═══════════════════════════════════════ */
 
         :root {
@@ -57,7 +57,11 @@
         }
 
         h1, h2, .display { font-family: 'Noto Sans Display', 'Noto Sans', sans-serif; }
-        .jost { font-family: 'Jost', sans-serif; }
+
+        /* Typographic voices */
+        .label { font-family: 'Noto Sans', sans-serif; }
+        .label-legal { font-family: 'Noto Serif', serif; }
+        .label-tech { font-family: 'Noto Sans Mono', monospace; }
 
         /* ── FIXED CORNERS ── */
         .fc {
@@ -87,7 +91,7 @@
             border-bottom: 1px solid rgba(0,0,0,0.04);
         }
         .topbar-mark {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-weight: 700; font-size: 0.78rem;
             letter-spacing: 0.16em;
             text-transform: uppercase;
@@ -184,9 +188,9 @@
             animation: fu 0.4s 0.95s ease-out forwards;
         }
         .hero-text .lead {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Serif', serif;
             font-size: clamp(0.95rem, 1.4vw, 1.15rem);
-            font-weight: 500;
+            font-weight: 400;
             color: var(--ink-80);
             margin-bottom: 0.5rem;
             letter-spacing: 0.01em;
@@ -225,7 +229,7 @@
         @keyframes barGrow3 { to { width: clamp(160px, 28vw, 340px); } }
 
         .hero-location {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: 0.6rem;
             letter-spacing: 0.25em;
             text-transform: uppercase;
@@ -246,9 +250,9 @@
         }
 
         .cap-label {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: 0.62rem; font-weight: 600;
-            letter-spacing: 0.25em;
+            letter-spacing: 0.20em;
             text-transform: uppercase;
             color: var(--ink-40);
             margin-bottom: 1.25rem;
@@ -290,14 +294,14 @@
         .cap-card:hover::before { opacity: 1; }
 
         .cap-num {
-            font-family: 'Jost', sans-serif;
             font-size: 0.6rem; font-weight: 700;
             letter-spacing: 0.06em;
             margin-bottom: 1.75rem;
         }
-        .cap-card:nth-child(1) .cap-num { color: var(--yellow); }
-        .cap-card:nth-child(2) .cap-num { color: var(--green); }
-        .cap-card:nth-child(3) .cap-num { color: var(--purple); }
+        /* Card 01 = Commercial (Noto Sans), Card 02 = Legal (Noto Serif), Card 03 = Tech (Noto Sans Mono) */
+        .cap-card:nth-child(1) .cap-num { font-family: 'Noto Sans', sans-serif; color: var(--yellow); }
+        .cap-card:nth-child(2) .cap-num { font-family: 'Noto Serif', serif; color: var(--green); }
+        .cap-card:nth-child(3) .cap-num { font-family: 'Noto Sans Mono', monospace; color: var(--purple); }
 
         .cap-card h3 {
             font-family: 'Noto Sans', sans-serif;
@@ -317,7 +321,6 @@
             display: flex; flex-direction: column; gap: 0.5rem;
         }
         .cap-list li {
-            font-family: 'Jost', sans-serif;
             font-size: 0.78rem;
             font-weight: 400;
             color: rgba(255,255,255,0.55);
@@ -325,6 +328,10 @@
             position: relative;
             letter-spacing: 0.01em;
         }
+        /* Discipline-specific fonts for capability list items */
+        .cap-card:nth-child(1) .cap-list li { font-family: 'Noto Sans', sans-serif; }
+        .cap-card:nth-child(2) .cap-list li { font-family: 'Noto Serif', serif; }
+        .cap-card:nth-child(3) .cap-list li { font-family: 'Noto Sans Mono', monospace; }
         .cap-list li::before {
             content: '→';
             position: absolute; left: 0;
@@ -352,7 +359,7 @@
             font-weight: 600;
         }
         .dep-header .dates {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: 0.7rem; color: var(--ink-25);
             letter-spacing: 0.08em;
         }
@@ -381,22 +388,31 @@
             transition: opacity 0.3s;
         }
         .dep-item:hover::before { opacity: 1; }
-        .dep-item:nth-child(1)::before, .dep-item:nth-child(2)::before { background: var(--purple); }
+        /* Purple = Fares (Story/Tech), Yellow = Samer (Strategy), Green = Nicole (Legal) */
+        .dep-item:nth-child(1)::before { background: var(--purple); }
+        .dep-item:nth-child(2)::before { background: var(--purple); }
         .dep-item:nth-child(3)::before { background: var(--yellow); }
-        .dep-item:nth-child(4)::before { background: var(--yellow); }
+        .dep-item:nth-child(4)::before { background: var(--purple); }
         .dep-item:nth-child(5)::before { background: var(--purple); }
         .dep-item:nth-child(6)::before { background: var(--purple); }
+        .dep-item:nth-child(7)::before { background: var(--yellow); }
+        .dep-item:nth-child(8)::before { background: var(--yellow); }
+        .dep-item:nth-child(9)::before { background: var(--green); }
+        .dep-item:nth-child(10)::before { background: var(--green); }
 
         .dep-tag {
             display: inline-flex;
             align-items: center; gap: 6px;
-            font-family: 'Jost', sans-serif;
             font-size: 0.55rem; font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.14em;
             color: var(--ink-25);
             margin-bottom: 0.5rem;
         }
+        /* Deployment tags use the font matching their dot color */
+        .dep-tag.tag-yellow { font-family: 'Noto Sans', sans-serif; }
+        .dep-tag.tag-green { font-family: 'Noto Serif', serif; font-weight: 500; }
+        .dep-tag.tag-purple { font-family: 'Noto Sans Mono', monospace; font-weight: 500; }
         .dep-dot {
             width: 5px; height: 5px;
             border-radius: 50%;
@@ -419,9 +435,9 @@
         .team { background: var(--bone); }
 
         .team-label {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: 0.62rem; font-weight: 600;
-            letter-spacing: 0.25em;
+            letter-spacing: 0.20em;
             text-transform: uppercase;
             color: var(--ink-25);
             margin-bottom: 1.25rem;
@@ -441,11 +457,18 @@
             grid-template-columns: repeat(3, 1fr);
             gap: clamp(1rem, 2vw, 2rem);
         }
+        /* Team card links — wrapper for nth-child targeting */
+        .team-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
         .team-card {
             padding: clamp(1.5rem, 2.5vw, 2.25rem);
             background: var(--cream);
             position: relative;
             transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
         }
         .team-card:hover {
             transform: translateY(-4px);
@@ -457,9 +480,9 @@
             top: 0; left: 0;
             width: 100%; height: 3px;
         }
-        .team-card:nth-child(1)::before { background: var(--yellow); }
-        .team-card:nth-child(2)::before { background: var(--green); }
-        .team-card:nth-child(3)::before { background: var(--purple); }
+        .team-card-link:nth-child(1) .team-card::before { background: var(--yellow); }
+        .team-card-link:nth-child(2) .team-card::before { background: var(--green); }
+        .team-card-link:nth-child(3) .team-card::before { background: var(--purple); }
 
         .team-num {
             font-family: 'Noto Sans Display', sans-serif;
@@ -469,9 +492,9 @@
             margin-bottom: 1rem;
             letter-spacing: -0.03em;
         }
-        .team-card:nth-child(1) .team-num { color: var(--yellow); }
-        .team-card:nth-child(2) .team-num { color: var(--green); }
-        .team-card:nth-child(3) .team-num { color: var(--purple); }
+        .team-card-link:nth-child(1) .team-num { color: var(--yellow); }
+        .team-card-link:nth-child(2) .team-num { color: var(--green); }
+        .team-card-link:nth-child(3) .team-num { color: var(--purple); }
 
         .team-card h3 {
             font-family: 'Noto Sans', sans-serif;
@@ -481,18 +504,36 @@
             line-height: 1.3;
         }
         .team-role {
-            font-family: 'Jost', sans-serif;
             font-size: 0.65rem; font-weight: 600;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--ink-25);
             margin-bottom: 1.25rem;
         }
+        /* Discipline-specific fonts for role lines */
+        .team-card-link:nth-child(1) .team-role { font-family: 'Noto Sans', sans-serif; }
+        .team-card-link:nth-child(2) .team-role { font-family: 'Noto Serif', serif; font-weight: 500; }
+        .team-card-link:nth-child(3) .team-role { font-family: 'Noto Sans Mono', monospace; font-weight: 500; }
+
         .team-card .bio {
             font-size: 0.82rem;
             color: var(--ink-60);
             line-height: 1.75;
         }
+
+        .team-card .profile-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            color: var(--ink-25);
+            margin-top: 1.25rem;
+            transition: color 0.3s;
+        }
+        .team-card:hover .profile-hint { color: var(--ink-60); }
 
         /* ═══ CONTACT ═══ */
         .contact-section {
@@ -530,7 +571,7 @@
             margin-bottom: 1.5rem;
         }
         .contact-section .email {
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: clamp(1rem, 1.6vw, 1.25rem);
             color: var(--ink-40);
             text-decoration: none;
@@ -540,7 +581,7 @@
         .contact-section .email:hover { color: var(--cream); }
         .contact-location {
             margin-top: 2.5rem;
-            font-family: 'Jost', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             font-size: 0.58rem;
             letter-spacing: 0.25em;
             text-transform: uppercase;
@@ -599,7 +640,7 @@
     <div class="fc fc-bl"></div><div class="fc fc-br"></div>
 
     <nav class="topbar">
-        <span class="topbar-mark jost" id="topbar-mark">FACT</span>
+        <span class="topbar-mark label" id="topbar-mark">FACT</span>
         <div class="nav-dots">
             <button class="nav-dot active" data-s="hero" aria-label="Home"></button>
             <button class="nav-dot" data-s="capabilities" aria-label="Capabilities"></button>
@@ -631,7 +672,7 @@
                     <div class="hero-bar"></div>
                     <div class="hero-bar"></div>
                 </div>
-                <div class="hero-location jost">Doha — Qatar</div>
+                <div class="hero-location label">Doha &mdash; Qatar</div>
             </div>
         </div>
     </section>
@@ -646,12 +687,12 @@
     <section class="capabilities" id="capabilities">
         <div class="si">
             <div class="reveal">
-                <div class="cap-label jost">What We Do</div>
+                <div class="cap-label label">What We Do</div>
                 <h2 class="cap-heading">Three disciplines.<br>One interface.</h2>
             </div>
             <div class="cap-grid reveal rd1">
                 <div class="cap-card">
-                    <div class="cap-num jost">01</div>
+                    <div class="cap-num label">01</div>
                     <h3>Commercial Strategy</h3>
                     <p class="desc">The business logic. Maximising value through capital efficiency and operational rigour.</p>
                     <ul class="cap-list">
@@ -661,7 +702,7 @@
                     </ul>
                 </div>
                 <div class="cap-card">
-                    <div class="cap-num jost">02</div>
+                    <div class="cap-num label-legal">02</div>
                     <h3>Legal Architecture</h3>
                     <p class="desc">The framework. Protecting assets and ensuring compliance across complex jurisdictions.</p>
                     <ul class="cap-list">
@@ -671,7 +712,7 @@
                     </ul>
                 </div>
                 <div class="cap-card">
-                    <div class="cap-num jost">03</div>
+                    <div class="cap-num label-tech">03</div>
                     <h3>Narrative Intelligence</h3>
                     <p class="desc">The interface. Deploying AI and narrative design to position complex ideas with precision.</p>
                     <ul class="cap-list">
@@ -695,38 +736,58 @@
         <div class="si">
             <div class="dep-header reveal">
                 <h2>Deployments</h2>
-                <span class="dates jost">2023 — 2026</span>
+                <span class="dates label">2007 &mdash; 2026</span>
             </div>
             <div class="dep-grid reveal rd1">
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Tech</div>
+                    <div class="dep-tag tag-purple"><span class="dep-dot" style="background:var(--purple)"></span>Story / Tech</div>
                     <h4>Proprietary Gen-AI Machine</h4>
                     <p>Generative AI framework accelerating creative brainstorming (Stealth).</p>
                 </div>
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Gov</div>
+                    <div class="dep-tag tag-purple"><span class="dep-dot" style="background:var(--purple)"></span>Story / Gov</div>
                     <h4>Government Digital Comms</h4>
                     <p>Narrative strategy, content systems, and workflow automation for a national digital transformation programme.</p>
                 </div>
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy</div>
+                    <div class="dep-tag tag-yellow"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy</div>
                     <h4>Regional Telco Restructuring</h4>
                     <p>Carve-out and pro forma financials for a major GCC telecom group.</p>
                 </div>
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy / Tech</div>
+                    <div class="dep-tag tag-purple"><span class="dep-dot" style="background:var(--purple)"></span>Tech / Finance</div>
                     <h4>Automated Finance Platform</h4>
                     <p>SMS-to-dashboard personal finance SaaS with AI-powered categorisation and analytics.</p>
                 </div>
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Tech / EdTech</div>
+                    <div class="dep-tag tag-purple"><span class="dep-dot" style="background:var(--purple)"></span>Tech / EdTech</div>
                     <h4>US EdTech Scaling</h4>
                     <p>AI-driven content workflow optimisation for educational platforms.</p>
                 </div>
                 <div class="dep-item">
-                    <div class="dep-tag jost"><span class="dep-dot" style="background:var(--purple)"></span>Story / Culture</div>
+                    <div class="dep-tag tag-purple"><span class="dep-dot" style="background:var(--purple)"></span>Story / Culture</div>
                     <h4>National Cultural Narrative</h4>
                     <p>Strategic copywriting and positioning for national tourism and heritage initiatives.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag tag-yellow"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy / Advisory</div>
+                    <h4>Sovereign Fund Reporting Architecture</h4>
+                    <p>IFRS advisory and financial reporting enhancement for a regional sovereign wealth fund.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag tag-yellow"><span class="dep-dot" style="background:var(--yellow)"></span>Strategy / ESG</div>
+                    <h4>National Green Bond Framework</h4>
+                    <p>ESG assurance and sustainable finance reporting for a government-linked banking institution.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag tag-green"><span class="dep-dot" style="background:var(--green)"></span>Legal / M&amp;A</div>
+                    <h4>Cross-Border Infrastructure Disposition</h4>
+                    <p>Virtual data room architecture and due diligence coordination for a multinational telecom tower transaction.</p>
+                </div>
+                <div class="dep-item">
+                    <div class="dep-tag tag-green"><span class="dep-dot" style="background:var(--green)"></span>Legal / Governance</div>
+                    <h4>International Dispute Architecture</h4>
+                    <p>ICC arbitration and cross-jurisdictional litigation support for a regional telecommunications group.</p>
                 </div>
             </div>
         </div>
@@ -742,28 +803,37 @@
     <section class="team" id="team">
         <div class="si">
             <div class="reveal">
-                <div class="team-label jost">Specialists</div>
+                <div class="team-label label">Specialists</div>
                 <h2 class="team-heading">Built around expertise,<br>not headcount.</h2>
             </div>
             <div class="team-grid reveal rd1">
-                <div class="team-card">
-                    <div class="team-num">01</div>
-                    <h3>Commercial<br>Strategy</h3>
-                    <div class="team-role jost">Samer — Capital &amp; Systems</div>
-                    <p class="bio">Ex-Big 4 Manager specialising in M&amp;A carve-outs, financial modelling, target operating model design, and ESG assurance across the GCC.</p>
-                </div>
-                <div class="team-card">
-                    <div class="team-num">02</div>
-                    <h3>Legal<br>Architecture</h3>
-                    <div class="team-role jost">Nicole — Operations &amp; Compliance</div>
-                    <p class="bio">Ex-Telecom Senior Paralegal with over twenty years in complex contract architecture, corporate formation, and operational compliance across the GCC.</p>
-                </div>
-                <div class="team-card">
-                    <div class="team-num">03</div>
-                    <h3>Narrative<br>Design</h3>
-                    <div class="team-role jost">Fares — Creative Tech</div>
-                    <p class="bio">Former Government Comms Lead specialising in AI-augmented storytelling, narrative strategy, and the design of proprietary creative-tech frameworks.</p>
-                </div>
+                <a href="samer/samer.html" class="team-card-link">
+                    <div class="team-card">
+                        <div class="team-num">01</div>
+                        <h3>Commercial<br>Strategy</h3>
+                        <div class="team-role label">Samer &mdash; Capital &amp; Systems</div>
+                        <p class="bio">Seven years at Deloitte advising sovereign wealth funds, telecom groups, and national banks. M&amp;A carve-outs, IFRS advisory, ESG assurance, and finance transformation across the GCC.</p>
+                        <div class="profile-hint">View Profile &rarr;</div>
+                    </div>
+                </a>
+                <a href="nicole/nicole.html" class="team-card-link">
+                    <div class="team-card">
+                        <div class="team-num">02</div>
+                        <h3>Legal<br>Architecture</h3>
+                        <div class="team-role label-legal">Nicole &mdash; Operations &amp; Compliance</div>
+                        <p class="bio">Three decades across legal operations, M&amp;A governance, and corporate administration. Sixteen years at Ooredoo Group managing due diligence, arbitration support, and subsidiary compliance across the GCC.</p>
+                        <div class="profile-hint">View Profile &rarr;</div>
+                    </div>
+                </a>
+                <a href="fares/fares.html" class="team-card-link">
+                    <div class="team-card">
+                        <div class="team-num">03</div>
+                        <h3>Narrative<br>Design</h3>
+                        <div class="team-role label-tech">Fares &mdash; Creative Tech</div>
+                        <p class="bio">Fifteen years across copywriting, narrative strategy, and system design &mdash; from editorial and government comms to full-stack applications and AI tools.</p>
+                        <div class="profile-hint">View Profile &rarr;</div>
+                    </div>
+                </a>
             </div>
         </div>
     </section>
@@ -780,8 +850,8 @@
         <div class="si">
             <div class="contact-ring reveal"><div class="dot"></div></div>
             <h2 class="reveal">Initiate Mandate</h2>
-            <a href="mailto:info@fact.qa" class="email reveal jost">info@fact.qa</a>
-            <div class="contact-location reveal jost">Doha — Qatar</div>
+            <a href="mailto:info@fact.qa" class="email reveal label">info@fact.qa</a>
+            <div class="contact-location reveal label">Doha &mdash; Qatar</div>
         </div>
     </section>
     </footer>

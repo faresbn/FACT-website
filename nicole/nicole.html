@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nicole Daou Bou-Nassif — Legal Architecture &amp; Operations</title>
+    <meta name="description" content="Portfolio of Nicole Daou Bou-Nassif — corporate legal architecture, M&A support, and operations management from Doha, Qatar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════
+           NICOLE DAOU BOU-NASSIF — PORTFOLIO 2026
+           Design system: FACT Special Projects
+           Fonts: Noto Sans / Noto Sans Display / Noto Serif / Noto Sans Mono
+           Palette: Warm bone + Y/G/P triad
+           Accent: Green (Legal Architecture)
+           ═══════════════════════════════════════ */
+
+        :root {
+            --bone: #FAF7F1;
+            --bone-deep: #F3EEE6;
+            --cream: #FEFCF8;
+            --yellow: #F4C44E;
+            --green: #75B876;
+            --purple: #D3C0D9;
+            --ink: #111111;
+            --ink-80: #333;
+            --ink-60: #555;
+            --ink-40: #888;
+            --ink-25: #ABABAB;
+            --ink-12: #D9D5CC;
+            --ink-06: #ECE8E0;
+            --fi: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background: var(--bone);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: -1;
+            opacity: 0.18;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        h1, h2, h3, .display { font-family: 'Noto Sans Display', 'Noto Sans', sans-serif; }
+        .label { font-family: 'Noto Sans', sans-serif; }
+        .label-legal { font-family: 'Noto Serif', serif; }
+        .label-tech { font-family: 'Noto Sans Mono', monospace; }
+
+        a { color: inherit; }
+
+        /* ── FIXED CORNERS ── */
+        .fc {
+            position: fixed; z-index: 100;
+            width: 14px; height: 14px;
+            border: 1.5px solid var(--ink);
+            pointer-events: none;
+            opacity: 0.18;
+            transition: opacity 0.6s;
+        }
+        body:hover .fc { opacity: 0.4; }
+        .fc-tl { top: var(--fi); left: var(--fi); border-right: none; border-bottom: none; }
+        .fc-tr { top: var(--fi); right: var(--fi); border-left: none; border-bottom: none; }
+        .fc-bl { bottom: var(--fi); left: var(--fi); border-right: none; border-top: none; }
+        .fc-br { bottom: var(--fi); right: var(--fi); border-left: none; border-top: none; }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 52px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 clamp(1.5rem, 4vw, 3rem);
+            z-index: 90;
+            background: rgba(250, 247, 241, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .topbar-back {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.68rem; font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-40);
+            text-decoration: none;
+            transition: color 0.3s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .topbar-back:hover { color: var(--ink); }
+        .topbar-back .arrow { font-size: 0.8rem; }
+
+        .nav-dots { display: flex; gap: 4px; align-items: center; }
+        .nav-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--ink-25);
+            border: none; cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0; margin: 0;
+            position: relative;
+        }
+        .nav-dot::before {
+            content: '';
+            position: absolute;
+            inset: -12px;
+        }
+        .nav-dot:hover, .nav-dot:focus-visible { transform: scale(1.6); }
+        .nav-dot:focus-visible { outline: 2px solid var(--ink-40); outline-offset: 4px; }
+        .nav-dot.active { transform: scale(1.6); }
+        .nav-dot[data-s="hero"].active { background: var(--ink); }
+        .nav-dot[data-s="current"].active { background: var(--green); }
+        .nav-dot[data-s="expertise"].active { background: var(--yellow); }
+        .nav-dot[data-s="background"].active { background: var(--green); }
+        .nav-dot[data-s="contact"].active { background: var(--ink); }
+
+        /* ── SECTIONS ── */
+        section {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: clamp(6rem, 12vh, 10rem) clamp(1.5rem, 6vw, 7rem);
+            position: relative;
+        }
+        .si { width: 100%; max-width: 1080px; }
+
+        /* ── COLOR DIVIDER ── */
+        .divider-strip {
+            display: flex; height: 4px; width: 100%;
+        }
+        .divider-strip span { flex: 1; }
+
+        /* ═══════════════════════════════════════
+           HERO
+           ═══════════════════════════════════════ */
+        .hero { min-height: 100vh; padding-bottom: 0; }
+
+        .hero .si {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 5vw, 6rem);
+            align-items: center;
+        }
+
+        .hero-content { position: relative; }
+
+        .hero h1 {
+            font-weight: 900;
+            font-size: clamp(2.8rem, 6.5vw, 5.5rem);
+            line-height: 0.92;
+            letter-spacing: -0.04em;
+            margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
+            opacity: 0;
+            animation: fu 0.6s 0.2s ease-out forwards;
+        }
+
+        .hero-rule {
+            width: 48px; height: 3px;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fu 0.4s 0.5s ease-out forwards;
+            display: flex; gap: 0;
+        }
+        .hero-rule span { flex: 1; height: 100%; }
+
+        .hero-tagline {
+            font-family: 'Noto Serif', serif;
+            font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+            font-weight: 400;
+            color: var(--ink-80);
+            margin-bottom: 1rem;
+            letter-spacing: 0.01em;
+            opacity: 0;
+            animation: fu 0.4s 0.65s ease-out forwards;
+        }
+
+        .hero-text {
+            font-size: 0.88rem;
+            color: var(--ink-60);
+            line-height: 1.75;
+            max-width: 440px;
+            opacity: 0;
+            animation: fu 0.4s 0.8s ease-out forwards;
+        }
+
+        .hero-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            animation: fu 0.6s 1s ease-out forwards;
+        }
+        .hero-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+        }
+        .hero-bar {
+            height: 6px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-bar:nth-child(1) { background: var(--yellow); width: 0; animation: barGrow1 0.7s 1.2s ease-out forwards; }
+        .hero-bar:nth-child(2) { background: var(--green); width: 0; animation: barGrow2 0.7s 1.35s ease-out forwards; }
+        .hero-bar:nth-child(3) { background: var(--purple); width: 0; animation: barGrow3 0.7s 1.5s ease-out forwards; }
+
+        @keyframes barGrow1 { to { width: clamp(120px, 22vw, 280px); } }
+        @keyframes barGrow2 { to { width: clamp(80px, 16vw, 200px); } }
+        @keyframes barGrow3 { to { width: clamp(160px, 28vw, 340px); } }
+
+        .hero-location {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-top: 2.5rem;
+        }
+
+        @keyframes fu {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════
+           CURRENT
+           ═══════════════════════════════════════ */
+        .current { background: var(--cream); min-height: auto; padding-top: clamp(5rem, 10vh, 8rem); padding-bottom: clamp(5rem, 10vh, 8rem); }
+
+        .current-label {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.62rem; font-weight: 400;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 1.25rem;
+        }
+
+        .current-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: clamp(1rem, 2vw, 2rem);
+        }
+        .current-card {
+            padding: clamp(1.5rem, 2.5vw, 2.25rem);
+            background: var(--bone);
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .current-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.05);
+        }
+        .current-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+        }
+        .current-card:nth-child(1)::before { background: var(--green); }
+        .current-card:nth-child(2)::before { background: var(--yellow); }
+
+        .current-card .org {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.58rem; font-weight: 400;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 0.75rem;
+        }
+        .current-card h3 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: clamp(1rem, 1.4vw, 1.15rem);
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+        }
+        .current-card .dates {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.65rem;
+            font-weight: 300;
+            color: var(--ink-25);
+            letter-spacing: 0.06em;
+            margin-bottom: 0.8rem;
+        }
+        .current-card p {
+            font-size: 0.82rem;
+            color: var(--ink-60);
+            line-height: 1.7;
+        }
+
+        /* ═══════════════════════════════════════
+           EXPERTISE
+           ═══════════════════════════════════════ */
+        .expertise {
+            background: var(--ink);
+            color: var(--cream);
+            min-height: auto;
+            padding-top: clamp(5rem, 10vh, 8rem);
+            padding-bottom: clamp(5rem, 10vh, 8rem);
+        }
+
+        .exp-label {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.62rem; font-weight: 400;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-40);
+            margin-bottom: 1.25rem;
+        }
+        .exp-heading {
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: clamp(3rem, 6vh, 4.5rem);
+            line-height: 1.15;
+        }
+
+        .exp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+        }
+        .exp-card {
+            padding: clamp(1.5rem, 2.5vw, 2.25rem);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            position: relative;
+            transition: background 0.2s;
+        }
+        .exp-card:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
+        .exp-card:hover { background: rgba(255,255,255,0.02); }
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 3px; height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .exp-card:hover::before { opacity: 1; }
+        .exp-card:nth-child(1)::before { background: var(--green); }
+        .exp-card:nth-child(2)::before { background: var(--yellow); }
+        .exp-card:nth-child(3)::before { background: var(--green); }
+        .exp-card:nth-child(4)::before { background: var(--purple); }
+
+        .exp-num {
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: clamp(2rem, 3.2vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
+        }
+        .exp-card:nth-child(1) .exp-num { color: var(--green); }
+        .exp-card:nth-child(2) .exp-num { color: var(--yellow); }
+        .exp-card:nth-child(3) .exp-num { color: var(--green); }
+        .exp-card:nth-child(4) .exp-num { color: var(--purple); }
+
+        .exp-card h3 {
+            font-family: 'Noto Serif', serif;
+            font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .exp-card .desc {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .exp-list {
+            list-style: none;
+        }
+        .exp-list li {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: rgba(255,255,255,0.55);
+            padding-left: 1rem;
+            margin-bottom: 0.3rem;
+            position: relative;
+        }
+        .exp-list li::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0.55em;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+        }
+        .exp-card:nth-child(1) .exp-list li::before { background: var(--green); }
+        .exp-card:nth-child(2) .exp-list li::before { background: var(--yellow); }
+        .exp-card:nth-child(3) .exp-list li::before { background: var(--green); }
+        .exp-card:nth-child(4) .exp-list li::before { background: var(--purple); }
+
+        /* ═══════════════════════════════════════
+           BACKGROUND
+           ═══════════════════════════════════════ */
+        .background {
+            background: var(--cream);
+            min-height: auto;
+            padding-top: clamp(5rem, 10vh, 8rem);
+            padding-bottom: clamp(5rem, 10vh, 8rem);
+        }
+        .background .si { max-width: 960px; }
+
+        .bg-label {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.62rem; font-weight: 400;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 1.25rem;
+        }
+
+        .bg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 5vw, 4rem);
+        }
+
+        /* Timeline */
+        .timeline { position: relative; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 1px; height: 100%;
+            background: var(--ink-06);
+        }
+        .tl-item {
+            padding-left: 1.5rem;
+            padding-bottom: 1.5rem;
+            position: relative;
+        }
+        .tl-item:last-child { padding-bottom: 0; }
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -3px; top: 6px;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--ink-12);
+            transition: background 0.3s;
+        }
+        .tl-item:first-child::before { background: var(--green); }
+        .tl-item .tl-year {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.6rem; font-weight: 400;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 0.15rem;
+        }
+        .tl-item .tl-role {
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.35;
+            margin-bottom: 0.1rem;
+        }
+        .tl-item .tl-org {
+            font-size: 0.78rem;
+            color: var(--ink-60);
+        }
+
+        /* Info blocks */
+        .bg-block { margin-bottom: 2rem; }
+        .bg-block:last-child { margin-bottom: 0; }
+        .bg-block-label {
+            font-family: 'Noto Serif', serif;
+            font-size: 0.58rem; font-weight: 400;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--ink-06);
+        }
+        .bg-block p, .bg-block li {
+            font-size: 0.82rem;
+            color: var(--ink-60);
+            line-height: 1.7;
+        }
+        .bg-block ul {
+            list-style: none;
+        }
+        .bg-block li {
+            padding-left: 1rem;
+            position: relative;
+            margin-bottom: 0.25rem;
+        }
+        .bg-block li::before {
+            content: '\2192';
+            position: absolute;
+            left: 0;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--ink-12);
+        }
+
+        /* ═══════════════════════════════════════
+           CONTACT
+           ═══════════════════════════════════════ */
+        .contact-section {
+            background: var(--ink);
+            color: var(--cream);
+            text-align: center;
+            min-height: 50vh;
+        }
+        .contact-section .si {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .contact-ring {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            border: 2px solid var(--ink-40);
+            transition: border-color 0.3s;
+        }
+        .contact-ring:hover { border-color: var(--cream); }
+        .contact-ring .dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--cream);
+        }
+
+        .contact-section h2 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+        }
+        .contact-section .email {
+            font-family: 'Noto Serif', serif;
+            font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+            font-weight: 400;
+            color: var(--ink-40);
+            text-decoration: none;
+            transition: color 0.3s;
+            letter-spacing: 0.03em;
+        }
+        .contact-section .email:hover { color: var(--cream); }
+
+        .contact-location {
+            margin-top: 2.5rem;
+            font-family: 'Noto Serif', serif;
+            font-size: 0.58rem;
+            font-weight: 300;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.14);
+        }
+
+        .contact-fact {
+            margin-top: 1.25rem;
+        }
+        .contact-fact a {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.2);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .contact-fact a:hover { color: var(--cream); }
+
+        /* ═══ REVEAL ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .rd1 { transition-delay: 0.12s; }
+        .rd2 { transition-delay: 0.24s; }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 920px) {
+            .hero .si {
+                grid-template-columns: 1fr;
+            }
+            .hero-visual {
+                align-items: flex-start;
+            }
+            @keyframes barGrow1 { to { width: 60%; } }
+            @keyframes barGrow2 { to { width: 40%; } }
+            @keyframes barGrow3 { to { width: 80%; } }
+        }
+
+        @media (max-width: 820px) {
+            .current-grid { grid-template-columns: 1fr; }
+            .exp-grid { grid-template-columns: 1fr; }
+            .exp-card:nth-child(odd) { border-right: none; }
+            .bg-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 520px) {
+            :root { --fi: 10px; }
+            section { padding-left: 1.25rem; padding-right: 1.25rem; }
+            .topbar { padding: 0 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="fc fc-tl"></div><div class="fc fc-tr"></div>
+    <div class="fc fc-bl"></div><div class="fc fc-br"></div>
+
+    <nav class="topbar">
+        <a href="../index.html" class="topbar-back label"><span class="arrow">&larr;</span> FACT</a>
+        <div class="nav-dots">
+            <button class="nav-dot active" data-s="hero" aria-label="Top"></button>
+            <button class="nav-dot" data-s="current" aria-label="Current"></button>
+            <button class="nav-dot" data-s="expertise" aria-label="Expertise"></button>
+            <button class="nav-dot" data-s="background" aria-label="Background"></button>
+            <button class="nav-dot" data-s="contact" aria-label="Contact"></button>
+        </div>
+    </nav>
+
+    <!-- ═══ HERO ═══ -->
+    <section class="hero" id="hero">
+        <div class="si">
+            <div class="hero-content">
+                <h1>Nicole Daou<br>Bou-Nassif</h1>
+                <div class="hero-rule">
+                    <span style="background:var(--yellow)"></span>
+                    <span style="background:var(--green)"></span>
+                    <span style="background:var(--purple)"></span>
+                </div>
+                <p class="hero-tagline">Legal architecture and operations. Three decades building the structures that hold complex organisations&nbsp;together.</p>
+                <p class="hero-text">From executive coordination at one of the Gulf&rsquo;s largest engineering firms to sixteen years managing legal operations, M&amp;A due diligence, and corporate governance at a multinational telecom group. A career defined by precision, institutional knowledge, and the ability to manage complexity at&nbsp;scale.</p>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-block">
+                    <div class="hero-bar"></div>
+                    <div class="hero-bar"></div>
+                    <div class="hero-bar"></div>
+                </div>
+                <div class="hero-location label">Doha &mdash; Qatar</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ CURRENT ═══ -->
+    <section class="current" id="current">
+        <div class="si">
+            <div class="current-label reveal label-legal">Current</div>
+            <div class="current-grid reveal rd1">
+                <div class="current-card">
+                    <div class="org label-legal">KLME LLP &mdash; Abu Dhabi (Remote)</div>
+                    <h3>Senior Paralegal</h3>
+                    <div class="dates label-legal">June 2023 &mdash; Present</div>
+                    <p>Corporate legal agreements, M&amp;A transaction support, due diligence coordination, and case management for an Abu Dhabi-based law&nbsp;firm.</p>
+                </div>
+                <div class="current-card">
+                    <div class="org label-legal">FACT Special Projects &mdash; Doha</div>
+                    <h3>Specialist &mdash; Legal Architecture</h3>
+                    <div class="dates label-legal">2024 &mdash; Present</div>
+                    <p>Corporate formation, contract architecture, and operational compliance through a multidisciplinary consultancy&nbsp;model.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ EXPERTISE ═══ -->
+    <section class="expertise" id="expertise">
+        <div class="si">
+            <div class="reveal">
+                <div class="exp-label label-legal">Focus Areas</div>
+                <h2 class="exp-heading">The framework behind<br>every transaction.</h2>
+            </div>
+            <div class="exp-grid reveal rd1">
+                <div class="exp-card">
+                    <div class="exp-num">01</div>
+                    <h3>Legal &amp; M&amp;A Support</h3>
+                    <p class="desc">Due diligence management, virtual data rooms, transaction coordination, and corporate legal agreements across jurisdictions.</p>
+                    <ul class="exp-list">
+                        <li>Due Diligence &amp; VDR Management</li>
+                        <li>M&amp;A Transaction Support</li>
+                        <li>Corporate Legal Agreements</li>
+                        <li>RFP &amp; Procurement Processes</li>
+                    </ul>
+                </div>
+                <div class="exp-card">
+                    <div class="exp-num">02</div>
+                    <h3>Corporate Governance</h3>
+                    <p class="desc">Board materials, corporate records, subsidiary management, and securities law compliance for multinational groups.</p>
+                    <ul class="exp-list">
+                        <li>Board of Directors Support</li>
+                        <li>Corporate Records Management</li>
+                        <li>Securities Law Compliance</li>
+                        <li>Subsidiary Governance</li>
+                    </ul>
+                </div>
+                <div class="exp-card">
+                    <div class="exp-num">03</div>
+                    <h3>Dispute Resolution</h3>
+                    <p class="desc">ICC arbitration and Delaware litigation support, case management, and coordination with external counsel.</p>
+                    <ul class="exp-list">
+                        <li>ICC Arbitration Support</li>
+                        <li>Litigation Coordination</li>
+                        <li>Case Management Systems</li>
+                        <li>Client Billing &amp; Reporting</li>
+                    </ul>
+                </div>
+                <div class="exp-card">
+                    <div class="exp-num">04</div>
+                    <h3>Operations &amp; Administration</h3>
+                    <p class="desc">Department budget management, legal department operations, document systems architecture, and cross-functional coordination.</p>
+                    <ul class="exp-list">
+                        <li>Department Budget Management</li>
+                        <li>Document Systems</li>
+                        <li>Translation &amp; Proofreading</li>
+                        <li>Cross-functional Coordination</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ BACKGROUND ═══ -->
+    <section class="background" id="background">
+        <div class="si">
+            <div class="bg-label reveal label-legal">Background</div>
+            <div class="bg-grid reveal rd1">
+                <div class="timeline">
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2024 &mdash; Present</div>
+                        <div class="tl-role">Specialist, Legal Architecture</div>
+                        <div class="tl-org">FACT Special Projects, Doha</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2023 &mdash; Present</div>
+                        <div class="tl-role">Senior Paralegal (Remote)</div>
+                        <div class="tl-org">KLME LLP, Abu Dhabi</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2007 &mdash; 2023</div>
+                        <div class="tl-role">Senior Specialist, Legal &amp; M&amp;A</div>
+                        <div class="tl-org">Ooredoo Group LLC, Doha</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2007</div>
+                        <div class="tl-role">Student Affairs Officer</div>
+                        <div class="tl-org">Academic Bridge Program, Qatar Foundation</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2006 &mdash; 2007</div>
+                        <div class="tl-role">Cast Coordinator, 15th Asian Games Ceremonies</div>
+                        <div class="tl-org">David Atkins Enterprises, Doha</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2003 &mdash; 2005</div>
+                        <div class="tl-role">Assistant Division Manager, Special Projects</div>
+                        <div class="tl-org">Saud Bin Khalid Co., Doha</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">2000 &mdash; 2003</div>
+                        <div class="tl-role">Sales &amp; Marketing Manager</div>
+                        <div class="tl-org">Continent Trading &amp; Industry, Beirut</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-year label-legal">1992 &mdash; 2000</div>
+                        <div class="tl-role">Executive Secretary</div>
+                        <div class="tl-org">FACT Engineering &amp; Contracting Co., Abu Dhabi</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-block">
+                        <div class="bg-block-label label-legal">Education</div>
+                        <ul>
+                            <li>Administrative Office Management (incl. Statistics &amp; Economics) &mdash; YWCA College, 1981&ndash;1983</li>
+                            <li>Baccalaur&eacute;at 2e Partie &mdash; Mont La Salle, 1980</li>
+                        </ul>
+                    </div>
+                    <div class="bg-block">
+                        <div class="bg-block-label label-legal">Languages</div>
+                        <ul>
+                            <li>English &mdash; Fluent</li>
+                            <li>French &mdash; Fluent</li>
+                            <li>Arabic &mdash; Fluent</li>
+                        </ul>
+                    </div>
+                    <div class="bg-block">
+                        <div class="bg-block-label label-legal">Skills</div>
+                        <ul>
+                            <li>Interpersonal &amp; Communication</li>
+                            <li>Management &amp; Organizational</li>
+                            <li>MS Office &amp; Databasing Software</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider-strip">
+        <span style="background:var(--yellow)"></span>
+        <span style="background:var(--green)"></span>
+        <span style="background:var(--purple)"></span>
+    </div>
+
+    <!-- ═══ CONTACT ═══ -->
+    <footer>
+    <section class="contact-section" id="contact">
+        <div class="si">
+            <div class="contact-ring reveal"><div class="dot"></div></div>
+            <h2 class="reveal">Get in Touch</h2>
+            <a href="mailto:info@fact.qa" class="email reveal label-legal">info@fact.qa</a>
+            <div class="contact-location reveal label-legal">Doha &mdash; Qatar</div>
+            <div class="contact-fact reveal">
+                <a href="../index.html">&larr; FACT Special Projects</a>
+            </div>
+        </div>
+    </section>
+    </footer>
+
+    <script>
+        const ss = document.querySelectorAll('section');
+        const ds = document.querySelectorAll('.nav-dot');
+
+        document.querySelector('.nav-dots').addEventListener('click', (e) => {
+            const dot = e.target.closest('.nav-dot');
+            if (!dot) return;
+            const el = document.getElementById(dot.dataset.s);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        const navObs = new IntersectionObserver((es) => {
+            es.forEach(e => {
+                if (e.isIntersecting) {
+                    const id = e.target.id;
+                    ds.forEach(d => d.classList.toggle('active', d.dataset.s === id));
+                }
+            });
+        }, { threshold: 0.3 });
+        ss.forEach(s => navObs.observe(s));
+
+        const revObs = new IntersectionObserver((es) => {
+            es.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    revObs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+    </script>
+</body>
+</html>
