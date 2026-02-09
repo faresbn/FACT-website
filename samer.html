@@ -10,10 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
-           SAMER BOU NASSIF — PORTFOLIO 2026
-           Design system: FACT Special Projects
-           Fonts: Noto Sans / Noto Sans Display / Noto Serif / Noto Sans Mono
-           Palette: Warm bone + Y/G/P triad
+           SAMER BOU NASSIF — DETAIL PANEL 2026
+           Design: Slide-out inner page
            Accent: Yellow (Commercial Strategy)
            ═══════════════════════════════════════ */
 
@@ -31,7 +29,7 @@
             --ink-25: #ABABAB;
             --ink-12: #D9D5CC;
             --ink-06: #ECE8E0;
-            --fi: 20px;
+            --accent: var(--yellow);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,11 +44,22 @@
             overflow-x: hidden;
         }
 
+        /* Fractal noise — kept but subtle */
         body::before {
             content: '';
             position: fixed; inset: 0; z-index: -1;
             opacity: 0.18;
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* Left-edge accent line — signals "detail panel" */
+        body::after {
+            content: '';
+            position: fixed; left: 0; top: 0;
+            width: 2px; height: 100%;
+            background: var(--accent);
+            opacity: 0.12; z-index: 0;
             pointer-events: none;
         }
 
@@ -61,22 +70,7 @@
 
         a { color: inherit; }
 
-        /* ── FIXED CORNERS ── */
-        .fc {
-            position: fixed; z-index: 100;
-            width: 14px; height: 14px;
-            border: 1.5px solid var(--ink);
-            pointer-events: none;
-            opacity: 0.18;
-            transition: opacity 0.6s;
-        }
-        body:hover .fc { opacity: 0.4; }
-        .fc-tl { top: var(--fi); left: var(--fi); border-right: none; border-bottom: none; }
-        .fc-tr { top: var(--fi); right: var(--fi); border-left: none; border-bottom: none; }
-        .fc-bl { bottom: var(--fi); left: var(--fi); border-right: none; border-top: none; }
-        .fc-br { bottom: var(--fi); right: var(--fi); border-left: none; border-top: none; }
-
-        /* ── TOP BAR ── */
+        /* ── TOP BAR (simplified — no nav dots) ── */
         .topbar {
             position: fixed; top: 0; left: 0; right: 0;
             height: 52px;
@@ -100,79 +94,60 @@
         }
         .topbar-back:hover { color: var(--ink); }
         .topbar-back .arrow { font-size: 0.8rem; }
-
-        .nav-dots { display: flex; gap: 4px; align-items: center; }
-        .nav-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--ink-25);
-            border: none; cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            padding: 0; margin: 0;
-            position: relative;
+        .topbar-name {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 0.62rem; font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-25);
+            opacity: 0;
+            transition: opacity 0.5s;
         }
-        .nav-dot::before {
-            content: '';
-            position: absolute;
-            inset: -12px;
-        }
-        .nav-dot:hover, .nav-dot:focus-visible { transform: scale(1.6); }
-        .nav-dot:focus-visible { outline: 2px solid var(--ink-40); outline-offset: 4px; }
-        .nav-dot.active { transform: scale(1.6); }
-        .nav-dot[data-s="hero"].active { background: var(--ink); }
-        .nav-dot[data-s="current"].active { background: var(--yellow); }
-        .nav-dot[data-s="expertise"].active { background: var(--green); }
-        .nav-dot[data-s="background"].active { background: var(--yellow); }
-        .nav-dot[data-s="contact"].active { background: var(--ink); }
+        .topbar-name.visible { opacity: 1; }
 
-        /* ── SECTIONS ── */
+        /* ── SECTIONS (document flow — no viewport locking) ── */
         section {
-            min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            padding: clamp(6rem, 12vh, 10rem) clamp(1.5rem, 6vw, 7rem);
+            padding: clamp(3rem, 6vh, 5rem) clamp(1.5rem, 6vw, 5rem);
             position: relative;
         }
-        .si { width: 100%; max-width: 1080px; }
+        .si { width: 100%; max-width: 720px; margin: 0 auto; }
 
-        /* ── COLOR DIVIDER ── */
+        /* ── DIVIDER STRIP (single accent dash) ── */
         .divider-strip {
-            display: flex; height: 4px; width: 100%;
+            max-width: 720px; margin: 0 auto;
+            height: 1px; background: var(--ink-06);
+            position: relative;
         }
-        .divider-strip span { flex: 1; }
+        .divider-strip::before {
+            content: ''; position: absolute; left: 0; top: 0;
+            width: 48px; height: 1px;
+            background: var(--accent);
+        }
 
         /* ═══════════════════════════════════════
-           HERO
+           IDENTITY STRIP (compact hero)
            ═══════════════════════════════════════ */
-        .hero { min-height: 100vh; padding-bottom: 0; }
-
-        .hero .si {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(2rem, 5vw, 6rem);
-            align-items: center;
+        .hero {
+            padding-top: calc(52px + clamp(3rem, 6vh, 5rem));
+            padding-bottom: clamp(2rem, 4vh, 3rem);
         }
-
-        .hero-content { position: relative; }
+        .identity-accent {
+            height: 3px;
+            width: 48px;
+            background: var(--accent);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fu 0.3s 0.1s ease-out forwards;
+        }
 
         .hero h1 {
             font-weight: 900;
-            font-size: clamp(2.8rem, 6.5vw, 5.5rem);
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
             line-height: 0.92;
             letter-spacing: -0.04em;
-            margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
+            margin-bottom: clamp(1.2rem, 2.5vh, 2rem);
             opacity: 0;
-            animation: fu 0.6s 0.2s ease-out forwards;
-        }
-
-        .hero-rule {
-            width: 48px; height: 3px;
-            margin-bottom: 1.5rem;
-            opacity: 0;
-            animation: fu 0.4s 0.5s ease-out forwards;
-            display: flex; gap: 0;
-        }
-        .hero-rule span {
-            flex: 1; height: 100%;
+            animation: fu 0.5s 0.15s ease-out forwards;
         }
 
         .hero-tagline {
@@ -183,63 +158,37 @@
             margin-bottom: 1rem;
             letter-spacing: 0.01em;
             opacity: 0;
-            animation: fu 0.4s 0.65s ease-out forwards;
+            animation: fu 0.4s 0.35s ease-out forwards;
         }
 
         .hero-text {
             font-size: 0.88rem;
             color: var(--ink-60);
             line-height: 1.75;
-            max-width: 440px;
+            max-width: 540px;
             opacity: 0;
-            animation: fu 0.4s 0.8s ease-out forwards;
+            animation: fu 0.4s 0.5s ease-out forwards;
         }
-
-        .hero-visual {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            justify-content: center;
-            opacity: 0;
-            animation: fu 0.6s 1s ease-out forwards;
-        }
-        .hero-block {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            align-items: flex-end;
-        }
-        .hero-bar {
-            height: 6px;
-            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .hero-bar:nth-child(1) { background: var(--yellow); width: 0; animation: barGrow1 0.7s 1.2s ease-out forwards; }
-        .hero-bar:nth-child(2) { background: var(--green); width: 0; animation: barGrow2 0.7s 1.35s ease-out forwards; }
-        .hero-bar:nth-child(3) { background: var(--purple); width: 0; animation: barGrow3 0.7s 1.5s ease-out forwards; }
-
-        @keyframes barGrow1 { to { width: clamp(120px, 22vw, 280px); } }
-        @keyframes barGrow2 { to { width: clamp(80px, 16vw, 200px); } }
-        @keyframes barGrow3 { to { width: clamp(160px, 28vw, 340px); } }
 
         .hero-location {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 0.6rem;
-            font-weight: 500;
+            font-size: 0.6rem; font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--ink-25);
-            margin-top: 2.5rem;
+            margin-top: 1.5rem;
+            opacity: 0;
+            animation: fu 0.3s 0.65s ease-out forwards;
         }
 
         @keyframes fu {
-            from { opacity: 0; transform: translateY(18px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* ═══════════════════════════════════════
            CURRENT
            ═══════════════════════════════════════ */
-        .current { background: var(--cream); min-height: auto; padding-top: clamp(5rem, 10vh, 8rem); padding-bottom: clamp(5rem, 10vh, 8rem); }
+        .current { background: var(--cream); }
 
         .current-label {
             font-family: 'Noto Sans', sans-serif;
@@ -251,22 +200,21 @@
         }
 
         .current-card {
-            max-width: 540px;
             padding: clamp(1.5rem, 2.5vw, 2.25rem);
             background: var(--bone);
             position: relative;
             transition: transform 0.3s, box-shadow 0.3s;
         }
         .current-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
         }
         .current-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 3px;
-            background: var(--yellow);
+            background: var(--accent);
         }
 
         .current-card .org {
@@ -303,9 +251,6 @@
         .expertise {
             background: var(--ink);
             color: var(--cream);
-            min-height: auto;
-            padding-top: clamp(5rem, 10vh, 8rem);
-            padding-bottom: clamp(5rem, 10vh, 8rem);
         }
 
         .exp-label {
@@ -317,10 +262,10 @@
             margin-bottom: 1.25rem;
         }
         .exp-heading {
-            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-size: clamp(1.4rem, 2.5vw, 1.9rem);
             font-weight: 700;
             letter-spacing: -0.02em;
-            margin-bottom: clamp(3rem, 6vh, 4.5rem);
+            margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
             line-height: 1.15;
         }
 
@@ -330,7 +275,7 @@
             gap: 0;
         }
         .exp-card {
-            padding: clamp(1.5rem, 2.5vw, 2.25rem);
+            padding: clamp(1.25rem, 2vw, 1.75rem);
             border-bottom: 1px solid rgba(255,255,255,0.04);
             position: relative;
             transition: background 0.2s;
@@ -353,10 +298,10 @@
 
         .exp-num {
             font-family: 'Noto Sans Display', sans-serif;
-            font-size: clamp(2rem, 3.2vw, 2.8rem);
+            font-size: clamp(1.4rem, 2.2vw, 1.8rem);
             font-weight: 900;
             line-height: 1;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             letter-spacing: -0.03em;
         }
         .exp-card:nth-child(1) .exp-num { color: var(--yellow); }
@@ -366,25 +311,23 @@
 
         .exp-card h3 {
             font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+            font-size: clamp(0.9rem, 1.2vw, 1rem);
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             line-height: 1.3;
         }
         .exp-card .desc {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: rgba(255,255,255,0.45);
             line-height: 1.6;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
-        .exp-list {
-            list-style: none;
-        }
+        .exp-list { list-style: none; }
         .exp-list li {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: rgba(255,255,255,0.55);
             padding-left: 1rem;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.25rem;
             position: relative;
         }
         .exp-list li::before {
@@ -402,13 +345,7 @@
         /* ═══════════════════════════════════════
            BACKGROUND
            ═══════════════════════════════════════ */
-        .background {
-            background: var(--cream);
-            min-height: auto;
-            padding-top: clamp(5rem, 10vh, 8rem);
-            padding-bottom: clamp(5rem, 10vh, 8rem);
-        }
-        .background .si { max-width: 960px; }
+        .background { background: var(--cream); }
 
         .bg-label {
             font-family: 'Noto Sans', sans-serif;
@@ -420,9 +357,9 @@
         }
 
         .bg-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(2rem, 5vw, 4rem);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(2rem, 4vh, 3rem);
         }
 
         /* Timeline */
@@ -449,7 +386,7 @@
             background: var(--ink-12);
             transition: background 0.3s;
         }
-        .tl-item:first-child::before { background: var(--yellow); }
+        .tl-item:first-child::before { background: var(--accent); }
         .tl-item .tl-year {
             font-family: 'Noto Sans', sans-serif;
             font-size: 0.6rem; font-weight: 600;
@@ -469,9 +406,13 @@
             color: var(--ink-60);
         }
 
-        /* Info blocks */
-        .bg-block { margin-bottom: 2rem; }
-        .bg-block:last-child { margin-bottom: 0; }
+        /* Info blocks — 2-col grid below timeline */
+        .bg-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(1rem, 2vw, 1.5rem);
+        }
+        .bg-block { margin-bottom: 0; }
         .bg-block-label {
             font-family: 'Noto Sans', sans-serif;
             font-size: 0.58rem; font-weight: 600;
@@ -487,9 +428,7 @@
             color: var(--ink-60);
             line-height: 1.7;
         }
-        .bg-block ul {
-            list-style: none;
-        }
+        .bg-block ul { list-style: none; }
         .bg-block li {
             padding-left: 1rem;
             position: relative;
@@ -505,66 +444,49 @@
         }
 
         /* ═══════════════════════════════════════
-           CONTACT
+           CONTACT (compact horizontal footer)
            ═══════════════════════════════════════ */
         .contact-section {
             background: var(--ink);
             color: var(--cream);
-            text-align: center;
-            min-height: 50vh;
+            padding: clamp(2.5rem, 5vh, 3.5rem) clamp(1.5rem, 6vw, 5rem);
         }
         .contact-section .si {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-
-        .contact-ring {
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 2.5rem;
-            position: relative;
-            border: 2px solid var(--ink-40);
-            transition: border-color 0.3s;
-        }
-        .contact-ring:hover { border-color: var(--cream); }
-        .contact-ring .dot {
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: var(--cream);
-        }
-
-        .contact-section h2 {
-            font-size: clamp(1.8rem, 4vw, 3rem);
+        .contact-left h2 {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
             font-weight: 700;
-            letter-spacing: -0.03em;
-            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
         }
-        .contact-section .email {
+        .contact-left .email {
             font-family: 'Noto Sans', sans-serif;
-            font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+            font-size: clamp(0.85rem, 1.2vw, 1rem);
             color: var(--ink-40);
             text-decoration: none;
             transition: color 0.3s;
-            letter-spacing: 0.03em;
         }
-        .contact-section .email:hover { color: var(--cream); }
+        .contact-left .email:hover { color: var(--cream); }
 
+        .contact-right {
+            text-align: right;
+        }
         .contact-location {
-            margin-top: 2.5rem;
             font-family: 'Noto Sans', sans-serif;
             font-size: 0.58rem;
             font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: rgba(255,255,255,0.14);
+            margin-bottom: 0.5rem;
         }
-
-        .contact-fact {
-            margin-top: 1.25rem;
-        }
-        .contact-fact a {
+        .contact-fact-link {
             font-family: 'Noto Sans', sans-serif;
             font-size: 0.62rem;
             font-weight: 500;
@@ -574,88 +496,53 @@
             text-decoration: none;
             transition: color 0.3s;
         }
-        .contact-fact a:hover { color: var(--cream); }
+        .contact-fact-link:hover { color: var(--cream); }
 
-        /* ═══ REVEAL ═══ */
+        /* ═══ REVEAL (faster for inner pages) ═══ */
         .reveal {
             opacity: 0;
-            transform: translateY(18px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
         }
         .reveal.visible { opacity: 1; transform: translateY(0); }
-        .rd1 { transition-delay: 0.12s; }
-        .rd2 { transition-delay: 0.24s; }
+        .rd1 { transition-delay: 0.06s; }
+        .rd2 { transition-delay: 0.12s; }
 
         /* ═══ RESPONSIVE ═══ */
-        @media (max-width: 920px) {
-            .hero .si {
-                grid-template-columns: 1fr;
-            }
-            .hero-visual {
-                align-items: flex-start;
-            }
-            @keyframes barGrow1 { to { width: 60%; } }
-            @keyframes barGrow2 { to { width: 40%; } }
-            @keyframes barGrow3 { to { width: 80%; } }
-        }
-
         @media (max-width: 820px) {
             .exp-grid { grid-template-columns: 1fr; }
             .exp-card:nth-child(odd) { border-right: none; }
-            .bg-grid { grid-template-columns: 1fr; }
+            .bg-info-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 520px) {
-            :root { --fi: 10px; }
             section { padding-left: 1.25rem; padding-right: 1.25rem; }
             .topbar { padding: 0 1.25rem; }
+            .divider-strip { margin-left: 1.25rem; margin-right: 1.25rem; }
+            .contact-section .si { flex-direction: column; align-items: flex-start; }
+            .contact-right { text-align: left; }
         }
     </style>
 </head>
 <body>
-    <div class="fc fc-tl"></div><div class="fc fc-tr"></div>
-    <div class="fc fc-bl"></div><div class="fc fc-br"></div>
 
     <nav class="topbar">
-        <a href="../index.html" class="topbar-back label"><span class="arrow">&larr;</span> FACT</a>
-        <div class="nav-dots">
-            <button class="nav-dot active" data-s="hero" aria-label="Top"></button>
-            <button class="nav-dot" data-s="current" aria-label="Current"></button>
-            <button class="nav-dot" data-s="expertise" aria-label="Expertise"></button>
-            <button class="nav-dot" data-s="background" aria-label="Background"></button>
-            <button class="nav-dot" data-s="contact" aria-label="Contact"></button>
-        </div>
+        <a href="index.html" class="topbar-back label"><span class="arrow">&larr;</span> FACT</a>
+        <span class="topbar-name label">Samer Bou Nassif</span>
     </nav>
 
-    <!-- ═══ HERO ═══ -->
+    <!-- ═══ IDENTITY STRIP ═══ -->
     <section class="hero" id="hero">
         <div class="si">
-            <div class="hero-content">
-                <h1>Samer<br>Bou Nassif</h1>
-                <div class="hero-rule">
-                    <span style="background:var(--yellow)"></span>
-                    <span style="background:var(--green)"></span>
-                    <span style="background:var(--purple)"></span>
-                </div>
-                <p class="hero-tagline">Finance transformation strategist. Seven years advising sovereign entities and regional institutions across the&nbsp;GCC.</p>
-                <p class="hero-text">Built a practice at the intersection of financial modelling, regulatory readiness, and operational design &mdash; from M&amp;A carve-outs and IFRS advisory for sovereign wealth funds to ESG assurance and green bond reporting for national institutions. Now applying that rigour through FACT Special&nbsp;Projects.</p>
-            </div>
-            <div class="hero-visual">
-                <div class="hero-block">
-                    <div class="hero-bar"></div>
-                    <div class="hero-bar"></div>
-                    <div class="hero-bar"></div>
-                </div>
-                <div class="hero-location label">Doha &mdash; Qatar</div>
-            </div>
+            <div class="identity-accent"></div>
+            <h1>Samer<br>Bou Nassif</h1>
+            <p class="hero-tagline">Finance transformation strategist. Seven years advising sovereign entities and regional institutions across the&nbsp;GCC.</p>
+            <p class="hero-text">Built a practice at the intersection of financial modelling, regulatory readiness, and operational design &mdash; from M&amp;A carve-outs and IFRS advisory for sovereign wealth funds to ESG assurance and green bond reporting for national institutions. Now applying that rigour through FACT Special&nbsp;Projects.</p>
+            <div class="hero-location label">Doha &mdash; Qatar</div>
         </div>
     </section>
 
-    <div class="divider-strip">
-        <span style="background:var(--yellow)"></span>
-        <span style="background:var(--green)"></span>
-        <span style="background:var(--purple)"></span>
-    </div>
+    <div class="divider-strip"></div>
 
     <!-- ═══ CURRENT ═══ -->
     <section class="current" id="current">
@@ -672,11 +559,7 @@
         </div>
     </section>
 
-    <div class="divider-strip">
-        <span style="background:var(--yellow)"></span>
-        <span style="background:var(--green)"></span>
-        <span style="background:var(--purple)"></span>
-    </div>
+    <div class="divider-strip"></div>
 
     <!-- ═══ EXPERTISE ═══ -->
     <section class="expertise" id="expertise">
@@ -734,11 +617,7 @@
         </div>
     </section>
 
-    <div class="divider-strip">
-        <span style="background:var(--yellow)"></span>
-        <span style="background:var(--green)"></span>
-        <span style="background:var(--purple)"></span>
-    </div>
+    <div class="divider-strip"></div>
 
     <!-- ═══ BACKGROUND ═══ -->
     <section class="background" id="background">
@@ -757,7 +636,7 @@
                         <div class="tl-org">Deloitte &amp; Touche (M.E.), Doha</div>
                     </div>
                 </div>
-                <div>
+                <div class="bg-info-grid">
                     <div class="bg-block">
                         <div class="bg-block-label label">Education</div>
                         <ul>
@@ -792,48 +671,35 @@
         </div>
     </section>
 
-    <div class="divider-strip">
-        <span style="background:var(--yellow)"></span>
-        <span style="background:var(--green)"></span>
-        <span style="background:var(--purple)"></span>
-    </div>
-
     <!-- ═══ CONTACT ═══ -->
     <footer>
     <section class="contact-section" id="contact">
         <div class="si">
-            <div class="contact-ring reveal"><div class="dot"></div></div>
-            <h2 class="reveal">Get in Touch</h2>
-            <a href="mailto:info@fact.qa" class="email reveal label">info@fact.qa</a>
-            <div class="contact-location reveal label">Doha &mdash; Qatar</div>
-            <div class="contact-fact reveal">
-                <a href="../index.html">&larr; FACT Special Projects</a>
+            <div class="contact-left">
+                <h2>Get in Touch</h2>
+                <a href="mailto:info@fact.qa" class="email label">info@fact.qa</a>
+            </div>
+            <div class="contact-right">
+                <div class="contact-location label">Doha &mdash; Qatar</div>
+                <a href="index.html" class="contact-fact-link">&larr; FACT Special Projects</a>
             </div>
         </div>
     </section>
     </footer>
 
     <script>
-        const ss = document.querySelectorAll('section');
-        const ds = document.querySelectorAll('.nav-dot');
+        /* Topbar name fade-in when hero scrolls away */
+        const heroEl = document.getElementById('hero');
+        const nameEl = document.querySelector('.topbar-name');
 
-        document.querySelector('.nav-dots').addEventListener('click', (e) => {
-            const dot = e.target.closest('.nav-dot');
-            if (!dot) return;
-            const el = document.getElementById(dot.dataset.s);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-        });
-
-        const navObs = new IntersectionObserver((es) => {
-            es.forEach(e => {
-                if (e.isIntersecting) {
-                    const id = e.target.id;
-                    ds.forEach(d => d.classList.toggle('active', d.dataset.s === id));
-                }
+        const nameObs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                nameEl.classList.toggle('visible', !e.isIntersecting);
             });
-        }, { threshold: 0.3 });
-        ss.forEach(s => navObs.observe(s));
+        }, { threshold: 0.1 });
+        nameObs.observe(heroEl);
 
+        /* Reveal observer */
         const revObs = new IntersectionObserver((es) => {
             es.forEach(e => {
                 if (e.isIntersecting) {

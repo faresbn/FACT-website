@@ -54,7 +54,11 @@ jobs:
           cp *.png _site/ 2>/dev/null || true
           cp *.ico _site/ 2>/dev/null || true
           cp *.svg _site/ 2>/dev/null || true
-          # Copy individual portfolio pages
+          # Copy individual profile pages (HTML at root)
+          cp fares.html _site/ 2>/dev/null || true
+          cp samer.html _site/ 2>/dev/null || true
+          cp nicole.html _site/ 2>/dev/null || true
+          # Copy asset directories (CVs, portfolio PDFs)
           cp -r fares/ _site/fares/
           cp -r samer/ _site/samer/
           cp -r nicole/ _site/nicole/
