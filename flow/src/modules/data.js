@@ -53,6 +53,51 @@ function setLastSync(STATE) {
     try { localStorage.setItem(getLastSyncKey(STATE), new Date().toISOString()); } catch (_e) {}
 }
 
+// Sync progress bar helpers
+const SYNC_STAGES = [
+    { pct: 15, label: 'Connecting...' },
+    { pct: 35, label: 'Fetching transactions...' },
+    { pct: 55, label: 'Computing patterns...' },
+    { pct: 75, label: 'Analyzing trends...' },
+    { pct: 90, label: 'Finalizing...' },
+];
+
+function showSyncProgress(isFirstLoad) {
+    const el = document.getElementById('syncProgress');
+    const bar = document.getElementById('syncProgressBar');
+    const label = document.getElementById('syncProgressLabel');
+    if (!el || !bar || !label) return null;
+
+    el.classList.remove('hidden');
+    bar.style.width = '0%';
+    label.textContent = SYNC_STAGES[0].label;
+
+    let stageIndex = 0;
+    const interval = setInterval(() => {
+        stageIndex++;
+        if (stageIndex < SYNC_STAGES.length) {
+            bar.style.width = SYNC_STAGES[stageIndex].pct + '%';
+            label.textContent = SYNC_STAGES[stageIndex].label;
+        }
+    }, isFirstLoad ? 1500 : 600);
+
+    // Start first stage
+    requestAnimationFrame(() => { bar.style.width = SYNC_STAGES[0].pct + '%'; });
+
+    return interval;
+}
+
+function hideSyncProgress(interval) {
+    if (interval) clearInterval(interval);
+    const el = document.getElementById('syncProgress');
+    const bar = document.getElementById('syncProgressBar');
+    if (bar) bar.style.width = '100%';
+    setTimeout(() => {
+        if (el) el.classList.add('hidden');
+        if (bar) bar.style.width = '0%';
+    }, 600);
+}
+
 // DATA FETCHING - Secure via Supabase Edge Function
 export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
     const { showToast, filterAndRender, checkAchievements, renderPatternWarnings, setSalaryPeriod, setPeriod } = callbacks;
@@ -63,6 +108,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         document.getElementById('loadingState').classList.remove('hidden');
         document.getElementById('mainContent').classList.add('hidden');
     }
+
+    // Show progress bar
+    const progressInterval = showSyncProgress(isFirstLoad);
 
     try {
         // Use passed session if available (avoids getSession() race condition),
@@ -77,7 +125,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         // Use incremental sync on subsequent loads
         const lastSync = isFirstLoad ? null : getLastSync(STATE);
         const requestBody = {
-            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive', 'Patterns', 'SalaryInfo', 'Forecast', 'ChartData'],
+            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive', 'Patterns', 'SalaryInfo', 'Forecast', 'ChartData', 'DailyDigest'],
         };
         if (lastSync) requestBody.last_sync = lastSync;
 
@@ -159,6 +207,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         if (data.ChartData) {
             STATE.chartData = data.ChartData;
         }
+        if (data.DailyDigest) {
+            STATE.dailyDigest = data.DailyDigest;
+        }
 
         // Save sync timestamp for next incremental sync
         setLastSync(STATE);
@@ -199,6 +250,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
             setTimeout(() => renderPatternWarnings(), 3000);
         }
 
+        // Complete the progress bar
+        hideSyncProgress(progressInterval);
+
     } catch (err) {
         const errMsg = String(err.message || err);
 
@@ -228,6 +282,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
             document.getElementById('loadingState').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
         }
+
+        // Hide the progress bar on error
+        hideSyncProgress(progressInterval);
     }
 }
 

@@ -251,6 +251,52 @@ export function renderForecast(STATE, { formatNum }) {
     `;
 }
 
+/**
+ * Render SVG radial gauges for each active budget goal.
+ * Color: green (<80%), yellow (80-100%), red (>100%). Center: remaining amount.
+ * innerHTML safety: all data from forecastGoals() which computes from STATE (our own DB data).
+ * Category names come from goals table (user's own goals). No external/untrusted input.
+ */
+export function renderGoalGauges(STATE, { formatNum }) {
+    const container = document.getElementById('goalGauges');
+    if (!container) return;
+
+    const goals = forecastGoals(STATE);
+    if (!goals.details.length) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    // SVG gauge: 60px circle, stroke-dasharray for arc progress
+    container.innerHTML = `
+        <h3 class="text-xs font-semibold text-fact-ink dark:text-fact-dark-ink uppercase tracking-wider mb-3">Goal Progress</h3>
+        <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            ${goals.details.map(g => {
+                const pct = Math.min(g.percentUsed, 120);
+                const remaining = Math.max(0, g.limit - g.currentSpend);
+                const color = pct > 100 ? '#EF4444' : pct > 80 ? '#F59E0B' : '#10B981';
+                const radius = 26;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+                return `
+                    <div class="text-center">
+                        <svg viewBox="0 0 64 64" class="w-14 h-14 mx-auto">
+                            <circle cx="32" cy="32" r="${radius}" fill="none" stroke="currentColor" stroke-width="4" class="text-gray-200 dark:text-gray-700"/>
+                            <circle cx="32" cy="32" r="${radius}" fill="none" stroke="${color}" stroke-width="4"
+                                stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+                                stroke-linecap="round" transform="rotate(-90 32 32)" class="transition-all duration-700"/>
+                            <text x="32" y="30" text-anchor="middle" class="fill-current text-[8px] font-bold">${Math.round(pct)}%</text>
+                            <text x="32" y="40" text-anchor="middle" class="fill-current text-[6px] text-fact-muted">${formatNum(remaining)}</text>
+                        </svg>
+                        <div class="text-[9px] font-medium mt-1 truncate">${g.category}</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────
 
 function getMonthsOfData(STATE) {

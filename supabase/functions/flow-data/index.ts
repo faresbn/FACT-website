@@ -371,6 +371,17 @@ Deno.serve(async (request) => {
     );
   }
 
+  // Daily digest (personalized daily briefing)
+  if (sheets.includes('DailyDigest')) {
+    serverComputations.push(
+      adminClient.rpc('generate_daily_digest', { p_user_id: user.id })
+        .then(({ data: digest, error: digErr }) => {
+          if (digErr) { console.error('Daily digest error:', digErr); data.DailyDigest = null; }
+          else { data.DailyDigest = digest || null; }
+        })
+    );
+  }
+
   // Wait for all server computations to complete
   await Promise.all(serverComputations);
 

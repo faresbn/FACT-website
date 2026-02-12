@@ -65,6 +65,65 @@ const TOOLS = [
       required: ['type', 'key', 'value'],
     },
   },
+  {
+    name: 'compare_periods',
+    description: 'Compare spending between two time periods. Use when the user asks to compare months, weeks, or date ranges (e.g., "compare January vs February", "how does this month compare to last month").',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        current_start: { type: 'string', description: 'Start of current period (ISO 8601)' },
+        current_end: { type: 'string', description: 'End of current period (ISO 8601)' },
+        previous_start: { type: 'string', description: 'Start of comparison period (ISO 8601, defaults to same-length period before current)' },
+        previous_end: { type: 'string', description: 'End of comparison period (ISO 8601)' },
+        category: { type: 'string', description: 'Optional: filter to a specific category' },
+      },
+      required: ['current_start', 'current_end'],
+    },
+  },
+  {
+    name: 'find_anomalies',
+    description: 'Find unusual or outlier transactions. Use when the user asks about unusual spending, surprises, large purchases, or anything out of the ordinary.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        days_back: { type: 'number', description: 'How many days to look back (default 30, max 90)' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'suggest_savings',
+    description: 'Analyze spending and suggest specific areas to save money. Use when the user asks "how can I save", "where am I overspending", or wants budget optimization advice.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        target_savings: { type: 'number', description: 'Optional target savings amount in QAR per month' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'forecast_category',
+    description: 'Get a spending forecast for a specific category based on historical trends. Use when the user asks about future spending projections or "how much will I spend on X".',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        category: { type: 'string', description: 'The spending category to forecast (e.g., Dining, Groceries)' },
+      },
+      required: ['category'],
+    },
+  },
+  {
+    name: 'explain_pattern',
+    description: 'Explain a detected spending pattern with specific examples. Use when the user asks about their spending patterns, habits, or "why do I spend so much on weekends" etc.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        pattern_type: { type: 'string', enum: ['Night Out', 'Work Expense', 'Splurge', 'Subscription'], description: 'The pattern type to explain' },
+      },
+      required: ['pattern_type'],
+    },
+  },
 ];
 
 async function executeTool(supabase: any, userId: string, name: string, input: any): Promise<string> {
@@ -154,6 +213,234 @@ async function executeTool(supabase: any, userId: string, name: string, input: a
       promptCache.delete(userId);
       return `Remembered: ${input.key} -> ${input.value}`;
     }
+    case 'compare_periods': {
+      const curStart = input.current_start;
+      const curEnd = input.current_end;
+      const curMs = new Date(curEnd).getTime() - new Date(curStart).getTime();
+      const prevEnd = input.previous_end || new Date(new Date(curStart).getTime() - 1).toISOString();
+      const prevStart = input.previous_start || new Date(new Date(prevEnd).getTime() - curMs).toISOString();
+
+      const buildQuery = (start: string, end: string) => {
+        let q = supabase.from('raw_ledger')
+          .select('category, subcategory, amount, currency, counterparty, amount_qar')
+          .eq('user_id', userId).eq('direction', 'OUT')
+          .gte('txn_timestamp', start).lte('txn_timestamp', end);
+        if (input.category) q = q.or(`category.eq.${input.category},subcategory.eq.${input.category}`);
+        return q;
+      };
+      const [{ data: curRows }, { data: prevRows }] = await Promise.all([buildQuery(curStart, curEnd), buildQuery(prevStart, prevEnd)]);
+
+      const aggregate = (rows: any[]) => {
+        const byCat: Record<string, number> = {};
+        let total = 0;
+        for (const r of rows) {
+          const amt = Number(r.amount_qar || r.amount);
+          const cat = r.subcategory || r.category || 'Other';
+          byCat[cat] = (byCat[cat] || 0) + amt;
+          total += amt;
+        }
+        return { byCat, total, count: rows.length };
+      };
+      const cur = aggregate(curRows || []);
+      const prev = aggregate(prevRows || []);
+
+      const allCats = [...new Set([...Object.keys(cur.byCat), ...Object.keys(prev.byCat)])];
+      const catLines = allCats.sort((a, b) => (cur.byCat[b] || 0) - (cur.byCat[a] || 0)).map(cat => {
+        const c = cur.byCat[cat] || 0;
+        const p = prev.byCat[cat] || 0;
+        const pctChange = p > 0 ? ((c - p) / p * 100).toFixed(0) : (c > 0 ? '+∞' : '0');
+        const arrow = c > p ? '↑' : c < p ? '↓' : '→';
+        return `${cat}: QAR ${c.toFixed(0)} vs ${p.toFixed(0)} (${arrow}${pctChange}%)`;
+      });
+
+      const totalChange = prev.total > 0 ? ((cur.total - prev.total) / prev.total * 100).toFixed(1) : 'N/A';
+      return `Period comparison:\nCurrent: QAR ${cur.total.toFixed(0)} (${cur.count} txns)\nPrevious: QAR ${prev.total.toFixed(0)} (${prev.count} txns)\nChange: ${totalChange}%\n\nBy category:\n${catLines.join('\n')}`;
+    }
+    case 'find_anomalies': {
+      const daysBack = Math.min(input.days_back || 30, 90);
+      const since = new Date();
+      since.setDate(since.getDate() - daysBack);
+
+      const { data: rows } = await supabase.from('raw_ledger')
+        .select('txn_timestamp, amount, currency, counterparty, category, subcategory, amount_qar, pattern, size_tier')
+        .eq('user_id', userId).eq('direction', 'OUT')
+        .gte('txn_timestamp', since.toISOString())
+        .order('amount_qar', { ascending: false });
+
+      const txns = rows || [];
+      if (!txns.length) return 'No transactions found in this period.';
+
+      const amounts = txns.map((r: any) => Number(r.amount_qar || r.amount));
+      const mean = amounts.reduce((s, v) => s + v, 0) / amounts.length;
+      const variance = amounts.reduce((s, v) => s + (v - mean) ** 2, 0) / amounts.length;
+      const stdDev = Math.sqrt(variance);
+      const threshold = mean + 2 * stdDev;
+
+      // Find statistical outliers
+      const outliers = txns.filter((r: any) => Number(r.amount_qar || r.amount) > threshold);
+
+      // Find merchant anomalies: merchants with only 1 transaction (new merchants)
+      const merchantCounts: Record<string, number> = {};
+      for (const r of txns) { merchantCounts[r.counterparty] = (merchantCounts[r.counterparty] || 0) + 1; }
+      const newMerchants = txns.filter((r: any) => merchantCounts[r.counterparty] === 1 && Number(r.amount_qar || r.amount) > mean);
+
+      const formatTxn = (r: any) => {
+        const d = new Date(r.txn_timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `${d}: QAR ${Number(r.amount_qar || r.amount).toFixed(0)} at ${r.counterparty} [${r.subcategory || r.category}]${r.pattern ? ` (${r.pattern})` : ''}`;
+      };
+
+      const lines: string[] = [];
+      lines.push(`Stats: mean QAR ${mean.toFixed(0)}, std dev QAR ${stdDev.toFixed(0)}, threshold QAR ${threshold.toFixed(0)}`);
+      if (outliers.length) {
+        lines.push(`\n**${outliers.length} large outlier${outliers.length > 1 ? 's' : ''}:**`);
+        lines.push(...outliers.slice(0, 10).map(formatTxn));
+      }
+      if (newMerchants.length) {
+        lines.push(`\n**${newMerchants.length} new merchant${newMerchants.length > 1 ? 's' : ''} (above average spend):**`);
+        lines.push(...newMerchants.slice(0, 10).map(formatTxn));
+      }
+      if (!outliers.length && !newMerchants.length) {
+        lines.push('\nNo anomalies detected — spending looks consistent.');
+      }
+      return lines.join('\n');
+    }
+    case 'suggest_savings': {
+      const monthsBack = 3;
+      const since = new Date();
+      since.setMonth(since.getMonth() - monthsBack);
+
+      const { data: monthly } = await supabase.from('monthly_category_spend')
+        .select('month, category, subcategory, total_amount, txn_count')
+        .eq('user_id', userId).eq('direction', 'OUT')
+        .gte('month', since.toISOString());
+
+      const discretionary = ['Dining', 'Coffee', 'Delivery', 'Shopping', 'Entertainment', 'Bars & Nightlife', 'Travel', 'Hobbies'];
+      const catTotals: Record<string, { total: number; count: number; months: number }> = {};
+      const monthSet = new Set<string>();
+
+      for (const r of (monthly || [])) {
+        const cat = r.subcategory || r.category;
+        const m = new Date(r.month).toISOString().slice(0, 7);
+        monthSet.add(m);
+        if (!catTotals[cat]) catTotals[cat] = { total: 0, count: 0, months: 0 };
+        catTotals[cat].total += Number(r.total_amount);
+        catTotals[cat].count += Number(r.txn_count);
+      }
+      const numMonths = Math.max(monthSet.size, 1);
+
+      const ranked = Object.entries(catTotals)
+        .filter(([cat]) => discretionary.some(d => cat.toLowerCase().includes(d.toLowerCase())))
+        .map(([cat, d]) => ({
+          category: cat,
+          monthlyAvg: d.total / numMonths,
+          total: d.total,
+          count: d.count,
+          savingsPotential: d.total / numMonths * 0.3, // estimate 30% reduction possible
+        }))
+        .sort((a, b) => b.monthlyAvg - a.monthlyAvg);
+
+      if (!ranked.length) return 'No discretionary spending found to optimize.';
+
+      const totalDiscretionary = ranked.reduce((s, r) => s + r.monthlyAvg, 0);
+      const target = input.target_savings || totalDiscretionary * 0.2;
+      let cumSavings = 0;
+      const suggestions: string[] = [];
+
+      for (const r of ranked) {
+        const reduction = Math.min(r.savingsPotential, target - cumSavings);
+        if (reduction <= 0) break;
+        const pct = ((reduction / r.monthlyAvg) * 100).toFixed(0);
+        suggestions.push(`**${r.category}**: QAR ${r.monthlyAvg.toFixed(0)}/mo avg → save ~QAR ${reduction.toFixed(0)}/mo (${pct}% reduction, ${r.count} txns over ${numMonths} months)`);
+        cumSavings += reduction;
+      }
+
+      return `Savings analysis (${numMonths}-month avg):\nTotal discretionary: QAR ${totalDiscretionary.toFixed(0)}/mo\nTarget savings: QAR ${target.toFixed(0)}/mo\nAchievable: QAR ${cumSavings.toFixed(0)}/mo\n\nSuggestions:\n${suggestions.join('\n')}`;
+    }
+    case 'forecast_category': {
+      const admin = createAdminClient();
+      const { data: forecast, error: foreErr } = await admin.rpc('generate_forecast_data', { p_user_id: userId });
+      if (foreErr) return `Forecast error: ${foreErr.message}`;
+      if (!forecast) return 'No forecast data available yet.';
+
+      const parsed = typeof forecast === 'string' ? JSON.parse(forecast) : forecast;
+      const trends = parsed.categoryTrends || parsed[0]?.categoryTrends || [];
+      const confidence = parsed.confidenceStats || parsed[0]?.confidenceStats || {};
+
+      const cat = input.category.toLowerCase();
+      const match = trends.find((t: any) => (t.category || '').toLowerCase() === cat || (t.subcategory || '').toLowerCase() === cat);
+
+      if (!match) {
+        const available = trends.map((t: any) => t.subcategory || t.category).join(', ');
+        return `No forecast data for "${input.category}". Available categories: ${available}`;
+      }
+
+      const lines = [
+        `**${match.subcategory || match.category} Forecast**`,
+        `Monthly average: QAR ${Number(match.avg_monthly || match.avgMonthly || 0).toFixed(0)}`,
+        `Trend: ${match.trend || 'stable'} (${Number(match.trend_pct || match.trendPct || 0).toFixed(1)}% ${match.trend === 'increasing' ? '↑' : match.trend === 'decreasing' ? '↓' : '→'})`,
+        match.projected_next_month || match.projectedNextMonth ? `Projected next month: QAR ${Number(match.projected_next_month || match.projectedNextMonth).toFixed(0)}` : '',
+      ].filter(Boolean);
+
+      if (confidence.overall_confidence || confidence.overallConfidence) {
+        lines.push(`\nForecast confidence: ${confidence.overall_confidence || confidence.overallConfidence}`);
+      }
+      return lines.join('\n');
+    }
+    case 'explain_pattern': {
+      const patternType = input.pattern_type;
+      const since = new Date();
+      since.setDate(since.getDate() - 90);
+
+      const { data: txns } = await supabase.from('raw_ledger')
+        .select('txn_timestamp, amount, currency, counterparty, category, subcategory, amount_qar, time_context')
+        .eq('user_id', userId).eq('pattern', patternType)
+        .gte('txn_timestamp', since.toISOString())
+        .order('txn_timestamp', { ascending: false })
+        .limit(30);
+
+      if (!txns?.length) return `No "${patternType}" pattern transactions found in the last 90 days.`;
+
+      const amounts = txns.map((r: any) => Number(r.amount_qar || r.amount));
+      const total = amounts.reduce((s, v) => s + v, 0);
+      const avg = total / amounts.length;
+
+      // Analyze timing
+      const dayDist: Record<string, number> = {};
+      const hourDist: Record<number, number> = {};
+      for (const r of txns) {
+        const d = new Date(r.txn_timestamp);
+        const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+        dayDist[day] = (dayDist[day] || 0) + 1;
+        hourDist[d.getHours()] = (hourDist[d.getHours()] || 0) + 1;
+      }
+      const topDay = Object.entries(dayDist).sort((a, b) => b[1] - a[1])[0];
+      const topHour = Object.entries(hourDist).sort((a, b) => b[1] - a[1])[0];
+
+      // Top merchants
+      const merchantTotals: Record<string, { total: number; count: number }> = {};
+      for (const r of txns) {
+        const m = r.counterparty || 'Unknown';
+        if (!merchantTotals[m]) merchantTotals[m] = { total: 0, count: 0 };
+        merchantTotals[m].total += Number(r.amount_qar || r.amount);
+        merchantTotals[m].count++;
+      }
+      const topMerchants = Object.entries(merchantTotals).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+
+      const lines = [
+        `**"${patternType}" Pattern (last 90 days)**`,
+        `${txns.length} transactions, total QAR ${total.toFixed(0)}, avg QAR ${avg.toFixed(0)}`,
+        `\nMost common day: ${topDay?.[0]} (${topDay?.[1]} times)`,
+        `Most common hour: ${topHour?.[0]}:00 (${topHour?.[1]} times)`,
+        `\nTop merchants:`,
+        ...topMerchants.map(([m, d]) => `  ${m}: QAR ${d.total.toFixed(0)} (${d.count}x)`),
+        `\nRecent examples:`,
+        ...txns.slice(0, 5).map((r: any) => {
+          const d = new Date(r.txn_timestamp).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          return `  ${d}: QAR ${Number(r.amount_qar || r.amount).toFixed(0)} at ${r.counterparty}`;
+        }),
+      ];
+      return lines.join('\n');
+    }
     default:
       return `Unknown tool: ${name}`;
   }
@@ -170,13 +457,14 @@ function jsonResponse(request: Request, body: unknown, status = 200) {
 }
 
 async function buildSystemPrompt(supabase: any, userId: string): Promise<string> {
-  const [periodRes, merchantRes, contextRes, recipientRes, profileRes, goalsRes] = await Promise.all([
+  const [periodRes, merchantRes, contextRes, recipientRes, profileRes, goalsRes, digestRes] = await Promise.all([
     supabase.from('period_summary').select('*').eq('user_id', userId).order('month', { ascending: false }).limit(6),
     supabase.from('merchant_analytics').select('*').eq('user_id', userId).order('total_spent', { ascending: false }).limit(20),
     supabase.from('user_context').select('type, key, value, details').eq('user_id', userId),
     supabase.from('recipients').select('short_name, long_name').eq('user_id', userId),
     supabase.from('profiles').select('settings, display_name').eq('user_id', userId).single(),
     supabase.from('goals').select('category, monthly_limit').eq('user_id', userId).eq('active', true),
+    supabase.from('daily_digests').select('content').eq('user_id', userId).eq('digest_date', new Date().toISOString().slice(0, 10)).single(),
   ]);
   const periods = periodRes.data || [];
   const merchants = merchantRes.data || [];
@@ -184,6 +472,7 @@ async function buildSystemPrompt(supabase: any, userId: string): Promise<string>
   const recipients = recipientRes.data || [];
   const profile = profileRes.data;
   const goals = goalsRes.data || [];
+  const digest = digestRes.data?.content;
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const { data: currentMonthBreakdown } = await supabase.from('monthly_category_spend').select('*').eq('user_id', userId).gte('month', monthStart).eq('direction', 'OUT');
@@ -226,11 +515,33 @@ ${contextSummary || 'None'}
 == KNOWN RECIPIENTS ==
 ${recipientSummary || 'None'}
 
+== TODAY'S DIGEST ==
+${digest ? `Budget: ${digest.budget_pct_used || 0}% used, burn rate QAR ${Number(digest.daily_burn_rate || 0).toFixed(0)}/day, ${digest.days_in_month - digest.days_elapsed} days left\n${digest.top_category_change?.category ? `Biggest change: ${digest.top_category_change.category} ${digest.top_category_change.change_pct > 0 ? '↑' : '↓'}${Math.abs(digest.top_category_change.change_pct)}% vs last month` : ''}\n${digest.next_bill?.merchant ? `Next bill: ${digest.next_bill.merchant} QAR ${digest.next_bill.amount} on ${digest.next_bill.expected_date}` : ''}\n${digest.anomaly_count > 0 ? `${digest.anomaly_count} anomalies detected` : ''}` : 'Not generated yet'}
+
+== GOAL PROGRESS ==
+${goals.length > 0 ? (await (async () => {
+  const { data: curSpend } = await supabase.from('monthly_category_spend').select('subcategory, total_amount').eq('user_id', userId).gte('month', monthStart).eq('direction', 'OUT');
+  const spendByCat: Record<string, number> = {};
+  for (const s of (curSpend || [])) { spendByCat[s.subcategory] = (spendByCat[s.subcategory] || 0) + Number(s.total_amount); }
+  return goals.map((g: any) => {
+    const spent = spendByCat[g.category] || 0;
+    const pct = g.monthly_limit > 0 ? (spent / g.monthly_limit * 100).toFixed(0) : '0';
+    const status = Number(pct) > 100 ? 'OVER' : Number(pct) > 80 ? 'WARNING' : 'on-track';
+    return `${g.category}: QAR ${spent.toFixed(0)}/${g.monthly_limit} (${pct}%) — ${status}`;
+  }).join('\n');
+})()) : 'No goals set'}
+
 Guidelines:
 - Use query_transactions to search for specific transactions when the user asks about merchants, dates, or amounts.
 - Use query_trends for trend analysis and period comparisons.
+- Use compare_periods when the user wants to compare two specific time periods side by side.
+- Use find_anomalies when the user asks about unusual spending or surprises.
+- Use suggest_savings when the user wants to know where they can cut costs.
+- Use forecast_category when the user asks about projected future spending.
+- Use explain_pattern when the user asks about spending habits or patterns.
 - Use set_goal when the user wants to set or update a budget limit.
 - Use remember when the user asks you to note or remember something.
+- Proactively reference today's digest and goal progress when relevant.
 - Lead with the insight, then supporting data. No filler.
 - Reference specific QAR amounts and merchant names.
 - Currency is QAR unless otherwise specified. The user is in Qatar.

@@ -1451,3 +1451,84 @@ body.dark-mode .chat-ai-msg {
         color: #111;
     }
 }
+
+/* ─── MOBILE TOUCH TARGETS (min 44px per Apple HIG) ─── */
+@media (max-width: 768px) {
+    .txn-row { min-height: 56px; padding: 12px; }
+    .period-btn { min-height: 44px; min-width: 44px; }
+    .dim-filter, .viz-tab, .main-tab { min-height: 36px; padding: 8px 12px; }
+    button[onclick] { min-height: 44px; }
+    .chat-quick-action { min-height: 44px; }
+}
+
+/* ─── FEATURE DISCOVERY TOOLTIPS ─── */
+.feature-tip {
+    position: absolute;
+    z-index: 55;
+    background: #111;
+    color: #fff;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: tipFadeIn 0.3s ease-out;
+    pointer-events: auto;
+}
+.feature-tip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 16px;
+    width: 12px;
+    height: 12px;
+    background: #111;
+    transform: rotate(45deg);
+}
+.feature-tip.tip-right::after {
+    left: auto;
+    right: 16px;
+}
+@keyframes tipFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SLIDE-IN PANELS ─────────────────────────────────────────── */
+.slide-panel-backdrop {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.3);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.slide-panel-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.slide-panel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 420px; max-width: 100vw;
+    z-index: 51;
+    background: white;
+    border-left: 1px solid #E5E5E5;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+.slide-panel.open { transform: translateX(0); }
+body.dark-mode .slide-panel {
+    background: var(--fact-dark-card, #1A1A1A);
+    border-left-color: var(--fact-dark-border, #2A2A2A);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+}
+@media (prefers-color-scheme: dark) {
+    .slide-panel:not(body.dark-mode .slide-panel) {
+        background: #1A1A1A;
+        border-left-color: #2A2A2A;
+    }
+}
+@media (max-width: 768px) {
+    .slide-panel { width: 100%; border-left: none; }
+}
+
+/* Manual entry slide-up panel */
+#manualEntryPanel.open { transform: translateY(0) !important; }

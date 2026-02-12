@@ -270,3 +270,46 @@ export function toggleDarkMode() {
         localStorage.setItem('fact_dark_mode', 'true');
     }
 }
+
+// ─── FEATURE DISCOVERY TOOLTIPS ─────────────────────────────────
+const TIPS_KEY = 'fact_seen_tips';
+
+function getSeenTips() {
+    try { return JSON.parse(localStorage.getItem(TIPS_KEY) || '[]'); } catch { return []; }
+}
+
+export function hasSeenTip(id) {
+    return getSeenTips().includes(id);
+}
+
+export function showFeatureTip(id, targetEl, message, align = 'left') {
+    if (hasSeenTip(id) || !targetEl) return;
+
+    const tip = document.createElement('div');
+    tip.className = `feature-tip ${align === 'right' ? 'tip-right' : ''}`;
+    tip.textContent = message;
+    tip.onclick = () => dismissTip(id, tip);
+
+    document.body.appendChild(tip);
+
+    // Position below the target element
+    const rect = targetEl.getBoundingClientRect();
+    tip.style.top = `${rect.bottom + window.scrollY + 8}px`;
+    if (align === 'right') {
+        tip.style.right = `${window.innerWidth - rect.right}px`;
+    } else {
+        tip.style.left = `${rect.left + window.scrollX}px`;
+    }
+
+    // Auto-dismiss after 8 seconds
+    setTimeout(() => dismissTip(id, tip), 8000);
+}
+
+function dismissTip(id, tipEl) {
+    if (tipEl?.parentNode) tipEl.remove();
+    const seen = getSeenTips();
+    if (!seen.includes(id)) {
+        seen.push(id);
+        try { localStorage.setItem(TIPS_KEY, JSON.stringify(seen)); } catch {}
+    }
+}
