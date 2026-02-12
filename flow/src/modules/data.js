@@ -433,11 +433,23 @@ export function matchRecipient(counterparty, STATE) {
             }
         }
 
-        // Priority 3: Name match (ALL significant words from longName must appear in counterparty)
+        // Priority 3a: Name match (ALL significant words from longName must appear in counterparty)
         if (rec.longName) {
             const words = rec.longName.toLowerCase().split(/\s+/).filter(w => w.length > 2);
             if (words.length > 0 && words.every(word => cpLower.includes(word))) {
                 return { ...rec, matchType: 'name' };
+            }
+        }
+
+        // Priority 3b: Reverse name match (all counterparty words found in longName)
+        // Handles: counterparty "Afif Bou Nassif" matching longName "AFIF BOU NASSIF OR NICOLE DAOU"
+        if (rec.longName) {
+            const cpWords = cpLower.split(/\s+/).filter(w => w.length > 2);
+            if (cpWords.length >= 2) {
+                const lnLower = rec.longName.toLowerCase();
+                if (cpWords.every(word => lnLower.includes(word))) {
+                    return { ...rec, matchType: 'name' };
+                }
             }
         }
 
