@@ -191,7 +191,18 @@ export function openDrilldown(category, STATE, callbacks) {
         .slice(0, 5);
     const maxMerch = sortedMerch[0]?.total || 1;
 
+    // Note: merchant names are escaped via escapeHtml() callback to prevent XSS.
+    // "View People" button for Transfer/Family categories (static HTML, no user data)
+    const viewPeopleBtn = (category === 'Transfer' || category === 'Family')
+        ? `<button onclick="closeDrilldown(); openPeoplePanel()"
+            class="w-full mb-3 px-4 py-2.5 text-sm font-medium border border-fact-border dark:border-fact-dark-border rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center justify-between">
+            <span>View all people</span>
+            <svg class="w-4 h-4 text-fact-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+           </button>`
+        : '';
+
     document.getElementById('drilldownMerchants').innerHTML = `
+        ${viewPeopleBtn}
         <p class="text-xs font-medium mb-2">Top Merchants</p>
         ${sortedMerch.map(m => `
             <div class="flex items-center gap-2 cursor-pointer hover:opacity-80" onclick="closeDrilldown(); openMerchantDrilldown('${m.name.replace(/'/g, "\\'")}')">
@@ -211,14 +222,20 @@ export function openDrilldown(category, STATE, callbacks) {
         `).join('')}
     `;
 
+    // Re-show timeline in case it was hidden by person drilldown
+    const timelineContainer = document.getElementById('drilldownTimeline')?.parentElement;
+    if (timelineContainer) timelineContainer.style.display = '';
+
     // Transactions
     document.getElementById('drilldownTxns').innerHTML = out.slice(0, 20).map(t => renderTxnRow(t)).join('');
 
-    document.getElementById('drilldownModal').classList.remove('hidden');
+    document.getElementById('drilldownBackdrop').classList.add('open');
+    document.getElementById('drilldownModal').classList.add('open');
 }
 
 export function closeDrilldown() {
-    document.getElementById('drilldownModal').classList.add('hidden');
+    document.getElementById('drilldownBackdrop').classList.remove('open');
+    document.getElementById('drilldownModal').classList.remove('open');
 }
 
 export function openParentDrilldown(parentCategory, STATE, callbacks) {
@@ -311,10 +328,15 @@ export function openParentDrilldown(parentCategory, STATE, callbacks) {
         }).join('')}
     `;
 
+    // Re-show timeline in case it was hidden by person drilldown
+    const timelineContainer3 = document.getElementById('drilldownTimeline')?.parentElement;
+    if (timelineContainer3) timelineContainer3.style.display = '';
+
     // Transactions
     document.getElementById('drilldownTxns').innerHTML = out.slice(0, 20).map(t => renderTxnRow(t)).join('');
 
-    document.getElementById('drilldownModal').classList.remove('hidden');
+    document.getElementById('drilldownBackdrop').classList.add('open');
+    document.getElementById('drilldownModal').classList.add('open');
 }
 
 export function openMerchantDrilldown(merchantName, STATE, callbacks) {
@@ -399,10 +421,15 @@ export function openMerchantDrilldown(merchantName, STATE, callbacks) {
         </div>
     `;
 
+    // Re-show timeline in case it was hidden by person drilldown
+    const timelineContainer2 = document.getElementById('drilldownTimeline')?.parentElement;
+    if (timelineContainer2) timelineContainer2.style.display = '';
+
     // Transactions
     document.getElementById('drilldownTxns').innerHTML = out.slice(0, 30).map(t => renderTxnRow(t)).join('');
 
-    document.getElementById('drilldownModal').classList.remove('hidden');
+    document.getElementById('drilldownBackdrop').classList.add('open');
+    document.getElementById('drilldownModal').classList.add('open');
 }
 
 // ============== UNCATEGORIZED MODAL ==============

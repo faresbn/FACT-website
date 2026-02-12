@@ -29,7 +29,9 @@ import {
     installPWA,
     dismissInstall,
     initDarkMode,
-    toggleDarkMode
+    toggleDarkMode,
+    showFeatureTip,
+    hasSeenTip
 } from './modules/utils.js';
 
 // Onboarding module
@@ -185,7 +187,19 @@ import {
 import { initChat, toggleChat, openChat, closeChat } from './modules/chat.js';
 
 // Forecast module
-import { renderForecast as renderForecastModule } from './modules/forecast.js';
+import { renderForecast as renderForecastModule, renderGoalGauges as renderGoalGaugesModule } from './modules/forecast.js';
+
+// Digest module
+import { renderDailyDigest as renderDailyDigestModule, dismissDigest as dismissDigestModule } from './modules/digest.js';
+
+// Command palette module
+import { initCommandPalette, openCommandPalette, closeCommandPalette, executeCommand } from './modules/commandpalette.js';
+
+// Import module
+import { openImportModal, closeImportModal, handleImportFile, updateImportMapping, executeImport as executeImportModule } from './modules/import.js';
+
+// Manual entry module
+import { openManualEntry, closeManualEntry, submitManualEntry as submitManualEntryModule, initManualEntryCategories } from './modules/manualentry.js';
 
 // Visualizations module
 import {
@@ -193,7 +207,10 @@ import {
     renderMerchantTreemap,
     renderPeriodComparison,
     renderTimeHeatmap,
-    renderSmartMetrics
+    renderSmartMetrics,
+    renderSpendingDistribution,
+    renderMoneyFlow,
+    toggleCompareMode as toggleCompareModeModule
 } from './modules/visualizations.js';
 
 // Event bus
@@ -215,7 +232,14 @@ import {
     editRecipient as editRecipientModule,
     closeRecipientModal,
     saveRecipient as saveRecipientModule,
-    deleteRecipient as deleteRecipientModule
+    deleteRecipient as deleteRecipientModule,
+    openPeoplePanel as openPeoplePanelModule,
+    closePeoplePanel,
+    filterPeoplePanel as filterPeoplePanelModule,
+    openPersonDrilldown as openPersonDrilldownModule,
+    openUnmatchedDrilldown as openUnmatchedDrilldownModule,
+    assignUnmatchedTransfer,
+    saveRecipientAndRematch as saveRecipientAndRematchModule
 } from './modules/recipients.js';
 
 // Features module
@@ -302,7 +326,8 @@ const STATE = {
     dbStreaks: null,
     recurring: [],
     hourlySpend: [],
-    proactiveInsights: []
+    proactiveInsights: [],
+    dailyDigest: null
 };
 
 // ─── WRAPPER FUNCTIONS ──────────────────────────────────────────
@@ -323,7 +348,8 @@ function filterAndRender() {
     renderAllVisualizations();
     // Render forecast
     renderForecast();
-    // Render recurring subscriptions and proactive alerts
+    // Render daily digest, recurring subscriptions and proactive alerts
+    renderDailyDigest();
     renderRecurringSummary();
     renderProactiveInsights();
     // Emit event for any module listening for data changes
@@ -332,6 +358,11 @@ function filterAndRender() {
 
 function renderForecast() {
     renderForecastModule(STATE, { formatNum });
+    renderGoalGaugesModule(STATE, { formatNum });
+}
+
+function renderDailyDigest() {
+    renderDailyDigestModule(STATE, { formatNum, escapeHtml });
 }
 
 let activeVizTab = 'trend';
@@ -347,6 +378,8 @@ function renderActiveViz() {
         case 'compare': renderPeriodComparison(STATE, { formatNum, SUMMARY_GROUPS }); break;
         case 'merchants': renderMerchantTreemap(STATE, { formatNum, SUMMARY_GROUPS }); break;
         case 'heatmap': renderTimeHeatmap(STATE, { formatNum }); break;
+        case 'distribution': renderSpendingDistribution(STATE, { formatNum, SIZE_TIERS }); break;
+        case 'flow': renderMoneyFlow(STATE, { formatNum, SUMMARY_GROUPS, MERCHANT_TYPES }); break;
     }
 }
 
@@ -691,11 +724,33 @@ function editRecipient(index) {
 }
 
 async function saveRecipient() {
-    await saveRecipientModule(STATE, supabaseClient, CONFIG, { showToast, renderRecipientsList });
+    // Enhanced save that also re-matches transactions to the updated contact
+    await saveRecipientAndRematchModule(STATE, supabaseClient, CONFIG, {
+        showToast,
+        renderRecipientsList,
+        filterAndRender,
+        matchRecipient: (cp) => matchRecipient(cp, STATE)
+    });
 }
 
 async function deleteRecipient(index) {
     await deleteRecipientModule(index, STATE, supabaseClient, CONFIG, { showToast, showConfirm, renderRecipientsList });
+}
+
+function openPeoplePanel() {
+    openPeoplePanelModule(STATE, { formatNum, escapeHtml });
+}
+
+function filterPeoplePanel() {
+    filterPeoplePanelModule(STATE, { formatNum, escapeHtml });
+}
+
+function openPersonDrilldown(recipientId) {
+    openPersonDrilldownModule(recipientId, STATE, { formatNum, escapeHtml, renderTxnRow });
+}
+
+function openUnmatchedDrilldown(encodedLabel) {
+    openUnmatchedDrilldownModule(encodedLabel, STATE, { formatNum, escapeHtml, renderTxnRow });
 }
 
 function openHeatmap() {
@@ -941,6 +996,20 @@ async function showApp(user, session) {
     });
 
     checkOnboarding(supabaseClient);
+    initManualEntryCategories(MERCHANT_TYPES);
+
+    // Feature discovery tooltips — show one at a time on first use
+    setTimeout(() => {
+        const chatFab = document.getElementById('chatFab');
+        if (chatFab && !hasSeenTip('chat')) {
+            showFeatureTip('chat', chatFab, 'Ask me anything about your finances', 'right');
+        } else {
+            const healthBtn = document.querySelector('[onclick*="openHealthScore"]');
+            if (healthBtn && !hasSeenTip('health')) {
+                showFeatureTip('health', healthBtn, 'Tap to see your financial health score');
+            }
+        }
+    }, 4000);
 
     const txnSearch = document.getElementById('txnSearch');
     const txnFilter = document.getElementById('txnFilter');
@@ -960,6 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initServiceWorker();
     initPWAInstall();
+    initCommandPalette();
 
     // Event bus: listen for toast events from any module
     on(EVENTS.TOAST, ({ message, type }) => showToast(message, type || 'info'));
@@ -1014,6 +1084,18 @@ window.copyOnboardingKey = copyOnboardingKey;
 window.toggleDarkMode = toggleDarkMode;
 window.toggleFocusMode = toggleFocusMode;
 window.dismissImpulseBanner = dismissImpulseBanner;
+window.dismissDigest = () => dismissDigestModule(STATE, supabaseClient, CONFIG);
+window.openCommandPalette = openCommandPalette;
+window.closeCommandPalette = closeCommandPalette;
+window.executeCommand = executeCommand;
+window.openImportModal = openImportModal;
+window.closeImportModal = closeImportModal;
+window.handleImportFile = handleImportFile;
+window.updateImportMapping = updateImportMapping;
+window.executeImport = () => executeImportModule(supabaseClient, CONFIG, showToast, () => window.syncData());
+window.openManualEntry = openManualEntry;
+window.closeManualEntry = closeManualEntry;
+window.submitManualEntry = () => submitManualEntryModule(supabaseClient, CONFIG, showToast, () => window.syncData());
 window.installPWA = installPWA;
 window.dismissInstall = dismissInstall;
 window.showToast = showToast;
@@ -1049,6 +1131,7 @@ window.openGenerositySettings = openGenerositySettings;
 window.openGoals = openGoals;
 window.openHeatmap = openHeatmap;
 window.switchVizTab = switchVizTab;
+window.toggleCompareMode = () => { toggleCompareModeModule(); renderActiveViz(); };
 window.switchMainTab = switchMainTab;
 window.renderForecast = renderForecast;
 window.openTxnModal = openTxnModal;
@@ -1090,6 +1173,12 @@ window.closeRecipientModal = closeRecipientModal;
 window.saveRecipient = saveRecipient;
 window.deleteRecipient = deleteRecipient;
 window.filterRecipientsList = () => filterRecipientsList(STATE, { escapeHtml });
+window.openPeoplePanel = openPeoplePanel;
+window.closePeoplePanel = closePeoplePanel;
+window.filterPeoplePanel = filterPeoplePanel;
+window.openPersonDrilldown = openPersonDrilldown;
+window.openUnmatchedDrilldown = openUnmatchedDrilldown;
+window.assignUnmatchedTransfer = assignUnmatchedTransfer;
 window.renderHeatmap = renderHeatmap;
 window.drilldownDate = drilldownDate;
 window.closeCelebration = closeCelebration;

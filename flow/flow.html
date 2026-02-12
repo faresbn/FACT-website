@@ -48,6 +48,29 @@
   <script type="module" src="/src/main.js"></script>
 </head>
 <body class="text-fact-ink dark:text-fact-dark-ink">
+    <!-- Sync Progress Bar (fixed top) -->
+    <div id="syncProgress" class="hidden fixed top-0 left-0 right-0 z-[60]">
+        <div class="h-1 bg-gray-200 dark:bg-gray-800">
+            <div id="syncProgressBar" class="h-full rounded-r-full bg-gradient-to-r from-fact-yellow to-emerald-500 transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+        <div class="text-center text-[9px] text-fact-muted dark:text-fact-dark-muted py-0.5 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm" id="syncProgressLabel"></div>
+    </div>
+
+    <!-- Command Palette (Cmd+K) -->
+    <div id="commandPalette" class="hidden fixed inset-0 z-[70] flex items-start justify-center pt-[15vh]" role="dialog" aria-modal="true" aria-label="Command palette">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="window.closeCommandPalette()"></div>
+        <div class="relative w-full max-w-md mx-4 card rounded-xl shadow-2xl overflow-hidden border border-fact-border dark:border-fact-dark-border">
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-fact-border dark:border-fact-dark-border">
+                <svg class="w-4 h-4 text-fact-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input id="commandInput" type="text" placeholder="Type a command..." class="flex-1 bg-transparent border-none outline-none text-sm text-fact-text dark:text-fact-dark-text placeholder:text-fact-muted" autocomplete="off" spellcheck="false">
+                <kbd class="text-[10px] text-fact-muted bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">esc</kbd>
+            </div>
+            <div id="commandResults" class="max-h-[300px] overflow-y-auto py-1">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Skip to main content for accessibility -->
     <a href="#mainContent" class="skip-link" style="position: absolute; top: -40px; left: 0; z-index: 1000;">Skip to main content</a>
 
@@ -409,7 +432,11 @@
 
                 <!-- Forecast (1/3 width on desktop) -->
                 <div id="forecastCard" class="card rounded-xl p-3"></div>
+                <div id="goalGauges" class="hidden card rounded-xl p-3"></div>
             </div>
+
+            <!-- DAILY DIGEST CARD (personalized daily briefing) -->
+            <div id="dailyDigestCard" class="card rounded-xl p-3 hidden border border-amber-200/30 dark:border-amber-700/30 bg-gradient-to-r from-amber-50/50 to-emerald-50/50 dark:from-amber-950/20 dark:to-emerald-950/20"></div>
 
             <!-- IMPULSE WARNING BANNER (shown when burst detected) -->
             <div id="impulseBanner" class="impulse-banner">
@@ -531,6 +558,8 @@
                         <button onclick="switchVizTab('compare')" data-viz="compare" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Compare</button>
                         <button onclick="switchVizTab('merchants')" data-viz="merchants" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Merchants</button>
                         <button onclick="switchVizTab('heatmap')" data-viz="heatmap" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Heatmap</button>
+                        <button onclick="switchVizTab('distribution')" data-viz="distribution" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Distribution</button>
+                        <button onclick="switchVizTab('flow')" data-viz="flow" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Flow</button>
                     </div>
                 </div>
                 <!-- Viz panels (only one visible at a time) -->
@@ -538,6 +567,9 @@
                     <canvas id="spendingTrendChart"></canvas>
                 </div>
                 <div id="vizCompare" class="viz-panel h-64 hidden">
+                    <div class="flex justify-end mb-1">
+                        <button id="compareModeToggle" onclick="toggleCompareMode()" class="text-[9px] px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-fact-muted hover:text-fact-ink dark:hover:text-fact-dark-ink transition">Line</button>
+                    </div>
                     <canvas id="periodComparisonChart"></canvas>
                 </div>
                 <div id="vizMerchants" class="viz-panel h-64 hidden">
@@ -545,6 +577,12 @@
                 </div>
                 <div id="vizHeatmap" class="viz-panel hidden">
                     <div id="timeHeatmapGrid" class="overflow-x-auto"></div>
+                </div>
+                <div id="vizDistribution" class="viz-panel h-64 hidden">
+                    <canvas id="spendingDistChart"></canvas>
+                </div>
+                <div id="vizFlow" class="viz-panel hidden">
+                    <div id="moneyFlowSvg" class="overflow-x-auto" style="min-height: 220px;"></div>
                 </div>
             </div>
 
@@ -681,6 +719,11 @@
             </footer>
         </main>
     </div>
+    <!-- QUICK ENTRY FAB -->
+    <button onclick="openManualEntry()" class="fixed bottom-6 right-24 w-12 h-12 rounded-full bg-fact-ink dark:bg-white shadow-lg flex items-center justify-center z-40 hover:scale-110 transition-transform" title="Add transaction">
+        <svg class="w-5 h-5 text-white dark:text-fact-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    </button>
+
     <!-- CHAT FAB (Floating Action Button) -->
     <button id="chatFab" onclick="toggleChat()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-fact-yellow to-fact-green shadow-lg flex items-center justify-center z-40 hover:scale-110 transition-transform" title="AI Assistant">
         <svg class="w-6 h-6 text-fact-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -718,50 +761,82 @@
     </div>
 
     <!-- CATEGORY DRILL-DOWN MODAL -->
-    <div id="drilldownModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <div class="modal-box card rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
-            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+    <div id="drilldownBackdrop" class="slide-panel-backdrop" onclick="closeDrilldown()"></div>
+    <div id="drilldownModal" class="slide-panel">
+        <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+            <div>
+                <h3 class="font-display font-semibold" id="drilldownTitle">Category</h3>
+                <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="drilldownSubtitle">-- transactions</p>
+            </div>
+            <button onclick="closeDrilldown()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Drilldown Charts -->
+        <div class="p-5 space-y-4 border-b border-fact-border dark:border-fact-dark-border">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <h3 class="font-display font-semibold" id="drilldownTitle">Category</h3>
-                    <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="drilldownSubtitle">-- transactions</p>
+                    <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">Total Spent</p>
+                    <p class="font-display font-bold text-2xl" id="drilldownTotal">--</p>
                 </div>
-                <button onclick="closeDrilldown()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                <div>
+                    <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">vs Last Period</p>
+                    <p class="font-display font-bold text-2xl" id="drilldownDelta">--</p>
+                </div>
+            </div>
+
+            <!-- Timeline Chart -->
+            <div>
+                <p class="text-xs font-medium mb-2">Spending Over Time</p>
+                <div class="h-32">
+                    <canvas id="drilldownTimeline"></canvas>
+                </div>
+            </div>
+
+            <!-- Breakdown Section (Merchants/Subcategories/Stats) -->
+            <div id="drilldownMerchants" class="space-y-2">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="flex-1 overflow-y-auto">
+            <div id="drilldownTxns" class="divide-y divide-fact-border dark:divide-fact-dark-border">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- PEOPLE PANEL (Transfer Contacts) -->
+    <div id="peoplePanelBackdrop" class="slide-panel-backdrop" onclick="closePeoplePanel()"></div>
+    <div id="peoplePanel" class="slide-panel">
+        <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+            <div>
+                <h3 class="font-display font-semibold">People</h3>
+                <p class="text-xs text-fact-muted dark:text-fact-dark-muted" id="peoplePanelCount">-- contacts</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="addNewRecipient()" class="px-3 py-1.5 text-xs font-medium text-fact-ink bg-fact-yellow rounded-lg hover:bg-fact-yellow/80 transition">
+                    + Add
+                </button>
+                <button onclick="closePeoplePanel()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
+        </div>
 
-            <!-- Drilldown Charts -->
-            <div class="p-5 space-y-4 border-b border-fact-border dark:border-fact-dark-border">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">Total Spent</p>
-                        <p class="font-display font-bold text-2xl" id="drilldownTotal">--</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted uppercase tracking-wider mb-1">vs Last Period</p>
-                        <p class="font-display font-bold text-2xl" id="drilldownDelta">--</p>
-                    </div>
-                </div>
+        <!-- Search -->
+        <div class="p-4 border-b border-fact-border dark:border-fact-dark-border">
+            <input type="text" id="peoplePanelSearch" placeholder="Search people..."
+                class="w-full px-4 py-2.5 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow"
+                oninput="filterPeoplePanel()">
+        </div>
 
-                <!-- Timeline Chart -->
-                <div>
-                    <p class="text-xs font-medium mb-2">Spending Over Time</p>
-                    <div class="h-32">
-                        <canvas id="drilldownTimeline"></canvas>
-                    </div>
-                </div>
-
-                <!-- Breakdown Section (Merchants/Subcategories/Stats) -->
-                <div id="drilldownMerchants" class="space-y-2">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- Transactions -->
-            <div class="flex-1 overflow-y-auto">
-                <div id="drilldownTxns" class="divide-y divide-fact-border dark:divide-fact-dark-border">
-                    <!-- Populated by JS -->
-                </div>
+        <!-- People List -->
+        <div class="flex-1 overflow-y-auto">
+            <div id="peoplePanelList" class="p-2 space-y-1">
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
@@ -1061,6 +1136,15 @@
 
                 <!-- Contacts Panel -->
                 <div id="panelContacts" role="tabpanel" aria-labelledby="tabContacts" class="settings-panel p-5 hidden">
+                    <!-- View People button -->
+                    <button onclick="closeSettings(); openPeoplePanel()"
+                        class="w-full mb-4 px-4 py-3 text-sm font-medium border border-fact-border dark:border-fact-dark-border rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span>View all transfer people</span>
+                        </span>
+                        <svg class="w-4 h-4 text-fact-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h4 class="font-medium text-sm">Transfer Contacts</h4>
@@ -1140,6 +1224,17 @@
                         <button onclick="saveFxOverrides()"
                             class="w-full px-4 py-2 text-xs bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-lg font-medium hover:opacity-90 transition">
                             Save Rate Overrides
+                        </button>
+                    </div>
+
+                    <!-- Import Data -->
+                    <div class="border-t border-fact-border dark:border-fact-dark-border pt-5">
+                        <label class="block text-xs font-medium text-fact-muted dark:text-fact-dark-muted mb-2">Import Transactions</label>
+                        <p class="text-xs text-fact-muted dark:text-fact-dark-muted mb-3">Import transactions from a CSV file (bank export, spreadsheet, etc.)</p>
+                        <button onclick="openImportModal()"
+                            class="w-full px-4 py-3 text-sm border border-fact-border dark:border-fact-dark-border rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition min-h-[48px] flex items-center justify-between">
+                            <span>Import CSV File</span>
+                            <svg class="w-4 h-4 text-fact-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                         </button>
                     </div>
 
@@ -1263,6 +1358,124 @@
                     Save
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- CSV IMPORT MODAL -->
+    <div id="importModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" onclick="if(event.target === this) closeImportModal()">
+        <div class="modal-box card rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-fact-border dark:border-fact-dark-border flex items-center justify-between">
+                <h3 class="font-display font-semibold">Import CSV</h3>
+                <button onclick="closeImportModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto">
+                <!-- Step 1: File Upload -->
+                <div id="importStep1" class="space-y-4">
+                    <div id="importDropZone" class="border-2 border-dashed border-fact-border dark:border-fact-dark-border rounded-xl p-8 text-center cursor-pointer hover:border-fact-yellow transition"
+                        onclick="document.getElementById('importFileInput').click()"
+                        ondragover="event.preventDefault(); this.classList.add('border-fact-yellow')"
+                        ondragleave="this.classList.remove('border-fact-yellow')"
+                        ondrop="event.preventDefault(); this.classList.remove('border-fact-yellow'); handleImportFile(event.dataTransfer.files[0])">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-fact-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        <p class="text-sm font-medium">Drop CSV file here or click to browse</p>
+                        <p class="text-[10px] text-fact-muted mt-1">Supports any bank CSV export</p>
+                        <p id="importFileName" class="text-xs text-fact-green mt-2 font-medium"></p>
+                    </div>
+                    <input type="file" id="importFileInput" accept=".csv,.tsv,.txt" class="hidden" onchange="handleImportFile(this.files[0])">
+                </div>
+                <!-- Step 2: Column Mapping -->
+                <div id="importStep2" class="hidden space-y-4">
+                    <div>
+                        <p class="text-xs font-medium mb-1">Map your columns</p>
+                        <p class="text-[10px] text-fact-muted mb-3" id="importRowCount"></p>
+                    </div>
+                    <div id="importMappingFields" class="space-y-3"></div>
+                    <div class="mt-4">
+                        <p class="text-xs font-medium mb-2">Preview</p>
+                        <div class="overflow-x-auto bg-gray-50 dark:bg-gray-800 rounded-lg p-2" id="importPreview"></div>
+                    </div>
+                    <button id="importExecuteBtn" onclick="executeImport()"
+                        class="w-full px-4 py-3 text-sm bg-fact-green text-white rounded-xl font-medium hover:opacity-90 transition min-h-[48px]">
+                        Import
+                    </button>
+                </div>
+                <!-- Step 3: Results -->
+                <div id="importStep3" class="hidden space-y-4">
+                    <div id="importResults"></div>
+                    <button onclick="closeImportModal()"
+                        class="w-full px-4 py-3 text-sm bg-fact-ink dark:bg-white text-white dark:text-fact-ink rounded-xl font-medium hover:opacity-90 transition min-h-[48px]">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL ENTRY PANEL (slide-up) -->
+    <div id="manualEntryBackdrop" class="slide-panel-backdrop" onclick="closeManualEntry()"></div>
+    <div id="manualEntryPanel" class="fixed bottom-0 left-0 right-0 z-[52] bg-white dark:bg-[var(--fact-dark-card,#1A1A1A)] rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transform translate-y-full transition-transform duration-300 max-h-[80vh] overflow-y-auto" style="transition: transform 0.3s ease;">
+        <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mt-3"></div>
+        <div class="p-5 space-y-3">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-display font-semibold">Add Transaction</h3>
+                <button onclick="closeManualEntry()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Amount *</label>
+                    <input type="number" id="meAmount" step="0.01" min="0" placeholder="0.00"
+                        class="w-full px-4 py-3 border border-fact-border dark:border-fact-dark-border rounded-xl bg-white dark:bg-fact-dark-card text-lg font-display font-bold focus:outline-none focus:ring-2 focus:ring-fact-yellow text-center">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Merchant / Payee *</label>
+                    <input type="text" id="meCounterparty" placeholder="e.g., Starbucks"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Date</label>
+                    <input type="date" id="meDate"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Category</label>
+                    <select id="meCategory"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        <option value="">Auto-detect</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Currency</label>
+                    <select id="meCurrency"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        <option value="QAR" selected>QAR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="SAR">SAR</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Direction</label>
+                    <select id="meDirection"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                        <option value="OUT" selected>Expense (OUT)</option>
+                        <option value="IN">Income (IN)</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-medium text-fact-muted mb-1">Notes (optional)</label>
+                    <input type="text" id="meNotes" placeholder="e.g., Coffee with team"
+                        class="w-full px-3 py-2 border border-fact-border dark:border-fact-dark-border rounded-lg bg-white dark:bg-fact-dark-card text-sm focus:outline-none focus:ring-2 focus:ring-fact-yellow">
+                </div>
+            </div>
+            <button id="meSubmitBtn" onclick="submitManualEntry()"
+                class="w-full px-4 py-3 text-sm bg-gradient-to-r from-fact-yellow to-fact-green text-fact-ink rounded-xl font-medium hover:opacity-90 transition min-h-[48px]">
+                Add Transaction
+            </button>
         </div>
     </div>
 
