@@ -2,6 +2,8 @@
 // Slide-up panel for adding single transactions manually.
 // innerHTML usage: category dropdown populated from hardcoded MERCHANT_TYPES keys (not user input).
 
+let openedAt = 0;
+
 export function openManualEntry() {
     const panel = document.getElementById('manualEntryPanel');
     const backdrop = document.getElementById('manualEntryBackdrop');
@@ -17,6 +19,7 @@ export function openManualEntry() {
     const catSelect = document.getElementById('meCategory');
     if (catSelect) catSelect.value = '';
 
+    openedAt = Date.now();
     backdrop.classList.add('open');
     panel.classList.add('open');
     // Focus amount field
@@ -24,6 +27,9 @@ export function openManualEntry() {
 }
 
 export function closeManualEntry() {
+    // Guard against same-frame close: on mobile, the touch that opens the panel
+    // can propagate to the newly-clickable backdrop and immediately close it.
+    if (Date.now() - openedAt < 300) return;
     document.getElementById('manualEntryBackdrop').classList.remove('open');
     document.getElementById('manualEntryPanel').classList.remove('open');
 }

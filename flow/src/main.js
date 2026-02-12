@@ -239,7 +239,8 @@ import {
     openPersonDrilldown as openPersonDrilldownModule,
     openUnmatchedDrilldown as openUnmatchedDrilldownModule,
     assignUnmatchedTransfer,
-    saveRecipientAndRematch as saveRecipientAndRematchModule
+    saveRecipientAndRematch as saveRecipientAndRematchModule,
+    renderTransfersTab as renderTransfersTabModule
 } from './modules/recipients.js';
 
 // Features module
@@ -380,6 +381,7 @@ function renderActiveViz() {
         case 'heatmap': renderTimeHeatmap(STATE, { formatNum }); break;
         case 'distribution': renderSpendingDistribution(STATE, { formatNum, SIZE_TIERS }); break;
         case 'flow': renderMoneyFlow(STATE, { formatNum, SUMMARY_GROUPS, MERCHANT_TYPES }); break;
+        case 'transfers': renderTransfersTabModule(STATE, { formatNum, escapeHtml }); break;
     }
 }
 

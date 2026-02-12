@@ -600,3 +600,97 @@ export async function saveRecipientAndRematch(STATE, supabaseClient, CONFIG, cal
     // Clear the assign source
     if (modal) delete modal.dataset.assignSource;
 }
+
+// ============== TRANSFERS ANALYTICS TAB ==============
+// Renders a chronological transfer feed inside the Analytics card.
+// innerHTML usage: all user-supplied data is escaped via escapeHtml() (same pattern as renderPeopleList above).
+
+export function renderTransfersTab(STATE, callbacks) {
+    const { formatNum, escapeHtml } = callbacks;
+    const container = document.getElementById('transfersVizContent');
+    if (!container) return;
+
+    // Gather all transfer transactions using the existing filter
+    const transfers = STATE.allTxns.filter(isTransferTxn);
+    if (transfers.length === 0) {
+        container.innerHTML = `
+            <div class="flex items-center justify-center h-48 text-sm text-fact-muted dark:text-fact-dark-muted">
+                No transfers yet
+            </div>`;
+        return;
+    }
+
+    // Sort most recent first (allTxns may already be sorted, but ensure)
+    const sorted = [...transfers].sort((a, b) => b.date - a.date);
+
+    // Summary stats
+    const totalOut = sorted.filter(t => t.direction === 'OUT').reduce((s, t) => s + t.amount, 0);
+    const totalIn = sorted.filter(t => t.direction === 'IN').reduce((s, t) => s + t.amount, 0);
+    const net = totalIn - totalOut;
+    const uniquePeople = new Set(sorted.map(t => t.recipient?.id || t.counterparty)).size;
+
+    // Build summary bar
+    let html = `
+        <div class="flex items-center justify-between px-1 pb-2 mb-2 border-b border-fact-border dark:border-fact-dark-border text-[10px]">
+            <div class="flex items-center gap-3">
+                <span class="text-fact-red font-medium">↑ ${escapeHtml(formatNum(totalOut))} sent</span>
+                <span class="text-fact-green font-medium">↓ ${escapeHtml(formatNum(totalIn))} received</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="font-display font-bold ${net >= 0 ? 'text-fact-green' : 'text-fact-red'}">
+                    Net ${net >= 0 ? '+' : ''}${escapeHtml(formatNum(net))}
+                </span>
+                <span class="text-fact-muted dark:text-fact-dark-muted">${uniquePeople} people</span>
+            </div>
+        </div>`;
+
+    // Build transfer rows (cap at 50 for performance)
+    const capped = sorted.slice(0, 50);
+    html += '<div class="space-y-0.5">';
+
+    for (const t of capped) {
+        const isIn = t.direction === 'IN';
+        const arrow = isIn ? '↓' : '↑';
+        const arrowColor = isIn ? 'text-fact-green' : 'text-fact-red';
+        const amtColor = isIn ? 'text-fact-green' : 'text-fact-red';
+        const amtSign = isIn ? '+' : '-';
+        const name = t.resolvedName || t.counterparty || t.display || 'Unknown';
+        const dateStr = t.date.format('MMM D');
+        const isMatched = !!t.recipient?.id;
+
+        // Build click handler: person drilldown if matched, unmatched drilldown otherwise
+        let onclick;
+        if (isMatched) {
+            onclick = `openPersonDrilldown('${escapeHtml(t.recipient.id)}')`;
+        } else {
+            const safeLabel = btoa(unescape(encodeURIComponent(t.counterparty || t.display || '')));
+            onclick = `openUnmatchedDrilldown('${safeLabel}')`;
+        }
+
+        html += `
+            <div class="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition" onclick="${onclick}">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-medium ${arrowColor} w-4 flex-shrink-0">${arrow}</span>
+                    <div class="min-w-0">
+                        <div class="text-xs font-medium truncate">${escapeHtml(name)}</div>
+                        <div class="text-[10px] text-fact-muted dark:text-fact-dark-muted">${escapeHtml(dateStr)}</div>
+                    </div>
+                </div>
+                <div class="font-display font-semibold text-xs ${amtColor} flex-shrink-0 ml-2">
+                    ${amtSign}${escapeHtml(formatNum(t.amount))}
+                </div>
+            </div>`;
+    }
+
+    html += '</div>';
+
+    // "View all people" link at bottom
+    html += `
+        <div class="pt-2 mt-2 border-t border-fact-border dark:border-fact-dark-border">
+            <button onclick="openPeoplePanel()" class="w-full text-center text-[10px] font-medium text-fact-muted dark:text-fact-dark-muted hover:text-fact-ink dark:hover:text-fact-dark-ink transition py-1">
+                View all people →
+            </button>
+        </div>`;
+
+    container.innerHTML = html;
+}

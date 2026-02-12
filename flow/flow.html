@@ -560,6 +560,7 @@
                         <button onclick="switchVizTab('heatmap')" data-viz="heatmap" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Heatmap</button>
                         <button onclick="switchVizTab('distribution')" data-viz="distribution" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Distribution</button>
                         <button onclick="switchVizTab('flow')" data-viz="flow" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Flow</button>
+                        <button onclick="switchVizTab('transfers')" data-viz="transfers" class="viz-tab px-2.5 py-1 text-[10px] font-medium rounded-md text-fact-muted dark:text-fact-dark-muted transition">Transfers</button>
                     </div>
                 </div>
                 <!-- Viz panels (only one visible at a time) -->
@@ -583,6 +584,9 @@
                 </div>
                 <div id="vizFlow" class="viz-panel hidden">
                     <div id="moneyFlowSvg" class="overflow-x-auto" style="min-height: 220px;"></div>
+                </div>
+                <div id="vizTransfers" class="viz-panel hidden">
+                    <div id="transfersVizContent" class="overflow-y-auto" style="max-height: 280px;"></div>
                 </div>
             </div>
 
