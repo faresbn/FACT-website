@@ -67,8 +67,11 @@ jobs:
           cp -r flow/dist/* _site/flow/
           # GitHub Pages needs index.html for directory listing — copy flow.html as index.html
           cp _site/flow/flow.html _site/flow/index.html
+          # Copy FACT/Train app into /ftrain/ (static, no build step needed)
+          mkdir -p _site/ftrain
+          cp -r ftrain/*.html ftrain/*.json ftrain/*.js ftrain/*.png _site/ftrain/
           echo "=== _site structure ==="
-          find _site -type f | head -50
+          find _site -type f | head -80
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

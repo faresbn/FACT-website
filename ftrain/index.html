@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FACT/Train">
+    <meta name="theme-color" content="#1A1A1A">
+    <meta name="description" content="FACT/Train - Personal training: stretching, Pilates, and fat-burning workouts">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <title>FACT/Train</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230F0F0F'/><text x='50' y='58' font-size='34' font-weight='700' text-anchor='middle' fill='%23F4C44E' font-family='system-ui'>FT</text></svg>">
+
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://img.youtube.com">
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <!-- FACT Brand Typography: Noto family blend -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@400;600;700;900&family=Noto+Serif:wght@300;400;500;600&family=Noto+Sans+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CDN Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans"', 'system-ui', 'sans-serif'],
+                        display: ['"Noto Sans Display"', '"Noto Sans"', 'system-ui', 'sans-serif'],
+                        serif: ['"Noto Serif"', 'Georgia', 'serif'],
+                        mono: ['"Noto Sans Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: { DEFAULT: '#F4C44E', light: '#F7D470', dark: '#D4A853' },
+                        surface: { DEFAULT: '#1A1A1A', raised: '#2A2A2A' },
+                        ink: { DEFAULT: '#F5F5F5', muted: '#9CA3AF', dim: '#6B7280', faint: '#4B5563' },
+                        factborder: '#2A2A2A',
+                        fatburn: '#F4C44E',
+                        pilates: '#B593C6',
+                        stretch: '#75B876',
+                        agility: '#D4A853',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #0F0F0F;
+            color: #F5F5F5;
+            font-family: "Noto Sans", system-ui, -apple-system, sans-serif;
+            overscroll-behavior: none;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Safe areas for notch/home indicator */
+        .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+        /* Hide scrollbar */
+        ::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+        * { scrollbar-width: none; }
+
+        /* Video container 16:9 */
+        .video-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; }
+        .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* Tab bar glass */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-top: 1px solid rgba(42, 42, 42, 0.6);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* Animations */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .anim-fade-up { animation: fadeUp 0.35s ease-out forwards; }
+        .anim-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .anim-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+        .anim-slide-up { animation: slideUp 0.35s ease-out forwards; }
+
+        /* Staggered animation delays */
+        .delay-1 { animation-delay: 0.05s; opacity: 0; }
+        .delay-2 { animation-delay: 0.1s; opacity: 0; }
+        .delay-3 { animation-delay: 0.15s; opacity: 0; }
+        .delay-4 { animation-delay: 0.2s; opacity: 0; }
+        .delay-5 { animation-delay: 0.25s; opacity: 0; }
+
+        /* Progress ring */
+        .progress-ring { transform: rotate(-90deg); }
+        .progress-ring__bg { stroke: #2A2A2A; fill: none; }
+        .progress-ring__fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+
+        /* Touch feedback */
+        .touch-scale { transition: transform 0.1s ease; }
+        .touch-scale:active { transform: scale(0.96); }
+
+        /* Confetti piece */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; top: -10px; z-index: 200;
+            animation: confetti-fall 2.5s ease-in forwards;
+        }
+
+        /* Heatmap cell */
+        .heat-cell {
+            width: 14px; height: 14px; border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        /* Category pill active state */
+        .pill-active { color: white !important; }
+
+        /* Player fullscreen helper */
+        .player-fullscreen .video-wrap { border-radius: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    // ================================================================
+    //  WORKOUT LIBRARY
+    // ================================================================
+    const CATEGORIES = {
+        fatburn:  { name: 'Fat Burn',  color: '#F4C44E', bg: 'bg-[#F4C44E]/12', text: 'text-[#F4C44E]', ring: 'ring-[#F4C44E]/25', desc: 'HIIT & cardio to torch belly fat' },
+        pilates:  { name: 'Pilates',   color: '#B593C6', bg: 'bg-[#B593C6]/12', text: 'text-[#B593C6]', ring: 'ring-[#B593C6]/25', desc: 'Core strength & lean toning' },
+        stretch:  { name: 'Stretch',   color: '#75B876', bg: 'bg-[#75B876]/12', text: 'text-[#75B876]', ring: 'ring-[#75B876]/25', desc: 'Flexibility & recovery' },
+        agility:  { name: 'Agility',   color: '#D4A853', bg: 'bg-[#D4A853]/12', text: 'text-[#D4A853]', ring: 'ring-[#D4A853]/25', desc: 'Mobility & balance' },
+    };
+
+    const DURATIONS = [
+        { value: 5,  label: '5 min',  tag: 'Quick Fix' },
+        { value: 10, label: '10 min', tag: 'Solid Session' },
+        { value: 15, label: '15 min', tag: 'Deep Work' },
+        { value: 20, label: '20 min', tag: 'Full Burn' },
+    ];
+
+    const WORKOUTS = [
+        // ── FAT BURN ─────────────────────────────────
+        // 5 min
+        { id: 'uGytJAZA6m0', title: '5 Min Belly Fat Burner',         creator: '5-Min Fitness',    duration: 5,  category: 'fatburn', intensity: 'high',   tags: ['standing','belly'] },
+        { id: 'fSP7IZp1-bc', title: '5 Min Low Impact Fat Burn',      creator: 'Tracy Campoli',    duration: 5,  category: 'fatburn', intensity: 'low',    tags: ['low-impact','quiet'] },
+        { id: 'ds6qHs07ats', title: '3 Min Energetic HIIT',           creator: 'officialdeevy',    duration: 5,  category: 'fatburn', intensity: 'high',   tags: ['quick','energy'] },
+        // 10 min
+        { id: 'AA9Nu5Xah9U', title: '10 Min Cardio HIIT',             creator: 'Oliver Sjostrom',  duration: 10, category: 'fatburn', intensity: 'high',   tags: ['cardio','full-body'] },
+        { id: 'LvV7K_i7aDQ', title: '10 Min Sweat Session',           creator: 'MadFit',           duration: 10, category: 'fatburn', intensity: 'medium', tags: ['sweat','fun'] },
+        { id: 'd6EX80cR_zw', title: '10 Min Intense All Standing',    creator: 'Oliver Sjostrom',  duration: 10, category: 'fatburn', intensity: 'high',   tags: ['standing','no-floor'] },
+        // 20 min
+        { id: 'Bvc6XXRpXDU', title: '20 Min Fat Burn – No Jumping',   creator: 'Oliver Sjostrom',  duration: 20, category: 'fatburn', intensity: 'medium', tags: ['no-jump','joint-safe'] },
+        { id: 'x0QXubT27wg', title: '20 Min Intense HIIT',            creator: 'Oliver Sjostrom',  duration: 20, category: 'fatburn', intensity: 'high',   tags: ['intense','advanced'] },
+        { id: 'Jh72gk4WrIg', title: '20 Min Feel Good HIIT',          creator: 'Monika Larssen',   duration: 20, category: 'fatburn', intensity: 'medium', tags: ['feel-good','energy'] },
+
+        // ── PILATES ──────────────────────────────────
+        // 5 min
+        { id: 'xVaKiUNpCWo', title: '5 Min Pilates Ab Workout',       creator: 'Move With Nicole', duration: 5,  category: 'pilates', intensity: 'medium', tags: ['abs','core'] },
+        { id: 'K56Z12XNQ5c', title: '5 Min Pilates for Beginners',    creator: 'Blogilates',       duration: 5,  category: 'pilates', intensity: 'low',    tags: ['beginner','gentle'] },
+        { id: '2xOQa_3oGOw', title: '5 Min Standing Pilates',         creator: 'Lottie Murphy',    duration: 5,  category: 'pilates', intensity: 'low',    tags: ['standing','quick'] },
+        // 10 min
+        { id: 'K-VhKhkJBTk', title: '10 Min Pilates Abs',             creator: 'Blogilates',       duration: 10, category: 'pilates', intensity: 'medium', tags: ['abs','burn'] },
+        { id: 'xUPFfKMEJz8', title: '10 Min Pilates Full Body',       creator: 'Move With Nicole', duration: 10, category: 'pilates', intensity: 'medium', tags: ['full-body','tone'] },
+        { id: 'wMz7kqGNNaA', title: '10 Min Pilates for Waist',       creator: 'Lottie Murphy',    duration: 10, category: 'pilates', intensity: 'medium', tags: ['waist','sculpt'] },
+        // 20 min
+        { id: 'Kz2cC6tFQCc', title: '20 Min Full Body Pilates',       creator: 'Move With Nicole', duration: 20, category: 'pilates', intensity: 'medium', tags: ['full-body','complete'] },
+        { id: 'K16Y0kIdswk', title: '20 Min Pilates Burn',            creator: 'Blogilates',       duration: 20, category: 'pilates', intensity: 'high',   tags: ['burn','intense'] },
+        { id: 'MlneQjxNREQ', title: '20 Min Pilates for Beginners',   creator: 'Jessica Valant',   duration: 20, category: 'pilates', intensity: 'low',    tags: ['beginner','gentle'] },
+
+        // ── STRETCHING ───────────────────────────────
+        // 5 min
+        { id: 'sTANio_2E0Q', title: '5 Min Full Body Stretch',        creator: 'MadFit',           duration: 5,  category: 'stretch', intensity: 'low',    tags: ['full-body','cool-down'] },
+        { id: 'g_tea8ZNk5A', title: '5 Min Morning Stretch',          creator: 'MadFit',           duration: 5,  category: 'stretch', intensity: 'low',    tags: ['morning','wake-up'] },
+        { id: 'Qk-rS6fe2cA', title: '5 Min Office Stretch Break',     creator: 'Tom Merrick',      duration: 5,  category: 'stretch', intensity: 'low',    tags: ['desk','quick'] },
+        // 10 min
+        { id: 'g20OTahqnFo', title: '10 Min Stretch for Stiff Bodies', creator: 'MadFit',          duration: 10, category: 'stretch', intensity: 'low',    tags: ['stiff','gentle'] },
+        { id: '4pKly2JojMw', title: '10 Min Relaxing Stretch',        creator: 'Yoga With Adriene', duration: 10, category: 'stretch', intensity: 'low',   tags: ['relax','evening'] },
+        { id: 'SedzswEwn58', title: '10 Min Daily Stretch Routine',   creator: 'Tom Merrick',      duration: 10, category: 'stretch', intensity: 'low',    tags: ['daily','routine'] },
+        // 20 min
+        { id: '2LqyDfsfPxI', title: '20 Min Full Body Stretch',       creator: 'Yoga With Adriene', duration: 20, category: 'stretch', intensity: 'low',   tags: ['deep','flexibility'] },
+        { id: 'qULTwquOuT8', title: '20 Min Flexibility Routine',     creator: 'Tom Merrick',      duration: 20, category: 'stretch', intensity: 'medium', tags: ['flexibility','progress'] },
+        { id: 'XeXz8fIZDCE', title: '20 Min Relaxing Evening Stretch', creator: 'MadFit',          duration: 20, category: 'stretch', intensity: 'low',    tags: ['evening','wind-down'] },
+
+        // ── AGILITY / MOBILITY ───────────────────────
+        // 5 min
+        { id: 'SsT_jULF0oA', title: '5 Min Daily Mobility Routine',   creator: 'Tom Merrick',      duration: 5,  category: 'agility', intensity: 'low',    tags: ['daily','mobility'] },
+        { id: 'TSIZzORbgEU', title: '5 Min Morning Mobility',         creator: 'FitnessFAQs',      duration: 5,  category: 'agility', intensity: 'low',    tags: ['morning','wake-up'] },
+        { id: 'gC_diODMFCg', title: '5 Min Dynamic Warmup',           creator: 'THENX',            duration: 5,  category: 'agility', intensity: 'medium', tags: ['warmup','dynamic'] },
+        // 10 min
+        { id: 'u8-aKjFkXmE', title: '10 Min Full Body Mobility',      creator: 'Tom Merrick',      duration: 10, category: 'agility', intensity: 'medium', tags: ['full-body','flow'] },
+        { id: 'bBYHaMWQbgk', title: '10 Min Hip Mobility Flow',       creator: 'FitnessFAQs',      duration: 10, category: 'agility', intensity: 'medium', tags: ['hips','flow'] },
+        { id: 'Nk1_7Lu4Gvc', title: '10 Min Balance & Agility',       creator: 'THENX',            duration: 10, category: 'agility', intensity: 'medium', tags: ['balance','coordination'] },
+        // 20 min
+        { id: 'XoMpo3R8vjE', title: '20 Min Mobility Flow',           creator: 'Tom Merrick',      duration: 20, category: 'agility', intensity: 'medium', tags: ['deep','flow'] },
+        { id: 'xoUls5SZXHM', title: '20 Min Full Flexibility',        creator: 'FitnessFAQs',      duration: 20, category: 'agility', intensity: 'medium', tags: ['flexibility','complete'] },
+        { id: 'GLy2rYHwUqo', title: '20 Min Movement Practice',       creator: 'Saturno Movement', duration: 20, category: 'agility', intensity: 'high',   tags: ['movement','advanced'] },
+    ];
+
+    // ================================================================
+    //  STORAGE LAYER
+    // ================================================================
+    const STORAGE_KEYS = {
+        history:    'ftrain_history',
+        favorites:  'ftrain_favorites',
+        goal:       'ftrain_goal',
+        custom:     'ftrain_custom_workouts',
+    };
+
+    const Store = {
+        _get(key, fallback) {
+            try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+            catch { return fallback; }
+        },
+        _set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+
+        // History
+        logWorkout(workout) {
+            const history = this.getHistory();
+            history.push({
+                workoutId: workout.id,
+                title: workout.title,
+                duration: workout.duration,
+                category: workout.category,
+                date: new Date().toISOString(),
+            });
+            this._set(STORAGE_KEYS.history, history);
+        },
+        getHistory() { return this._get(STORAGE_KEYS.history, []); },
+
+        // Favorites
+        toggleFavorite(id) {
+            const favs = this.getFavorites();
+            const idx = favs.indexOf(id);
+            if (idx >= 0) favs.splice(idx, 1); else favs.push(id);
+            this._set(STORAGE_KEYS.favorites, favs);
+            return idx < 0; // returns true if now favorited
+        },
+        isFavorite(id) { return this.getFavorites().includes(id); },
+        getFavorites() { return this._get(STORAGE_KEYS.favorites, []); },
+
+        // Weekly goal
+        getGoal() { return this._get(STORAGE_KEYS.goal, 5); },
+        setGoal(n) { this._set(STORAGE_KEYS.goal, n); },
+
+        // Custom workouts
+        getCustomWorkouts() { return this._get(STORAGE_KEYS.custom, []); },
+        addCustomWorkout(w) {
+            const custom = this.getCustomWorkouts();
+            if (!custom.find(c => c.id === w.id)) { custom.push(w); this._set(STORAGE_KEYS.custom, custom); }
+        },
+        removeCustomWorkout(id) {
+            this._set(STORAGE_KEYS.custom, this.getCustomWorkouts().filter(c => c.id !== id));
+        },
+
+        // Stats
+        getThisWeekCount() {
+            const now = new Date();
+            const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); monday.setHours(0,0,0,0);
+            return this.getHistory().filter(h => new Date(h.date) >= monday).length;
+        },
+        getTotalWorkouts() { return this.getHistory().length; },
+        getTotalMinutes() { return this.getHistory().reduce((sum, h) => sum + (h.duration || 0), 0); },
+        getStreak() {
+            const history = this.getHistory();
+            if (!history.length) return 0;
+            const days = new Set(history.map(h => new Date(h.date).toDateString()));
+            let streak = 0;
+            const d = new Date(); d.setHours(0,0,0,0);
+            // Check if today or yesterday has a workout
+            if (!days.has(d.toDateString())) { d.setDate(d.getDate() - 1); if (!days.has(d.toDateString())) return 0; }
+            while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
+            return streak;
+        },
+        getBestStreak() {
+            const history = this.getHistory();
+            if (!history.length) return 0;
+            const days = [...new Set(history.map(h => new Date(h.date).toDateString()))].map(d => new Date(d)).sort((a,b) => a - b);
+            let best = 1, current = 1;
+            for (let i = 1; i < days.length; i++) {
+                const diff = (days[i] - days[i-1]) / 86400000;
+                if (diff === 1) { current++; best = Math.max(best, current); }
+                else { current = 1; }
+            }
+            return best;
+        },
+        getCategoryBreakdown() {
+            const history = this.getHistory();
+            const counts = {};
+            Object.keys(CATEGORIES).forEach(k => counts[k] = 0);
+            history.forEach(h => { if (counts[h.category] !== undefined) counts[h.category]++; });
+            return counts;
+        },
+        getWeeklyData(weeks = 4) {
+            const data = [];
+            const now = new Date();
+            for (let w = weeks - 1; w >= 0; w--) {
+                const start = new Date(now); start.setDate(now.getDate() - ((now.getDay() + 6) % 7) - w * 7); start.setHours(0,0,0,0);
+                const end = new Date(start); end.setDate(start.getDate() + 7);
+                const count = this.getHistory().filter(h => { const d = new Date(h.date); return d >= start && d < end; }).length;
+                data.push({ weekStart: start, count });
+            }
+            return data;
+        },
+        getCalendarData(days = 84) {
+            const map = {};
+            const now = new Date(); now.setHours(0,0,0,0);
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(now); d.setDate(now.getDate() - i);
+                map[d.toDateString()] = 0;
+            }
+            this.getHistory().forEach(h => {
+                const key = new Date(h.date).toDateString();
+                if (map[key] !== undefined) map[key]++;
+            });
+            return Object.entries(map).map(([date, count]) => ({ date: new Date(date), count }));
+        },
+        getRecentWorkouts(n = 3) {
+            return this.getHistory().slice(-n).reverse();
+        },
+    };
+
+    // ================================================================
+    //  ICONS (inline SVGs)
+    // ================================================================
+    const I = ({ d, size = 24, fill = 'none', strokeWidth = 2, className = '' }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
+             strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            {typeof d === 'string' ? <path d={d} /> : d}
+        </svg>
+    );
+
+    const Icon = {
+        Home:     (p) => <I {...p} d={<><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />,
+        Grid:     (p) => <I {...p} d={<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>} />,
+        Chart:    (p) => <I {...p} d={<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>} />,
+        Play:     (p) => <I {...p} d="M5 3l14 9-14 9V3z" fill="currentColor" />,
+        Heart:    (p) => <I {...p} d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />,
+        HeartFill:(p) => <I {...p} d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" fill="currentColor" />,
+        Clock:    (p) => <I {...p} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
+        Flame:    (p) => <I {...p} d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />,
+        Zap:      (p) => <I {...p} d={<><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>} />,
+        Target:   (p) => <I {...p} d={<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>} />,
+        Star:     (p) => <I {...p} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
+        Check:    (p) => <I {...p} d={<><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />,
+        ChevL:    (p) => <I {...p} d="M15 18l-6-6 6-6" />,
+        ChevR:    (p) => <I {...p} d="M9 18l6-6-6-6" />,
+        Fire:     (p) => <I {...p} d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" fill="currentColor" />,
+        Trophy:   (p) => <I {...p} d={<><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></>} />,
+        Plus:     (p) => <I {...p} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+        X:        (p) => <I {...p} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />,
+        Shuffle:  (p) => <I {...p} d={<><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></>} />,
+        Tv:       (p) => <I {...p} d={<><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></>} />,
+        Settings: (p) => <I {...p} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></>} />,
+        Wind:     (p) => <I {...p} d={<><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></>} />,
+        Sparkle:  (p) => <I {...p} d="M12 3l-1.9 5.8a2 2 0 01-1.3 1.3L3 12l5.8 1.9a2 2 0 011.3 1.3L12 21l1.9-5.8a2 2 0 011.3-1.3L21 12l-5.8-1.9a2 2 0 01-1.3-1.3L12 3z" />,
+        Expand:   (p) => <I {...p} d={<><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></>} />,
+        Calendar: (p) => <I {...p} d={<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>} />,
+    };
+
+    // ================================================================
+    //  CATEGORY ICON HELPER
+    // ================================================================
+    const CategoryIcon = ({ category, size = 24, className = '' }) => {
+        const map = { fatburn: Icon.Flame, pilates: Icon.Wind, stretch: Icon.Sparkle, agility: Icon.Zap };
+        const Comp = map[category] || Icon.Star;
+        return <Comp size={size} className={className} />;
+    };
+
+    // ================================================================
+    //  PROGRESS RING COMPONENT
+    // ================================================================
+    const ProgressRing = ({ progress, size = 120, stroke = 8, color = '#F4C44E' }) => {
+        const r = (size - stroke) / 2;
+        const circumference = 2 * Math.PI * r;
+        const offset = circumference - Math.min(progress, 1) * circumference;
+        return (
+            <svg width={size} height={size} className="progress-ring">
+                <circle className="progress-ring__bg" cx={size/2} cy={size/2} r={r} strokeWidth={stroke} />
+                <circle className="progress-ring__fill" cx={size/2} cy={size/2} r={r} strokeWidth={stroke}
+                    stroke={color} strokeDasharray={circumference} strokeDashoffset={offset} />
+            </svg>
+        );
+    };
+
+    // ================================================================
+    //  CONFETTI EFFECT
+    // ================================================================
+    const Confetti = () => {
+        const colors = ['#F4C44E', '#B593C6', '#75B876', '#D4A853', '#F7D470', '#D3C0D9', '#F5F5F5'];
+        const pieces = Array.from({ length: 40 }, (_, i) => ({
+            left: Math.random() * 100, color: colors[i % colors.length],
+            delay: Math.random() * 1.5, size: 6 + Math.random() * 8,
+            shape: Math.random() > 0.5 ? 'rounded-full' : 'rounded-sm',
+        }));
+        return (
+            <div className="fixed inset-0 pointer-events-none z-50">
+                {pieces.map((p, i) => (
+                    <div key={i} className={`confetti ${p.shape}`}
+                        style={{ left: `${p.left}%`, width: p.size, height: p.size, backgroundColor: p.color,
+                                 animationDelay: `${p.delay}s` }} />
+                ))}
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  WORKOUT CARD
+    // ================================================================
+    const WorkoutCard = ({ workout, onPlay, onFav, isFav, compact = false }) => {
+        const cat = CATEGORIES[workout.category];
+        if (compact) {
+            return (
+                <button onClick={() => onPlay(workout)}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-factborder touch-scale w-full text-left">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img src={`https://img.youtube.com/vi/${workout.id}/mqdefault.jpg`}
+                             alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Icon.Play size={16} className="text-white" />
+                        </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-ink truncate">{workout.title}</p>
+                        <p className="text-xs text-ink-muted">{workout.creator} &middot; {workout.duration}m</p>
+                    </div>
+                </button>
+            );
+        }
+        return (
+            <button onClick={() => onPlay(workout)}
+                className="rounded-2xl bg-surface border border-factborder overflow-hidden touch-scale text-left group w-full">
+                <div className="relative aspect-video bg-surface-raised">
+                    <img src={`https://img.youtube.com/vi/${workout.id}/mqdefault.jpg`}
+                         alt={workout.title} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Icon.Play size={20} className="text-white ml-0.5" />
+                        </div>
+                    </div>
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded-md font-medium">
+                        {workout.duration}m
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); onFav(workout.id); }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 backdrop-blur-sm">
+                        {isFav
+                            ? <Icon.HeartFill size={16} className="text-[#E74C3C]" />
+                            : <Icon.Heart size={16} className="text-white/70" />}
+                    </button>
+                </div>
+                <div className="p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`inline-block w-2 h-2 rounded-full`} style={{ backgroundColor: cat.color }} />
+                        <span className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">{cat.name}</span>
+                    </div>
+                    <h3 className="font-semibold text-sm text-ink truncate">{workout.title}</h3>
+                    <p className="text-xs text-ink-muted mt-0.5">{workout.creator}</p>
+                </div>
+            </button>
+        );
+    };
+
+    // ================================================================
+    //  SCREEN: HOME
+    // ================================================================
+    const HomeScreen = ({ onPlay, allWorkouts }) => {
+        const [favs, setFavs] = useState(Store.getFavorites());
+        const weekCount = Store.getThisWeekCount();
+        const goal = Store.getGoal();
+        const streak = Store.getStreak();
+        const totalMin = Store.getTotalMinutes();
+        const recent = Store.getRecentWorkouts(3);
+
+        const greeting = useMemo(() => {
+            const h = new Date().getHours();
+            if (h < 6) return 'Late night grind';
+            if (h < 12) return 'Good morning';
+            if (h < 17) return 'Good afternoon';
+            if (h < 21) return 'Good evening';
+            return 'Night owl mode';
+        }, []);
+
+        // Smart suggestion: pick from under-done category, consider time of day
+        const suggestion = useMemo(() => {
+            const breakdown = Store.getCategoryBreakdown();
+            const h = new Date().getHours();
+            let preferredCats;
+            if (h < 10) preferredCats = ['stretch', 'agility', 'pilates', 'fatburn']; // gentle morning
+            else if (h < 18) preferredCats = ['fatburn', 'agility', 'pilates', 'stretch']; // energy midday
+            else preferredCats = ['stretch', 'pilates', 'agility', 'fatburn']; // cool evening
+
+            // Sort by least done first, using preference as tiebreaker
+            const sorted = Object.keys(breakdown).sort((a, b) => {
+                const diff = breakdown[a] - breakdown[b];
+                return diff !== 0 ? diff : preferredCats.indexOf(a) - preferredCats.indexOf(b);
+            });
+            const targetCat = sorted[0];
+            const candidates = allWorkouts.filter(w => w.category === targetCat);
+            // Avoid recently done
+            const recentIds = new Set(recent.map(r => r.workoutId));
+            const fresh = candidates.filter(w => !recentIds.has(w.id));
+            const pool = fresh.length ? fresh : candidates;
+            return pool[Math.floor(Math.random() * pool.length)] || allWorkouts[0];
+        }, []);
+
+        const handleFav = (id) => { Store.toggleFavorite(id); setFavs([...Store.getFavorites()]); };
+
+        const quickPlay = (duration) => {
+            const candidates = allWorkouts.filter(w => w.duration <= duration);
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            if (pick) onPlay(pick);
+        };
+
+        return (
+            <div className="space-y-6 pb-4">
+                {/* Header */}
+                <div className="flex items-center justify-between anim-fade-up">
+                    <div>
+                        <h1 className="text-2xl font-bold text-ink font-display">{greeting}</h1>
+                        <p className="text-ink-muted text-sm mt-0.5 font-serif italic">Let's move.</p>
+                    </div>
+                    <div className="relative">
+                        <ProgressRing progress={weekCount / goal} size={56} stroke={5} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-sm font-bold text-ink">{weekCount}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats strip */}
+                <div className="flex gap-3 anim-fade-up delay-1">
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                            <Icon.Fire size={14} className="text-brand" />
+                            <span className="text-lg font-bold text-ink font-display">{streak}</span>
+                        </div>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">Streak</p>
+                    </div>
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
+                        <span className="text-lg font-bold text-ink font-display">{weekCount}/{goal}</span>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">This week</p>
+                    </div>
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
+                        <span className="text-lg font-bold text-ink font-display">{totalMin}m</span>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">Total</p>
+                    </div>
+                </div>
+
+                {/* Quick Play */}
+                <div className="anim-fade-up delay-2">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-base font-semibold text-ink">Quick Play</h2>
+                        <Icon.Shuffle size={16} className="text-ink-muted" />
+                    </div>
+                    <div className="flex gap-3">
+                        {DURATIONS.filter(d => [5, 10, 20].includes(d.value)).map(d => (
+                            <button key={d.value} onClick={() => quickPlay(d.value)}
+                                className="flex-1 bg-surface border border-factborder rounded-2xl p-4 text-center touch-scale hover:border-[#444] transition-colors">
+                                <span className="text-2xl font-bold text-ink font-display">{d.value}</span>
+                                <p className="text-xs text-ink-muted mt-1 font-mono">min</p>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Today's Pick */}
+                {suggestion && (
+                    <div className="anim-fade-up delay-3">
+                        <h2 className="text-base font-semibold text-ink mb-3">Suggested for You</h2>
+                        <WorkoutCard workout={suggestion} onPlay={onPlay}
+                            onFav={handleFav} isFav={favs.includes(suggestion.id)} />
+                    </div>
+                )}
+
+                {/* Category Quick Links */}
+                <div className="anim-fade-up delay-4">
+                    <h2 className="text-base font-semibold text-ink mb-3">Categories</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(CATEGORIES).map(([key, cat]) => (
+                            <button key={key} onClick={() => onPlay({ __browse: key })}
+                                className={`${cat.bg} border border-transparent rounded-2xl p-4 text-left touch-scale`}>
+                                <CategoryIcon category={key} size={22} className={cat.text} />
+                                <h3 className="font-semibold text-ink text-sm mt-2">{cat.name}</h3>
+                                <p className="text-xs text-ink-muted mt-0.5">{cat.desc}</p>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Recent */}
+                {recent.length > 0 && (
+                    <div className="anim-fade-up delay-5">
+                        <h2 className="text-base font-semibold text-ink mb-3">Recent</h2>
+                        <div className="space-y-2">
+                            {recent.map((r, i) => {
+                                const w = allWorkouts.find(w => w.id === r.workoutId);
+                                if (!w) return null;
+                                return <WorkoutCard key={i} workout={w} onPlay={onPlay}
+                                    onFav={handleFav} isFav={favs.includes(w.id)} compact />;
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  SCREEN: BROWSE
+    // ================================================================
+    const BrowseScreen = ({ onPlay, allWorkouts, initCategory }) => {
+        const [catFilter, setCatFilter] = useState(initCategory || 'all');
+        const [durFilter, setDurFilter] = useState('all');
+        const [showFavs, setShowFavs] = useState(false);
+        const [favs, setFavs] = useState(Store.getFavorites());
+        const [showAdd, setShowAdd] = useState(false);
+
+        const filtered = useMemo(() => {
+            let list = allWorkouts;
+            if (showFavs) list = list.filter(w => favs.includes(w.id));
+            if (catFilter !== 'all') list = list.filter(w => w.category === catFilter);
+            if (durFilter !== 'all') list = list.filter(w => w.duration === parseInt(durFilter));
+            return list;
+        }, [catFilter, durFilter, showFavs, favs, allWorkouts]);
+
+        const handleFav = (id) => { Store.toggleFavorite(id); setFavs([...Store.getFavorites()]); };
+
+        return (
+            <div className="space-y-4 pb-4">
+                <h1 className="text-2xl font-bold text-ink anim-fade-up font-display">Browse</h1>
+
+                {/* Category filters */}
+                <div className="flex gap-2 overflow-x-auto pb-1 anim-fade-up delay-1" style={{ scrollbarWidth: 'none' }}>
+                    <button onClick={() => { setCatFilter('all'); setShowFavs(false); }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${catFilter === 'all' && !showFavs ? 'bg-ink text-[#111]' : 'bg-surface text-ink-muted border border-factborder'}`}>
+                        All
+                    </button>
+                    {Object.entries(CATEGORIES).map(([key, cat]) => (
+                        <button key={key} onClick={() => { setCatFilter(key); setShowFavs(false); }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${catFilter === key && !showFavs ? 'text-white pill-active' : 'bg-surface text-ink-muted border border-factborder'}`}
+                            style={catFilter === key && !showFavs ? { backgroundColor: cat.color } : {}}>
+                            <CategoryIcon category={key} size={14} />
+                            {cat.name}
+                        </button>
+                    ))}
+                    <button onClick={() => { setShowFavs(!showFavs); setCatFilter('all'); }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${showFavs ? 'bg-[#E74C3C] text-white' : 'bg-surface text-ink-muted border border-factborder'}`}>
+                        <Icon.Heart size={14} />
+                        Favorites
+                    </button>
+                </div>
+
+                {/* Duration filters */}
+                <div className="flex gap-2 anim-fade-up delay-2">
+                    <button onClick={() => setDurFilter('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === 'all' ? 'bg-[#333] text-ink' : 'bg-surface text-ink-muted border border-factborder'}`}>
+                        Any length
+                    </button>
+                    {DURATIONS.map(d => (
+                        <button key={d.value} onClick={() => setDurFilter(String(d.value))}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === String(d.value) ? 'bg-[#333] text-ink' : 'bg-surface text-ink-muted border border-factborder'}`}>
+                            {d.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Results count */}
+                <p className="text-xs text-ink-muted">{filtered.length} workout{filtered.length !== 1 ? 's' : ''}</p>
+
+                {/* Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    {filtered.map((w, i) => (
+                        <WorkoutCard key={w.id} workout={w} onPlay={onPlay}
+                            onFav={handleFav} isFav={favs.includes(w.id)} />
+                    ))}
+                </div>
+
+                {filtered.length === 0 && (
+                    <div className="text-center py-16">
+                        <Icon.Heart size={32} className="text-ink-faint mx-auto mb-3" />
+                        <p className="text-ink-muted">{showFavs ? 'No favorites yet' : 'No workouts match'}</p>
+                        <p className="text-ink-dim text-sm mt-1">{showFavs ? 'Tap the heart on any workout to save it' : 'Try different filters'}</p>
+                    </div>
+                )}
+
+                {/* Add custom workout */}
+                <AddWorkoutSection onAdd={(w) => { /* handled via parent state refresh */ }} />
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  ADD CUSTOM WORKOUT
+    // ================================================================
+    const AddWorkoutSection = ({ onAdd }) => {
+        const [open, setOpen] = useState(false);
+        const [url, setUrl] = useState('');
+        const [title, setTitle] = useState('');
+        const [cat, setCat] = useState('fatburn');
+        const [dur, setDur] = useState('10');
+
+        const extractId = (input) => {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/,
+                /^([A-Za-z0-9_-]{11})$/,
+            ];
+            for (const p of patterns) { const m = input.match(p); if (m) return m[1]; }
+            return null;
+        };
+
+        const handleAdd = () => {
+            const id = extractId(url.trim());
+            if (!id || !title.trim()) return;
+            const workout = { id, title: title.trim(), creator: 'Custom', duration: parseInt(dur), category: cat, intensity: 'medium', tags: ['custom'], custom: true };
+            Store.addCustomWorkout(workout);
+            setUrl(''); setTitle(''); setOpen(false);
+            onAdd(workout);
+        };
+
+        if (!open) {
+            return (
+                <button onClick={() => setOpen(true)}
+                    className="w-full py-4 rounded-2xl border-2 border-dashed border-factborder text-ink-muted flex items-center justify-center gap-2 hover:border-[#444] transition-colors touch-scale">
+                    <Icon.Plus size={18} />
+                    <span className="text-sm font-medium">Add YouTube Workout</span>
+                </button>
+            );
+        }
+
+        return (
+            <div className="bg-surface border border-factborder rounded-2xl p-4 space-y-3 anim-scale-in">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-ink text-sm">Add Custom Workout</h3>
+                    <button onClick={() => setOpen(false)} className="text-ink-muted"><Icon.X size={18} /></button>
+                </div>
+                <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="YouTube URL or video ID"
+                    className="w-full bg-surface-raised border border-[#333] rounded-xl px-4 py-3 text-sm text-ink placeholder-ink-dim focus:outline-none focus:border-ink-dim" />
+                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Workout title"
+                    className="w-full bg-surface-raised border border-[#333] rounded-xl px-4 py-3 text-sm text-ink placeholder-ink-dim focus:outline-none focus:border-ink-dim" />
+                <div className="flex gap-2">
+                    <select value={cat} onChange={(e) => setCat(e.target.value)}
+                        className="flex-1 bg-surface-raised border border-[#333] rounded-xl px-3 py-2.5 text-sm text-ink focus:outline-none">
+                        {Object.entries(CATEGORIES).map(([k, c]) => <option key={k} value={k}>{c.name}</option>)}
+                    </select>
+                    <select value={dur} onChange={(e) => setDur(e.target.value)}
+                        className="flex-1 bg-surface-raised border border-[#333] rounded-xl px-3 py-2.5 text-sm text-ink focus:outline-none">
+                        {DURATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                    </select>
+                </div>
+                <button onClick={handleAdd}
+                    className="w-full py-3 rounded-xl bg-brand text-white font-semibold text-sm touch-scale">
+                    Add Workout
+                </button>
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  SCREEN: PROGRESS
+    // ================================================================
+    const ProgressScreen = () => {
+        const totalWorkouts = Store.getTotalWorkouts();
+        const totalMinutes = Store.getTotalMinutes();
+        const streak = Store.getStreak();
+        const bestStreak = Store.getBestStreak();
+        const weeklyData = Store.getWeeklyData(6);
+        const calendarData = Store.getCalendarData(84);
+        const categoryBreakdown = Store.getCategoryBreakdown();
+        const goal = Store.getGoal();
+        const [editGoal, setEditGoal] = useState(false);
+        const [newGoal, setNewGoal] = useState(goal);
+
+        const maxWeekly = Math.max(...weeklyData.map(w => w.count), goal);
+
+        const totalForBreakdown = Object.values(categoryBreakdown).reduce((a, b) => a + b, 0) || 1;
+
+        const saveGoal = () => { Store.setGoal(newGoal); setEditGoal(false); };
+
+        return (
+            <div className="space-y-6 pb-4">
+                <div className="flex items-center justify-between anim-fade-up">
+                    <h1 className="text-2xl font-bold text-ink font-display">Progress</h1>
+                    <button onClick={() => setEditGoal(!editGoal)} className="text-ink-muted hover:text-ink/80">
+                        <Icon.Settings size={20} />
+                    </button>
+                </div>
+
+                {editGoal && (
+                    <div className="bg-surface border border-factborder rounded-2xl p-4 anim-scale-in">
+                        <p className="text-sm text-ink/80 mb-2">Weekly workout goal</p>
+                        <div className="flex items-center gap-3">
+                            <input type="range" min="1" max="14" value={newGoal} onChange={(e) => setNewGoal(Number(e.target.value))}
+                                className="flex-1 accent-[#F4C44E]" />
+                            <span className="text-lg font-bold text-ink w-8 text-center">{newGoal}</span>
+                            <button onClick={saveGoal} className="px-4 py-2 bg-brand rounded-lg text-white text-sm font-medium touch-scale">Save</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Stat cards */}
+                <div className="grid grid-cols-2 gap-3 anim-fade-up delay-1">
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Trophy size={20} className="text-brand mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{totalWorkouts}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Total Workouts</p>
+                    </div>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Clock size={20} className="text-[#75B876] mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{totalMinutes}m</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Total Minutes</p>
+                    </div>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Fire size={20} className="text-brand mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{streak}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Current Streak</p>
+                    </div>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Star size={20} className="text-[#B593C6] mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{bestStreak}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Best Streak</p>
+                    </div>
+                </div>
+
+                {/* Weekly chart */}
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-2">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-4">Weekly Activity</h3>
+                    <div className="flex items-end gap-2 h-32">
+                        {weeklyData.map((w, i) => {
+                            const height = maxWeekly > 0 ? (w.count / maxWeekly) * 100 : 0;
+                            const isThisWeek = i === weeklyData.length - 1;
+                            return (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                    <span className="text-[10px] text-ink-muted font-medium">{w.count}</span>
+                                    <div className="w-full rounded-lg relative" style={{ height: '100px' }}>
+                                        {/* Goal line */}
+                                        <div className="absolute w-full border-t border-dashed border-[#333]"
+                                            style={{ bottom: `${(goal / maxWeekly) * 100}%` }} />
+                                        <div className={`absolute bottom-0 w-full rounded-lg transition-all duration-500 ${isThisWeek ? 'bg-brand' : 'bg-[#333]'}`}
+                                            style={{ height: `${Math.max(height, 4)}%` }} />
+                                    </div>
+                                    <span className="text-[10px] text-ink-dim">
+                                        {w.weekStart.toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Calendar heatmap */}
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-3">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-3">Activity Calendar</h3>
+                    <div className="flex gap-[3px] flex-wrap" style={{ maxWidth: '100%' }}>
+                        {calendarData.map((d, i) => {
+                            const intensity = d.count === 0 ? 'bg-surface-raised' : d.count === 1 ? 'bg-[#2d4a2e]' : d.count === 2 ? 'bg-[#4d8a4e]' : 'bg-[#75B876]';
+                            const isToday = d.date.toDateString() === new Date().toDateString();
+                            return (
+                                <div key={i} className={`heat-cell ${intensity} ${isToday ? 'ring-1 ring-ink-muted' : ''}`}
+                                    title={`${d.date.toLocaleDateString('en', { month: 'short', day: 'numeric' })}: ${d.count} workout${d.count !== 1 ? 's' : ''}`} />
+                            );
+                        })}
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 text-[10px] text-ink-dim">
+                        <span>Less</span>
+                        <div className="heat-cell bg-surface-raised" />
+                        <div className="heat-cell bg-[#2d4a2e]" />
+                        <div className="heat-cell bg-[#4d8a4e]" />
+                        <div className="heat-cell bg-[#75B876]" />
+                        <span>More</span>
+                    </div>
+                </div>
+
+                {/* Category breakdown */}
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-4">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-4">Category Mix</h3>
+                    <div className="space-y-3">
+                        {Object.entries(CATEGORIES).map(([key, cat]) => {
+                            const count = categoryBreakdown[key] || 0;
+                            const pct = Math.round((count / totalForBreakdown) * 100);
+                            return (
+                                <div key={key}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <CategoryIcon category={key} size={14} className={cat.text} />
+                                            <span className="text-sm text-ink/80">{cat.name}</span>
+                                        </div>
+                                        <span className="text-xs text-ink-muted">{count} ({pct}%)</span>
+                                    </div>
+                                    <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
+                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: cat.color }} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  SCREEN: PLAYER
+    // ================================================================
+    const PlayerScreen = ({ workout, onBack, onComplete, allWorkouts }) => {
+        const [completed, setCompleted] = useState(false);
+        const [showConfetti, setShowConfetti] = useState(false);
+        const [theaterMode, setTheaterMode] = useState(false);
+        const cat = CATEGORIES[workout.category];
+
+        const handleComplete = () => {
+            Store.logWorkout(workout);
+            setCompleted(true);
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 3000);
+        };
+
+        // Suggest next workout (different from current, same or random category)
+        const nextSuggestion = useMemo(() => {
+            const candidates = allWorkouts.filter(w => w.id !== workout.id);
+            const sameCat = candidates.filter(w => w.category === workout.category);
+            const pool = sameCat.length > 0 ? sameCat : candidates;
+            return pool[Math.floor(Math.random() * pool.length)];
+        }, [workout]);
+
+        if (theaterMode) {
+            return (
+                <div className="fixed inset-0 bg-black z-50 flex flex-col">
+                    {showConfetti && <Confetti />}
+                    <div className="flex items-center justify-between p-4">
+                        <button onClick={() => setTheaterMode(false)} className="text-ink-muted hover:text-white p-2">
+                            <Icon.X size={24} />
+                        </button>
+                        <div className="text-center">
+                            <p className="text-sm font-semibold text-ink/80">{workout.title}</p>
+                            <p className="text-xs text-ink-dim">{workout.creator}</p>
+                        </div>
+                        <div className="w-10" />
+                    </div>
+                    <div className="flex-1 flex items-center px-4">
+                        <div className="video-wrap w-full" style={{ borderRadius: '8px' }}>
+                            <iframe src={`https://www.youtube.com/embed/${workout.id}?rel=0&modestbranding=1&autoplay=1&playsinline=1`}
+                                title={workout.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen />
+                        </div>
+                    </div>
+                    <div className="p-4 safe-bottom">
+                        {!completed ? (
+                            <button onClick={handleComplete}
+                                className="w-full py-4 rounded-2xl bg-[#75B876] text-white font-bold text-lg touch-scale flex items-center justify-center gap-2">
+                                <Icon.Check size={24} />
+                                Done
+                            </button>
+                        ) : (
+                            <div className="text-center">
+                                <p className="text-[#75B876] font-semibold">Workout logged!</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-4 pb-4 anim-fade-up">
+                {showConfetti && <Confetti />}
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <button onClick={onBack} className="flex items-center gap-1 text-ink-muted hover:text-ink p-1">
+                        <Icon.ChevL size={20} />
+                        <span className="text-sm">Back</span>
+                    </button>
+                    <button onClick={() => setTheaterMode(true)}
+                        className="flex items-center gap-1.5 text-ink-muted hover:text-ink px-3 py-1.5 rounded-lg bg-surface border border-factborder text-sm">
+                        <Icon.Tv size={14} />
+                        <span>TV Mode</span>
+                    </button>
+                </div>
+
+                {/* Video */}
+                <div className="video-wrap">
+                    <iframe src={`https://www.youtube.com/embed/${workout.id}?rel=0&modestbranding=1&autoplay=1&playsinline=1`}
+                        title={workout.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen />
+                </div>
+
+                {/* Info */}
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: cat.color + '22', color: cat.color }}>
+                            <CategoryIcon category={workout.category} size={12} />
+                            {cat.name}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-surface-raised text-ink-muted">
+                            <Icon.Clock size={12} />
+                            {workout.duration} min
+                        </span>
+                    </div>
+                    <h2 className="text-xl font-bold text-ink font-display">{workout.title}</h2>
+                    <p className="text-sm text-ink-muted mt-1">{workout.creator}</p>
+                </div>
+
+                {/* Complete */}
+                {!completed ? (
+                    <button onClick={handleComplete}
+                        className="w-full py-4 rounded-2xl bg-[#75B876] hover:bg-[#69a66a] text-white font-bold text-lg touch-scale flex items-center justify-center gap-2 shadow-lg shadow-[#75B876]/20 transition-colors">
+                        <Icon.Check size={24} />
+                        Workout Complete
+                    </button>
+                ) : (
+                    <div className="space-y-4 anim-scale-in">
+                        <div className="bg-[#75B876]/10 border border-[#75B876]/20 rounded-2xl p-6 text-center">
+                            <div className="w-16 h-16 rounded-full bg-[#75B876]/20 flex items-center justify-center mx-auto mb-3">
+                                <Icon.Check size={32} className="text-[#75B876]" />
+                            </div>
+                            <h3 className="text-lg font-bold text-[#75B876] font-display">Crushed it!</h3>
+                            <p className="text-sm text-ink-muted mt-1">+{workout.duration} minutes logged</p>
+                        </div>
+
+                        {nextSuggestion && (
+                            <div>
+                                <p className="text-sm text-ink-muted mb-2">Up next?</p>
+                                <WorkoutCard workout={nextSuggestion} onPlay={onComplete}
+                                    onFav={() => {}} isFav={false} compact />
+                            </div>
+                        )}
+
+                        <button onClick={onBack}
+                            className="w-full py-3 rounded-xl bg-surface-raised text-ink/80 font-medium text-sm touch-scale">
+                            Back to Home
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  TAB BAR
+    // ================================================================
+    const TabBar = ({ active, onChange }) => {
+        const tabs = [
+            { id: 'home', label: 'Home', icon: Icon.Home },
+            { id: 'browse', label: 'Browse', icon: Icon.Grid },
+            { id: 'progress', label: 'Progress', icon: Icon.Chart },
+        ];
+        return (
+            <div className="tab-bar">
+                <div className="flex items-center justify-around max-w-lg mx-auto px-4 py-2">
+                    {tabs.map(t => {
+                        const isActive = active === t.id;
+                        return (
+                            <button key={t.id} onClick={() => onChange(t.id)}
+                                className={`flex flex-col items-center gap-0.5 py-1 px-4 rounded-xl transition-colors ${isActive ? 'text-brand' : 'text-ink-dim'}`}>
+                                <t.icon size={22} className={isActive ? 'text-brand' : 'text-ink-dim'} />
+                                <span className={`text-[10px] font-medium ${isActive ? 'text-brand' : 'text-ink-dim'}`}>{t.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  MAIN APP
+    // ================================================================
+    const App = () => {
+        // URL parameter support for PWA shortcuts
+        const params = useMemo(() => new URLSearchParams(window.location.search), []);
+        const initialTab = params.get('tab') || 'home';
+        const quickParam = params.get('quick');
+
+        const [tab, setTab] = useState(initialTab);
+        const [playerWorkout, setPlayerWorkout] = useState(null);
+        const [refreshKey, setRefreshKey] = useState(0);
+        const [browseInitCat, setBrowseInitCat] = useState(null);
+
+        // Merge built-in + custom workouts
+        const allWorkouts = useMemo(() => {
+            return [...WORKOUTS, ...Store.getCustomWorkouts()];
+        }, [refreshKey]);
+
+        // Handle quick-play URL param on mount
+        useEffect(() => {
+            if (quickParam) {
+                const dur = parseInt(quickParam);
+                const candidates = allWorkouts.filter(w => w.duration <= dur);
+                const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                if (pick) setPlayerWorkout(pick);
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }, []);
+
+        const handlePlay = (workout) => {
+            // Special: category browse shortcut from home
+            if (workout.__browse) {
+                setBrowseInitCat(workout.__browse);
+                setTab('browse');
+                return;
+            }
+            setPlayerWorkout(workout);
+        };
+
+        const handleBack = () => {
+            setPlayerWorkout(null);
+            setRefreshKey(k => k + 1); // refresh stats
+        };
+
+        const handleComplete = (nextWorkout) => {
+            setPlayerWorkout(nextWorkout);
+            setRefreshKey(k => k + 1);
+        };
+
+        // Player view overrides tabs
+        if (playerWorkout) {
+            return (
+                <div className="min-h-screen safe-top">
+                    <div className="max-w-2xl mx-auto px-4 pt-4 pb-4">
+                        <PlayerScreen workout={playerWorkout} onBack={handleBack}
+                            onComplete={handleComplete} allWorkouts={allWorkouts} />
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="min-h-screen safe-top">
+                <div className="max-w-2xl mx-auto px-4 pt-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+                    {tab === 'home' && <HomeScreen key={refreshKey} onPlay={handlePlay} allWorkouts={allWorkouts} />}
+                    {tab === 'browse' && <BrowseScreen key={refreshKey + 'b'} onPlay={handlePlay} allWorkouts={allWorkouts} initCategory={browseInitCat} />}
+                    {tab === 'progress' && <ProgressScreen key={refreshKey + 'p'} />}
+                </div>
+                <TabBar active={tab} onChange={(t) => { setBrowseInitCat(null); setTab(t); window.scrollTo(0, 0); }} />
+            </div>
+        );
+    };
+
+    // ================================================================
+    //  RENDER + PWA REGISTRATION
+    // ================================================================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+    }
+    </script>
+</body>
+</html>
