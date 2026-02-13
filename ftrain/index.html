@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FACT/Train">
-    <meta name="theme-color" content="#09090b">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="description" content="FACT/Train - Personal training: stretching, Pilates, and fat-burning workouts">
     <meta name="mobile-web-app-capable" content="yes">
 
@@ -14,12 +14,17 @@
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f97316'/><text x='50' y='62' font-size='36' font-weight='bold' text-anchor='middle' fill='white' font-family='system-ui'>FT</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230F0F0F'/><text x='50' y='58' font-size='34' font-weight='700' text-anchor='middle' fill='%23F4C44E' font-family='system-ui'>FT</text></svg>">
 
     <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://img.youtube.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <!-- FACT Brand Typography: Noto family blend -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Display:wght@400;600;700;900&family=Noto+Serif:wght@300;400;500;600&family=Noto+Sans+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- CDN Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -31,13 +36,21 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans"', 'system-ui', 'sans-serif'],
+                        display: ['"Noto Sans Display"', '"Noto Sans"', 'system-ui', 'sans-serif'],
+                        serif: ['"Noto Serif"', 'Georgia', 'serif'],
+                        mono: ['"Noto Sans Mono"', 'monospace'],
+                    },
                     colors: {
-                        brand: { DEFAULT: '#f97316', light: '#fb923c', dark: '#ea580c' },
-                        surface: { DEFAULT: '#18181b', raised: '#27272a' },
-                        fatburn: '#f97316',
-                        pilates: '#a855f7',
-                        stretch: '#14b8a6',
-                        agility: '#3b82f6',
+                        brand: { DEFAULT: '#F4C44E', light: '#F7D470', dark: '#D4A853' },
+                        surface: { DEFAULT: '#1A1A1A', raised: '#2A2A2A' },
+                        ink: { DEFAULT: '#F5F5F5', muted: '#9CA3AF', dim: '#6B7280', faint: '#4B5563' },
+                        factborder: '#2A2A2A',
+                        fatburn: '#F4C44E',
+                        pilates: '#B593C6',
+                        stretch: '#75B876',
+                        agility: '#D4A853',
                     }
                 }
             }
@@ -48,9 +61,9 @@
         * { -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: #09090b;
-            color: #fafafa;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #0F0F0F;
+            color: #F5F5F5;
+            font-family: "Noto Sans", system-ui, -apple-system, sans-serif;
             overscroll-behavior: none;
             -webkit-font-smoothing: antialiased;
             user-select: none;
@@ -72,10 +85,10 @@
         /* Tab bar glass */
         .tab-bar {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-            background: rgba(9, 9, 11, 0.82);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border-top: 1px solid rgba(63, 63, 70, 0.4);
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-top: 1px solid rgba(42, 42, 42, 0.6);
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
@@ -104,7 +117,7 @@
 
         /* Progress ring */
         .progress-ring { transform: rotate(-90deg); }
-        .progress-ring__bg { stroke: #27272a; fill: none; }
+        .progress-ring__bg { stroke: #2A2A2A; fill: none; }
         .progress-ring__fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
 
         /* Touch feedback */
@@ -140,10 +153,10 @@
     //  WORKOUT LIBRARY
     // ================================================================
     const CATEGORIES = {
-        fatburn:  { name: 'Fat Burn',  color: '#f97316', bg: 'bg-orange-500/15', text: 'text-orange-400', ring: 'ring-orange-500/30', desc: 'HIIT & cardio to torch belly fat' },
-        pilates:  { name: 'Pilates',   color: '#a855f7', bg: 'bg-violet-500/15', text: 'text-violet-400', ring: 'ring-violet-500/30', desc: 'Core strength & lean toning' },
-        stretch:  { name: 'Stretch',   color: '#14b8a6', bg: 'bg-teal-500/15',   text: 'text-teal-400',   ring: 'ring-teal-500/30',   desc: 'Flexibility & recovery' },
-        agility:  { name: 'Agility',   color: '#3b82f6', bg: 'bg-blue-500/15',   text: 'text-blue-400',   ring: 'ring-blue-500/30',   desc: 'Mobility & balance' },
+        fatburn:  { name: 'Fat Burn',  color: '#F4C44E', bg: 'bg-[#F4C44E]/12', text: 'text-[#F4C44E]', ring: 'ring-[#F4C44E]/25', desc: 'HIIT & cardio to torch belly fat' },
+        pilates:  { name: 'Pilates',   color: '#B593C6', bg: 'bg-[#B593C6]/12', text: 'text-[#B593C6]', ring: 'ring-[#B593C6]/25', desc: 'Core strength & lean toning' },
+        stretch:  { name: 'Stretch',   color: '#75B876', bg: 'bg-[#75B876]/12', text: 'text-[#75B876]', ring: 'ring-[#75B876]/25', desc: 'Flexibility & recovery' },
+        agility:  { name: 'Agility',   color: '#D4A853', bg: 'bg-[#D4A853]/12', text: 'text-[#D4A853]', ring: 'ring-[#D4A853]/25', desc: 'Mobility & balance' },
     };
 
     const DURATIONS = [
@@ -384,7 +397,7 @@
     // ================================================================
     //  PROGRESS RING COMPONENT
     // ================================================================
-    const ProgressRing = ({ progress, size = 120, stroke = 8, color = '#f97316' }) => {
+    const ProgressRing = ({ progress, size = 120, stroke = 8, color = '#F4C44E' }) => {
         const r = (size - stroke) / 2;
         const circumference = 2 * Math.PI * r;
         const offset = circumference - Math.min(progress, 1) * circumference;
@@ -401,7 +414,7 @@
     //  CONFETTI EFFECT
     // ================================================================
     const Confetti = () => {
-        const colors = ['#f97316', '#a855f7', '#14b8a6', '#3b82f6', '#22c55e', '#eab308', '#ef4444'];
+        const colors = ['#F4C44E', '#B593C6', '#75B876', '#D4A853', '#F7D470', '#D3C0D9', '#F5F5F5'];
         const pieces = Array.from({ length: 40 }, (_, i) => ({
             left: Math.random() * 100, color: colors[i % colors.length],
             delay: Math.random() * 1.5, size: 6 + Math.random() * 8,
@@ -426,7 +439,7 @@
         if (compact) {
             return (
                 <button onClick={() => onPlay(workout)}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 touch-scale w-full text-left">
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-factborder touch-scale w-full text-left">
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 relative">
                         <img src={`https://img.youtube.com/vi/${workout.id}/mqdefault.jpg`}
                              alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -435,16 +448,16 @@
                         </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-100 truncate">{workout.title}</p>
-                        <p className="text-xs text-zinc-500">{workout.creator} &middot; {workout.duration}m</p>
+                        <p className="text-sm font-semibold text-ink truncate">{workout.title}</p>
+                        <p className="text-xs text-ink-muted">{workout.creator} &middot; {workout.duration}m</p>
                     </div>
                 </button>
             );
         }
         return (
             <button onClick={() => onPlay(workout)}
-                className="rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden touch-scale text-left group w-full">
-                <div className="relative aspect-video bg-zinc-800">
+                className="rounded-2xl bg-surface border border-factborder overflow-hidden touch-scale text-left group w-full">
+                <div className="relative aspect-video bg-surface-raised">
                     <img src={`https://img.youtube.com/vi/${workout.id}/mqdefault.jpg`}
                          alt={workout.title} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy" />
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -458,17 +471,17 @@
                     <button onClick={(e) => { e.stopPropagation(); onFav(workout.id); }}
                         className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 backdrop-blur-sm">
                         {isFav
-                            ? <Icon.HeartFill size={16} className="text-red-500" />
+                            ? <Icon.HeartFill size={16} className="text-[#E74C3C]" />
                             : <Icon.Heart size={16} className="text-white/70" />}
                     </button>
                 </div>
                 <div className="p-3">
                     <div className="flex items-center gap-1.5 mb-1">
                         <span className={`inline-block w-2 h-2 rounded-full`} style={{ backgroundColor: cat.color }} />
-                        <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">{cat.name}</span>
+                        <span className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">{cat.name}</span>
                     </div>
-                    <h3 className="font-semibold text-sm text-zinc-100 truncate">{workout.title}</h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">{workout.creator}</p>
+                    <h3 className="font-semibold text-sm text-ink truncate">{workout.title}</h3>
+                    <p className="text-xs text-ink-muted mt-0.5">{workout.creator}</p>
                 </div>
             </button>
         );
@@ -530,48 +543,48 @@
                 {/* Header */}
                 <div className="flex items-center justify-between anim-fade-up">
                     <div>
-                        <h1 className="text-2xl font-bold text-zinc-50">{greeting}</h1>
-                        <p className="text-zinc-500 text-sm mt-0.5">Let's move.</p>
+                        <h1 className="text-2xl font-bold text-ink font-display">{greeting}</h1>
+                        <p className="text-ink-muted text-sm mt-0.5 font-serif italic">Let's move.</p>
                     </div>
                     <div className="relative">
                         <ProgressRing progress={weekCount / goal} size={56} stroke={5} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-zinc-100">{weekCount}</span>
+                            <span className="text-sm font-bold text-ink">{weekCount}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Stats strip */}
                 <div className="flex gap-3 anim-fade-up delay-1">
-                    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-center">
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
-                            <Icon.Fire size={14} className="text-orange-500" />
-                            <span className="text-lg font-bold text-zinc-100">{streak}</span>
+                            <Icon.Fire size={14} className="text-brand" />
+                            <span className="text-lg font-bold text-ink font-display">{streak}</span>
                         </div>
-                        <p className="text-[11px] text-zinc-500 uppercase tracking-wider">Streak</p>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">Streak</p>
                     </div>
-                    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-center">
-                        <span className="text-lg font-bold text-zinc-100">{weekCount}/{goal}</span>
-                        <p className="text-[11px] text-zinc-500 uppercase tracking-wider">This week</p>
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
+                        <span className="text-lg font-bold text-ink font-display">{weekCount}/{goal}</span>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">This week</p>
                     </div>
-                    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-center">
-                        <span className="text-lg font-bold text-zinc-100">{totalMin}m</span>
-                        <p className="text-[11px] text-zinc-500 uppercase tracking-wider">Total</p>
+                    <div className="flex-1 bg-surface border border-factborder rounded-2xl p-3 text-center">
+                        <span className="text-lg font-bold text-ink font-display">{totalMin}m</span>
+                        <p className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">Total</p>
                     </div>
                 </div>
 
                 {/* Quick Play */}
                 <div className="anim-fade-up delay-2">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-base font-semibold text-zinc-200">Quick Play</h2>
-                        <Icon.Shuffle size={16} className="text-zinc-500" />
+                        <h2 className="text-base font-semibold text-ink">Quick Play</h2>
+                        <Icon.Shuffle size={16} className="text-ink-muted" />
                     </div>
                     <div className="flex gap-3">
                         {DURATIONS.filter(d => [5, 10, 20].includes(d.value)).map(d => (
                             <button key={d.value} onClick={() => quickPlay(d.value)}
-                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center touch-scale hover:border-zinc-600 transition-colors">
-                                <span className="text-2xl font-bold text-zinc-100">{d.value}</span>
-                                <p className="text-xs text-zinc-500 mt-1">min</p>
+                                className="flex-1 bg-surface border border-factborder rounded-2xl p-4 text-center touch-scale hover:border-[#444] transition-colors">
+                                <span className="text-2xl font-bold text-ink font-display">{d.value}</span>
+                                <p className="text-xs text-ink-muted mt-1 font-mono">min</p>
                             </button>
                         ))}
                     </div>
@@ -580,7 +593,7 @@
                 {/* Today's Pick */}
                 {suggestion && (
                     <div className="anim-fade-up delay-3">
-                        <h2 className="text-base font-semibold text-zinc-200 mb-3">Suggested for You</h2>
+                        <h2 className="text-base font-semibold text-ink mb-3">Suggested for You</h2>
                         <WorkoutCard workout={suggestion} onPlay={onPlay}
                             onFav={handleFav} isFav={favs.includes(suggestion.id)} />
                     </div>
@@ -588,14 +601,14 @@
 
                 {/* Category Quick Links */}
                 <div className="anim-fade-up delay-4">
-                    <h2 className="text-base font-semibold text-zinc-200 mb-3">Categories</h2>
+                    <h2 className="text-base font-semibold text-ink mb-3">Categories</h2>
                     <div className="grid grid-cols-2 gap-3">
                         {Object.entries(CATEGORIES).map(([key, cat]) => (
                             <button key={key} onClick={() => onPlay({ __browse: key })}
                                 className={`${cat.bg} border border-transparent rounded-2xl p-4 text-left touch-scale`}>
                                 <CategoryIcon category={key} size={22} className={cat.text} />
-                                <h3 className="font-semibold text-zinc-100 text-sm mt-2">{cat.name}</h3>
-                                <p className="text-xs text-zinc-500 mt-0.5">{cat.desc}</p>
+                                <h3 className="font-semibold text-ink text-sm mt-2">{cat.name}</h3>
+                                <p className="text-xs text-ink-muted mt-0.5">{cat.desc}</p>
                             </button>
                         ))}
                     </div>
@@ -604,7 +617,7 @@
                 {/* Recent */}
                 {recent.length > 0 && (
                     <div className="anim-fade-up delay-5">
-                        <h2 className="text-base font-semibold text-zinc-200 mb-3">Recent</h2>
+                        <h2 className="text-base font-semibold text-ink mb-3">Recent</h2>
                         <div className="space-y-2">
                             {recent.map((r, i) => {
                                 const w = allWorkouts.find(w => w.id === r.workoutId);
@@ -641,24 +654,24 @@
 
         return (
             <div className="space-y-4 pb-4">
-                <h1 className="text-2xl font-bold text-zinc-50 anim-fade-up">Browse</h1>
+                <h1 className="text-2xl font-bold text-ink anim-fade-up font-display">Browse</h1>
 
                 {/* Category filters */}
                 <div className="flex gap-2 overflow-x-auto pb-1 anim-fade-up delay-1" style={{ scrollbarWidth: 'none' }}>
                     <button onClick={() => { setCatFilter('all'); setShowFavs(false); }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${catFilter === 'all' && !showFavs ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'}`}>
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${catFilter === 'all' && !showFavs ? 'bg-ink text-[#111]' : 'bg-surface text-ink-muted border border-factborder'}`}>
                         All
                     </button>
                     {Object.entries(CATEGORIES).map(([key, cat]) => (
                         <button key={key} onClick={() => { setCatFilter(key); setShowFavs(false); }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${catFilter === key && !showFavs ? 'text-white pill-active' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'}`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${catFilter === key && !showFavs ? 'text-white pill-active' : 'bg-surface text-ink-muted border border-factborder'}`}
                             style={catFilter === key && !showFavs ? { backgroundColor: cat.color } : {}}>
                             <CategoryIcon category={key} size={14} />
                             {cat.name}
                         </button>
                     ))}
                     <button onClick={() => { setShowFavs(!showFavs); setCatFilter('all'); }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${showFavs ? 'bg-red-500 text-white' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'}`}>
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${showFavs ? 'bg-[#E74C3C] text-white' : 'bg-surface text-ink-muted border border-factborder'}`}>
                         <Icon.Heart size={14} />
                         Favorites
                     </button>
@@ -667,19 +680,19 @@
                 {/* Duration filters */}
                 <div className="flex gap-2 anim-fade-up delay-2">
                     <button onClick={() => setDurFilter('all')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === 'all' ? 'bg-zinc-700 text-zinc-100' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}>
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === 'all' ? 'bg-[#333] text-ink' : 'bg-surface text-ink-muted border border-factborder'}`}>
                         Any length
                     </button>
                     {DURATIONS.map(d => (
                         <button key={d.value} onClick={() => setDurFilter(String(d.value))}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === String(d.value) ? 'bg-zinc-700 text-zinc-100' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}>
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${durFilter === String(d.value) ? 'bg-[#333] text-ink' : 'bg-surface text-ink-muted border border-factborder'}`}>
                             {d.label}
                         </button>
                     ))}
                 </div>
 
                 {/* Results count */}
-                <p className="text-xs text-zinc-500">{filtered.length} workout{filtered.length !== 1 ? 's' : ''}</p>
+                <p className="text-xs text-ink-muted">{filtered.length} workout{filtered.length !== 1 ? 's' : ''}</p>
 
                 {/* Grid */}
                 <div className="grid grid-cols-2 gap-3">
@@ -691,9 +704,9 @@
 
                 {filtered.length === 0 && (
                     <div className="text-center py-16">
-                        <Icon.Heart size={32} className="text-zinc-700 mx-auto mb-3" />
-                        <p className="text-zinc-500">{showFavs ? 'No favorites yet' : 'No workouts match'}</p>
-                        <p className="text-zinc-600 text-sm mt-1">{showFavs ? 'Tap the heart on any workout to save it' : 'Try different filters'}</p>
+                        <Icon.Heart size={32} className="text-ink-faint mx-auto mb-3" />
+                        <p className="text-ink-muted">{showFavs ? 'No favorites yet' : 'No workouts match'}</p>
+                        <p className="text-ink-dim text-sm mt-1">{showFavs ? 'Tap the heart on any workout to save it' : 'Try different filters'}</p>
                     </div>
                 )}
 
@@ -734,7 +747,7 @@
         if (!open) {
             return (
                 <button onClick={() => setOpen(true)}
-                    className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 flex items-center justify-center gap-2 hover:border-zinc-600 transition-colors touch-scale">
+                    className="w-full py-4 rounded-2xl border-2 border-dashed border-factborder text-ink-muted flex items-center justify-center gap-2 hover:border-[#444] transition-colors touch-scale">
                     <Icon.Plus size={18} />
                     <span className="text-sm font-medium">Add YouTube Workout</span>
                 </button>
@@ -742,22 +755,22 @@
         }
 
         return (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3 anim-scale-in">
+            <div className="bg-surface border border-factborder rounded-2xl p-4 space-y-3 anim-scale-in">
                 <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-zinc-200 text-sm">Add Custom Workout</h3>
-                    <button onClick={() => setOpen(false)} className="text-zinc-500"><Icon.X size={18} /></button>
+                    <h3 className="font-semibold text-ink text-sm">Add Custom Workout</h3>
+                    <button onClick={() => setOpen(false)} className="text-ink-muted"><Icon.X size={18} /></button>
                 </div>
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="YouTube URL or video ID"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500" />
+                    className="w-full bg-surface-raised border border-[#333] rounded-xl px-4 py-3 text-sm text-ink placeholder-ink-dim focus:outline-none focus:border-ink-dim" />
                 <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Workout title"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500" />
+                    className="w-full bg-surface-raised border border-[#333] rounded-xl px-4 py-3 text-sm text-ink placeholder-ink-dim focus:outline-none focus:border-ink-dim" />
                 <div className="flex gap-2">
                     <select value={cat} onChange={(e) => setCat(e.target.value)}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 focus:outline-none">
+                        className="flex-1 bg-surface-raised border border-[#333] rounded-xl px-3 py-2.5 text-sm text-ink focus:outline-none">
                         {Object.entries(CATEGORIES).map(([k, c]) => <option key={k} value={k}>{c.name}</option>)}
                     </select>
                     <select value={dur} onChange={(e) => setDur(e.target.value)}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 focus:outline-none">
+                        className="flex-1 bg-surface-raised border border-[#333] rounded-xl px-3 py-2.5 text-sm text-ink focus:outline-none">
                         {DURATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                     </select>
                 </div>
@@ -793,19 +806,19 @@
         return (
             <div className="space-y-6 pb-4">
                 <div className="flex items-center justify-between anim-fade-up">
-                    <h1 className="text-2xl font-bold text-zinc-50">Progress</h1>
-                    <button onClick={() => setEditGoal(!editGoal)} className="text-zinc-500 hover:text-zinc-300">
+                    <h1 className="text-2xl font-bold text-ink font-display">Progress</h1>
+                    <button onClick={() => setEditGoal(!editGoal)} className="text-ink-muted hover:text-ink/80">
                         <Icon.Settings size={20} />
                     </button>
                 </div>
 
                 {editGoal && (
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 anim-scale-in">
-                        <p className="text-sm text-zinc-300 mb-2">Weekly workout goal</p>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4 anim-scale-in">
+                        <p className="text-sm text-ink/80 mb-2">Weekly workout goal</p>
                         <div className="flex items-center gap-3">
                             <input type="range" min="1" max="14" value={newGoal} onChange={(e) => setNewGoal(Number(e.target.value))}
-                                className="flex-1 accent-orange-500" />
-                            <span className="text-lg font-bold text-zinc-100 w-8 text-center">{newGoal}</span>
+                                className="flex-1 accent-[#F4C44E]" />
+                            <span className="text-lg font-bold text-ink w-8 text-center">{newGoal}</span>
                             <button onClick={saveGoal} className="px-4 py-2 bg-brand rounded-lg text-white text-sm font-medium touch-scale">Save</button>
                         </div>
                     </div>
@@ -813,46 +826,46 @@
 
                 {/* Stat cards */}
                 <div className="grid grid-cols-2 gap-3 anim-fade-up delay-1">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                        <Icon.Trophy size={20} className="text-yellow-500 mb-2" />
-                        <p className="text-2xl font-bold text-zinc-100">{totalWorkouts}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">Total Workouts</p>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Trophy size={20} className="text-brand mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{totalWorkouts}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Total Workouts</p>
                     </div>
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                        <Icon.Clock size={20} className="text-blue-400 mb-2" />
-                        <p className="text-2xl font-bold text-zinc-100">{totalMinutes}m</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">Total Minutes</p>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Clock size={20} className="text-[#75B876] mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{totalMinutes}m</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Total Minutes</p>
                     </div>
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                        <Icon.Fire size={20} className="text-orange-500 mb-2" />
-                        <p className="text-2xl font-bold text-zinc-100">{streak}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">Current Streak</p>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Fire size={20} className="text-brand mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{streak}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Current Streak</p>
                     </div>
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                        <Icon.Star size={20} className="text-violet-400 mb-2" />
-                        <p className="text-2xl font-bold text-zinc-100">{bestStreak}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">Best Streak</p>
+                    <div className="bg-surface border border-factborder rounded-2xl p-4">
+                        <Icon.Star size={20} className="text-[#B593C6] mb-2" />
+                        <p className="text-2xl font-bold text-ink font-display">{bestStreak}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 font-mono">Best Streak</p>
                     </div>
                 </div>
 
                 {/* Weekly chart */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 anim-fade-up delay-2">
-                    <h3 className="text-sm font-semibold text-zinc-300 mb-4">Weekly Activity</h3>
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-2">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-4">Weekly Activity</h3>
                     <div className="flex items-end gap-2 h-32">
                         {weeklyData.map((w, i) => {
                             const height = maxWeekly > 0 ? (w.count / maxWeekly) * 100 : 0;
                             const isThisWeek = i === weeklyData.length - 1;
                             return (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                                    <span className="text-[10px] text-zinc-500 font-medium">{w.count}</span>
+                                    <span className="text-[10px] text-ink-muted font-medium">{w.count}</span>
                                     <div className="w-full rounded-lg relative" style={{ height: '100px' }}>
                                         {/* Goal line */}
-                                        <div className="absolute w-full border-t border-dashed border-zinc-700"
+                                        <div className="absolute w-full border-t border-dashed border-[#333]"
                                             style={{ bottom: `${(goal / maxWeekly) * 100}%` }} />
-                                        <div className={`absolute bottom-0 w-full rounded-lg transition-all duration-500 ${isThisWeek ? 'bg-brand' : 'bg-zinc-700'}`}
+                                        <div className={`absolute bottom-0 w-full rounded-lg transition-all duration-500 ${isThisWeek ? 'bg-brand' : 'bg-[#333]'}`}
                                             style={{ height: `${Math.max(height, 4)}%` }} />
                                     </div>
-                                    <span className="text-[10px] text-zinc-600">
+                                    <span className="text-[10px] text-ink-dim">
                                         {w.weekStart.toLocaleDateString('en', { month: 'short', day: 'numeric' })}
                                     </span>
                                 </div>
@@ -862,31 +875,31 @@
                 </div>
 
                 {/* Calendar heatmap */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 anim-fade-up delay-3">
-                    <h3 className="text-sm font-semibold text-zinc-300 mb-3">Activity Calendar</h3>
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-3">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-3">Activity Calendar</h3>
                     <div className="flex gap-[3px] flex-wrap" style={{ maxWidth: '100%' }}>
                         {calendarData.map((d, i) => {
-                            const intensity = d.count === 0 ? 'bg-zinc-800' : d.count === 1 ? 'bg-green-900' : d.count === 2 ? 'bg-green-700' : 'bg-green-500';
+                            const intensity = d.count === 0 ? 'bg-surface-raised' : d.count === 1 ? 'bg-[#2d4a2e]' : d.count === 2 ? 'bg-[#4d8a4e]' : 'bg-[#75B876]';
                             const isToday = d.date.toDateString() === new Date().toDateString();
                             return (
-                                <div key={i} className={`heat-cell ${intensity} ${isToday ? 'ring-1 ring-zinc-500' : ''}`}
+                                <div key={i} className={`heat-cell ${intensity} ${isToday ? 'ring-1 ring-ink-muted' : ''}`}
                                     title={`${d.date.toLocaleDateString('en', { month: 'short', day: 'numeric' })}: ${d.count} workout${d.count !== 1 ? 's' : ''}`} />
                             );
                         })}
                     </div>
-                    <div className="flex items-center gap-2 mt-3 text-[10px] text-zinc-600">
+                    <div className="flex items-center gap-2 mt-3 text-[10px] text-ink-dim">
                         <span>Less</span>
-                        <div className="heat-cell bg-zinc-800" />
-                        <div className="heat-cell bg-green-900" />
-                        <div className="heat-cell bg-green-700" />
-                        <div className="heat-cell bg-green-500" />
+                        <div className="heat-cell bg-surface-raised" />
+                        <div className="heat-cell bg-[#2d4a2e]" />
+                        <div className="heat-cell bg-[#4d8a4e]" />
+                        <div className="heat-cell bg-[#75B876]" />
                         <span>More</span>
                     </div>
                 </div>
 
                 {/* Category breakdown */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 anim-fade-up delay-4">
-                    <h3 className="text-sm font-semibold text-zinc-300 mb-4">Category Mix</h3>
+                <div className="bg-surface border border-factborder rounded-2xl p-4 anim-fade-up delay-4">
+                    <h3 className="text-sm font-semibold text-ink/80 mb-4">Category Mix</h3>
                     <div className="space-y-3">
                         {Object.entries(CATEGORIES).map(([key, cat]) => {
                             const count = categoryBreakdown[key] || 0;
@@ -896,11 +909,11 @@
                                     <div className="flex items-center justify-between mb-1">
                                         <div className="flex items-center gap-2">
                                             <CategoryIcon category={key} size={14} className={cat.text} />
-                                            <span className="text-sm text-zinc-300">{cat.name}</span>
+                                            <span className="text-sm text-ink/80">{cat.name}</span>
                                         </div>
-                                        <span className="text-xs text-zinc-500">{count} ({pct}%)</span>
+                                        <span className="text-xs text-ink-muted">{count} ({pct}%)</span>
                                     </div>
-                                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                    <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
                                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: cat.color }} />
                                     </div>
                                 </div>
@@ -941,12 +954,12 @@
                 <div className="fixed inset-0 bg-black z-50 flex flex-col">
                     {showConfetti && <Confetti />}
                     <div className="flex items-center justify-between p-4">
-                        <button onClick={() => setTheaterMode(false)} className="text-zinc-400 hover:text-white p-2">
+                        <button onClick={() => setTheaterMode(false)} className="text-ink-muted hover:text-white p-2">
                             <Icon.X size={24} />
                         </button>
                         <div className="text-center">
-                            <p className="text-sm font-semibold text-zinc-300">{workout.title}</p>
-                            <p className="text-xs text-zinc-600">{workout.creator}</p>
+                            <p className="text-sm font-semibold text-ink/80">{workout.title}</p>
+                            <p className="text-xs text-ink-dim">{workout.creator}</p>
                         </div>
                         <div className="w-10" />
                     </div>
@@ -960,13 +973,13 @@
                     <div className="p-4 safe-bottom">
                         {!completed ? (
                             <button onClick={handleComplete}
-                                className="w-full py-4 rounded-2xl bg-green-600 text-white font-bold text-lg touch-scale flex items-center justify-center gap-2">
+                                className="w-full py-4 rounded-2xl bg-[#75B876] text-white font-bold text-lg touch-scale flex items-center justify-center gap-2">
                                 <Icon.Check size={24} />
                                 Done
                             </button>
                         ) : (
                             <div className="text-center">
-                                <p className="text-green-400 font-semibold">Workout logged!</p>
+                                <p className="text-[#75B876] font-semibold">Workout logged!</p>
                             </div>
                         )}
                     </div>
@@ -980,12 +993,12 @@
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <button onClick={onBack} className="flex items-center gap-1 text-zinc-400 hover:text-zinc-200 p-1">
+                    <button onClick={onBack} className="flex items-center gap-1 text-ink-muted hover:text-ink p-1">
                         <Icon.ChevL size={20} />
                         <span className="text-sm">Back</span>
                     </button>
                     <button onClick={() => setTheaterMode(true)}
-                        className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm">
+                        className="flex items-center gap-1.5 text-ink-muted hover:text-ink px-3 py-1.5 rounded-lg bg-surface border border-factborder text-sm">
                         <Icon.Tv size={14} />
                         <span>TV Mode</span>
                     </button>
@@ -1005,42 +1018,42 @@
                             <CategoryIcon category={workout.category} size={12} />
                             {cat.name}
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-surface-raised text-ink-muted">
                             <Icon.Clock size={12} />
                             {workout.duration} min
                         </span>
                     </div>
-                    <h2 className="text-xl font-bold text-zinc-100">{workout.title}</h2>
-                    <p className="text-sm text-zinc-500 mt-1">{workout.creator}</p>
+                    <h2 className="text-xl font-bold text-ink font-display">{workout.title}</h2>
+                    <p className="text-sm text-ink-muted mt-1">{workout.creator}</p>
                 </div>
 
                 {/* Complete */}
                 {!completed ? (
                     <button onClick={handleComplete}
-                        className="w-full py-4 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg touch-scale flex items-center justify-center gap-2 shadow-lg shadow-green-600/20 transition-colors">
+                        className="w-full py-4 rounded-2xl bg-[#75B876] hover:bg-[#69a66a] text-white font-bold text-lg touch-scale flex items-center justify-center gap-2 shadow-lg shadow-[#75B876]/20 transition-colors">
                         <Icon.Check size={24} />
                         Workout Complete
                     </button>
                 ) : (
                     <div className="space-y-4 anim-scale-in">
-                        <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-6 text-center">
-                            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
-                                <Icon.Check size={32} className="text-green-400" />
+                        <div className="bg-[#75B876]/10 border border-[#75B876]/20 rounded-2xl p-6 text-center">
+                            <div className="w-16 h-16 rounded-full bg-[#75B876]/20 flex items-center justify-center mx-auto mb-3">
+                                <Icon.Check size={32} className="text-[#75B876]" />
                             </div>
-                            <h3 className="text-lg font-bold text-green-400">Crushed it!</h3>
-                            <p className="text-sm text-zinc-400 mt-1">+{workout.duration} minutes logged</p>
+                            <h3 className="text-lg font-bold text-[#75B876] font-display">Crushed it!</h3>
+                            <p className="text-sm text-ink-muted mt-1">+{workout.duration} minutes logged</p>
                         </div>
 
                         {nextSuggestion && (
                             <div>
-                                <p className="text-sm text-zinc-400 mb-2">Up next?</p>
+                                <p className="text-sm text-ink-muted mb-2">Up next?</p>
                                 <WorkoutCard workout={nextSuggestion} onPlay={onComplete}
                                     onFav={() => {}} isFav={false} compact />
                             </div>
                         )}
 
                         <button onClick={onBack}
-                            className="w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 font-medium text-sm touch-scale">
+                            className="w-full py-3 rounded-xl bg-surface-raised text-ink/80 font-medium text-sm touch-scale">
                             Back to Home
                         </button>
                     </div>
@@ -1065,9 +1078,9 @@
                         const isActive = active === t.id;
                         return (
                             <button key={t.id} onClick={() => onChange(t.id)}
-                                className={`flex flex-col items-center gap-0.5 py-1 px-4 rounded-xl transition-colors ${isActive ? 'text-brand' : 'text-zinc-600'}`}>
-                                <t.icon size={22} className={isActive ? 'text-brand' : 'text-zinc-600'} />
-                                <span className={`text-[10px] font-medium ${isActive ? 'text-brand' : 'text-zinc-600'}`}>{t.label}</span>
+                                className={`flex flex-col items-center gap-0.5 py-1 px-4 rounded-xl transition-colors ${isActive ? 'text-brand' : 'text-ink-dim'}`}>
+                                <t.icon size={22} className={isActive ? 'text-brand' : 'text-ink-dim'} />
+                                <span className={`text-[10px] font-medium ${isActive ? 'text-brand' : 'text-ink-dim'}`}>{t.label}</span>
                             </button>
                         );
                     })}
