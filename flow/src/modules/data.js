@@ -125,7 +125,7 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         // Use incremental sync on subsequent loads
         const lastSync = isFirstLoad ? null : getLastSync(STATE);
         const requestBody = {
-            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive', 'Patterns', 'SalaryInfo', 'Forecast', 'ChartData', 'DailyDigest'],
+            sheets: ['RawLedger', 'MerchantMap', 'FXRates', 'UserContext', 'Recipients', 'Profile', 'Goals', 'Insights', 'Streaks', 'Recurring', 'HourlySpend', 'Proactive', 'Patterns', 'SalaryInfo', 'Forecast', 'ChartData', 'DailyDigest', 'Splits'],
         };
         if (lastSync) requestBody.last_sync = lastSync;
 
@@ -209,6 +209,9 @@ export async function syncData(supabaseClient, CONFIG, STATE, callbacks) {
         }
         if (data.DailyDigest) {
             STATE.dailyDigest = data.DailyDigest;
+        }
+        if (data.Splits) {
+            STATE.splits = data.Splits;
         }
 
         // Save sync timestamp for next incremental sync

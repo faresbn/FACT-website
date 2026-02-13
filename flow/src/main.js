@@ -243,6 +243,39 @@ import {
     renderTransfersTab as renderTransfersTabModule
 } from './modules/recipients.js';
 
+// Splits module
+import {
+    openSplitsPanel as openSplitsPanelModule,
+    closeSplitsPanel,
+    renderSplitsList as renderSplitsListModule,
+    filterSplitsPanel as filterSplitsPanelModule,
+    openSplitDetail as openSplitDetailModule,
+    closeSplitDetail,
+    openCreateSplit as openCreateSplitModule,
+    closeCreateSplit,
+    addSplitItem as addSplitItemModule,
+    removeSplitItem as removeSplitItemModule,
+    addParticipantToItem as addParticipantToItemModule,
+    removeParticipantFromItem as removeParticipantFromItemModule,
+    addSelfToItem as addSelfToItemModule,
+    updateSplitItemField,
+    updateParticipantField,
+    submitCreateSplit as submitCreateSplitModule,
+    openSettleModal,
+    closeSettleModal,
+    submitSettle as submitSettleModule,
+    checkSettlementSuggestions as checkSettlementSuggestionsModule,
+    closeSettleSuggestions,
+    applySuggestion as applySuggestionModule,
+    openAddItemModal,
+    closeAddItemModal,
+    submitAddItem as submitAddItemModule,
+    cancelSplit as cancelSplitModule,
+    deleteSplit as deleteSplitModule,
+    renderSplitsWidget as renderSplitsWidgetModule,
+    renderPersonSplits
+} from './modules/splits.js';
+
 // Features module
 import {
     openHeatmap as openHeatmapModule,
@@ -328,7 +361,8 @@ const STATE = {
     recurring: [],
     hourlySpend: [],
     proactiveInsights: [],
-    dailyDigest: null
+    dailyDigest: null,
+    splits: []
 };
 
 // ─── WRAPPER FUNCTIONS ──────────────────────────────────────────
@@ -353,6 +387,7 @@ function filterAndRender() {
     renderDailyDigest();
     renderRecurringSummary();
     renderProactiveInsights();
+    renderSplitsWidget();
     // Emit event for any module listening for data changes
     emit(EVENTS.DATA_FILTERED, { count: STATE.filtered.length, period: STATE.period });
 }
@@ -749,10 +784,91 @@ function filterPeoplePanel() {
 
 function openPersonDrilldown(recipientId) {
     openPersonDrilldownModule(recipientId, STATE, { formatNum, escapeHtml, renderTxnRow });
+    // Append splits section to the drilldown merchants area
+    const splitsSection = renderPersonSplits(recipientId, STATE, { formatNum, escapeHtml });
+    if (splitsSection) {
+        const merchantsArea = document.getElementById('drilldownMerchants');
+        if (merchantsArea) merchantsArea.appendChild(splitsSection);
+    }
 }
 
 function openUnmatchedDrilldown(encodedLabel) {
     openUnmatchedDrilldownModule(encodedLabel, STATE, { formatNum, escapeHtml, renderTxnRow });
+}
+
+// ─── SPLITS WRAPPERS ────────────────────────────────────────────
+const splitsCallbacks = () => ({ formatNum, escapeHtml, showToast, showConfirm });
+
+function openSplitsPanel() {
+    openSplitsPanelModule(STATE, splitsCallbacks());
+}
+
+function filterSplitsPanel() {
+    filterSplitsPanelModule(STATE, splitsCallbacks());
+}
+
+function renderSplitsList() {
+    renderSplitsListModule(STATE, splitsCallbacks());
+}
+
+function renderSplitsWidget() {
+    renderSplitsWidgetModule(STATE, splitsCallbacks());
+}
+
+function openSplitDetail(splitId) {
+    openSplitDetailModule(splitId, STATE, splitsCallbacks());
+}
+
+function openCreateSplit() {
+    openCreateSplitModule(STATE, splitsCallbacks());
+}
+
+function addSplitItem() {
+    addSplitItemModule(STATE, splitsCallbacks());
+}
+
+function removeSplitItem(index) {
+    removeSplitItemModule(index, STATE, splitsCallbacks());
+}
+
+function addParticipantToItem(itemIndex) {
+    addParticipantToItemModule(itemIndex, STATE, splitsCallbacks());
+}
+
+function removeParticipantFromItem(itemIndex, partIndex) {
+    removeParticipantFromItemModule(itemIndex, partIndex, STATE, splitsCallbacks());
+}
+
+function addSelfToItem(itemIndex) {
+    addSelfToItemModule(itemIndex, STATE, splitsCallbacks());
+}
+
+async function submitCreateSplit() {
+    await submitCreateSplitModule(STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function submitSettle() {
+    await submitSettleModule(STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function checkSettlementSuggestions(splitId) {
+    await checkSettlementSuggestionsModule(splitId, STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function applySuggestion(participantId, amount, txnId) {
+    await applySuggestionModule(participantId, amount, txnId, STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function submitAddItem() {
+    await submitAddItemModule(STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function cancelSplit(splitId) {
+    await cancelSplitModule(splitId, STATE, supabaseClient, CONFIG, splitsCallbacks());
+}
+
+async function deleteSplit(splitId) {
+    await deleteSplitModule(splitId, STATE, supabaseClient, CONFIG, splitsCallbacks());
 }
 
 function openHeatmap() {
@@ -1181,6 +1297,33 @@ window.filterPeoplePanel = filterPeoplePanel;
 window.openPersonDrilldown = openPersonDrilldown;
 window.openUnmatchedDrilldown = openUnmatchedDrilldown;
 window.assignUnmatchedTransfer = assignUnmatchedTransfer;
+// Splits
+window.openSplitsPanel = openSplitsPanel;
+window.closeSplitsPanel = closeSplitsPanel;
+window.filterSplitsPanel = filterSplitsPanel;
+window.openSplitDetail = openSplitDetail;
+window.closeSplitDetail = closeSplitDetail;
+window.openCreateSplit = openCreateSplit;
+window.closeCreateSplit = closeCreateSplit;
+window.addSplitItem = addSplitItem;
+window.removeSplitItem = removeSplitItem;
+window.addParticipantToItem = addParticipantToItem;
+window.removeParticipantFromItem = removeParticipantFromItem;
+window.addSelfToItem = addSelfToItem;
+window.updateSplitItemField = updateSplitItemField;
+window.updateParticipantField = updateParticipantField;
+window.submitCreateSplit = submitCreateSplit;
+window.openSettleModal = openSettleModal;
+window.closeSettleModal = closeSettleModal;
+window.submitSettle = submitSettle;
+window.checkSettlementSuggestions = checkSettlementSuggestions;
+window.closeSettleSuggestions = closeSettleSuggestions;
+window.applySuggestion = applySuggestion;
+window.openAddItemModal = openAddItemModal;
+window.closeAddItemModal = closeAddItemModal;
+window.submitAddItem = submitAddItem;
+window.cancelSplit = cancelSplit;
+window.deleteSplit = deleteSplit;
 window.renderHeatmap = renderHeatmap;
 window.drilldownDate = drilldownDate;
 window.closeCelebration = closeCelebration;

@@ -265,6 +265,22 @@ Deno.serve(async (request) => {
     data.Streaks = streaks || [];
   }
 
+  // Splits with nested items and participants
+  if (sheets.includes('Splits')) {
+    const { data: splits } = await supabase
+      .from('splits')
+      .select(`
+        *,
+        split_items (
+          *,
+          split_participants (*)
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('split_date', { ascending: false });
+    data.Splits = splits || [];
+  }
+
   // Pre-aggregated heatmap data from hourly_spend view
   if (sheets.includes('HourlySpend')) {
     const { data: hourly } = await supabase
