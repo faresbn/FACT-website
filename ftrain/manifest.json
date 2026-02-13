@@ -1,0 +1,46 @@
+{
+  "name": "FACT/Train",
+  "short_name": "Train",
+  "description": "Personal training: stretching, Pilates, and fat-burning workouts",
+  "start_url": "/ftrain/",
+  "scope": "/ftrain/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "categories": ["fitness", "health"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick 5 Min Workout",
+      "short_name": "5 Min",
+      "url": "/ftrain/?quick=5",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Browse Workouts",
+      "short_name": "Browse",
+      "url": "/ftrain/?tab=browse",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
